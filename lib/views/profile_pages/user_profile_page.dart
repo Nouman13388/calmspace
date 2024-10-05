@@ -1,89 +1,154 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class UserProfilePage extends StatelessWidget {
+class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final SharedPreferences prefs = Get.find<SharedPreferences>();
+  _UserProfilePageState createState() => _UserProfilePageState();
+}
 
+class _UserProfilePageState extends State<UserProfilePage> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isEditing = false;
+  late User _user;
+  String _username = '';
+  String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserDetails();
+  }
+
+  void _fetchUserDetails() {
+    _user = FirebaseAuth.instance.currentUser!;
+    setState(() {
+      _username = _user.displayName ?? 'No Name';
+      _email = _user.email ?? 'No Email';
+    });
+  }
+
+  void _toggleEditing() {
+    setState(() {
+      _isEditing = !_isEditing;
+    });
+  }
+
+  void _saveProfile() async {
+    try {
+      if (_formKey.currentState!.validate()) {
+        _formKey.currentState!.save();
+
+        // Update user details
+        await _user.updateDisplayName(_username);
+        await _user.updateEmail(_email);
+
+        setState(() {
+          _isEditing = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully!')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update profile: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Profile'),
-        centerTitle: true,
+        leading: _isEditing
+            ? IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _toggleEditing,
+        )
+            : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              // Show loading animation
-              Get.dialog(
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
-                barrierDismissible: false,
-              );
-
-              // Clear shared preferences
-              await prefs.clear();
-
-              // Simulate a delay for logout animation
-              await Future.delayed(const Duration(seconds: 1));
-
-              // Close the loading dialog
-              Get.back();
-
-              // Navigate to the LoginPage
-              Get.offAllNamed('/user-login');
-            },
-          ),
+          if (!_isEditing)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: _toggleEditing,
+            ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Profile Information',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              Center(
+                child: CircleAvatar(
+                  radius: 100,
+                  backgroundImage: NetworkImage(
+                      _user.photoURL ?? 'https://via.placeholder.com/150'),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildProfileField('Name', 'John Doe'),
-            _buildProfileField('Email', 'john.doe@example.com'),
-            _buildProfileField('Phone', '123-456-7890'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Implement edit profile functionality
-              },
-              child: const Text('Edit Profile'),
-            ),
-          ],
+              const SizedBox(height: 16.0),
+              if (_isEditing)
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: _username,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a username';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _username = value!;
+                  },
+                )
+              else
+                ListTile(
+                  title: const Text('Username'),
+                  subtitle: Text(_username),
+                ),
+              const SizedBox(height: 16.0),
+              if (_isEditing)
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: _email,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an email';
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'Please enter a valid email address';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _email = value!;
+                  },
+                )
+              else
+                ListTile(
+                  title: const Text('Email'),
+                  subtitle: Text(_email),
+                ),
+              const SizedBox(height: 16.0),
+              if (_isEditing)
+                ElevatedButton(
+                  onPressed: _saveProfile,
+                  child: const Text('Save Profile'),
+                ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildProfileField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 18),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,5 @@
+import 'package:cuberto_bottom_bar/cuberto_bottom_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class CustomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -9,34 +9,45 @@ class CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context); // Get the current theme
+    // Define your tab data
+    final List<TabData> tabs = [
+      const TabData(
+        key: Key('Home'),
+        iconData: Icons.home,
+        title: 'Home',
+      ),
+      const TabData(
+        key: Key('Map'),
+        iconData: Icons.map,
+        title: 'Map',
+      ),
+      const TabData(
+        key: Key('Settings'),
+        iconData: Icons.settings,
+        title: 'Settings',
+      ),
+      const TabData(
+        key: Key('Profile'),
+        iconData: Icons.person,
+        title: 'Profile',
+      ),
+    ];
 
-    return BottomNavigationBar(
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.map), // Updated icon for chat
-          label: 'Map', // Updated label
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
-          label: 'Settings',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_2_sharp),
-          label: 'Profile',
-        ),
-      ],
-      currentIndex: currentIndex,
-      onTap: onTap,
-      selectedItemColor: theme.colorScheme.primary, // Use primary color from theme
-      unselectedItemColor: theme.iconTheme.color?.withOpacity(0.6), // Slightly faded color for unselected
-      showUnselectedLabels: true,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: theme.scaffoldBackgroundColor, // Use background color from theme
+    return Container(
+      height: 70, // Increased height for the navbar
+      color: const Color(0xFFFFF3E0), // Background color for the navbar
+      child: CubertoBottomBar(
+        key: const Key("BottomBar"),
+        inactiveIconColor: const Color(0xFFC68181), // Darker inactive color
+        tabStyle: CubertoTabStyle.styleNormal,
+        selectedTab: currentIndex, // Current selected tab index
+        tabs: tabs,
+        onTabChangedListener: (position, title, color) {
+          onTap(position); // Call the onTap function with the selected index
+        },
+        textColor: const Color(0xFFFFF3E0), // Darker text color for better contrast
+        barBackgroundColor: const Color(0xFFFFF3E0), // A slightly darker shade for the bar background
+      ),
     );
   }
 }

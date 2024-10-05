@@ -1,6 +1,4 @@
-import 'package:calmspace/views/chat_pages/user_chat_page.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
-import 'package:calmspace/views/map_pages/therapist_map.dart';
 import 'package:calmspace/views/setiings_pages/user_settings_page.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
 import 'package:calmspace/views/navbar.dart';
@@ -124,7 +122,7 @@ class _UserHomePageState extends State<UserHomePage> {
           children: [
             const HomePage(), // Home page content
             GoogleMapScreen(),
-            const UserSettingsPage(), // Your Settings page
+            UserSettingsPage(), // Your Settings page
             const UserProfilePage(), // Your Profile page
           ],
         ),

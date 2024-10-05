@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../profile_pages/therapist_profile_page.dart';
 import '../setiings_pages/therapist_settings_page.dart';
 
 class TherapistHomePage extends StatefulWidget {
@@ -123,7 +124,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
             const HomePage(), // Home page content
             GoogleMapScreen(), // Add the appropriate map page
             const TherapistSettingsPage(), // Add your Settings page
-            const UserProfilePage(), // Add your Profile page
+            const TherapistProfilePage(), // Add your Profile page
           ],
         ),
       ),
