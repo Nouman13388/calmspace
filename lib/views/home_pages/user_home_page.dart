@@ -1,3 +1,4 @@
+import 'package:calmspace/content_page.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/setiings_pages/user_settings_page.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
@@ -122,7 +123,7 @@ class _UserHomePageState extends State<UserHomePage> {
           children: [
             const HomePage(), // Home page content
             GoogleMapScreen(),
-            UserSettingsPage(), // Your Settings page
+            const ContentPage(),
             const UserProfilePage(), // Your Profile page
           ],
         ),

@@ -22,9 +22,9 @@ class CustomNavBar extends StatelessWidget {
         title: 'Map',
       ),
       const TabData(
-        key: Key('Settings'),
-        iconData: Icons.settings,
-        title: 'Settings',
+        key: Key('Browse'),
+        iconData: Icons.saved_search,
+        title: 'Browse',
       ),
       const TabData(
         key: Key('Profile'),
