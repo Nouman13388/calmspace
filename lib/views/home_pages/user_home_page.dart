@@ -1,6 +1,7 @@
+// File: lib/views/home_pages/user_home_page.dart
+
 import 'package:calmspace/content_page.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
-import 'package:calmspace/views/setiings_pages/user_settings_page.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
 import 'package:calmspace/views/navbar.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+
+import 'home_page.dart';
 
 class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key});
@@ -29,7 +32,6 @@ class _UserHomePageState extends State<UserHomePage> {
 
   Future<void> _getCurrentLocation() async {
     try {
-      // Check for location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -42,15 +44,12 @@ class _UserHomePageState extends State<UserHomePage> {
         return;
       }
 
-      // Get current location
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-
-      // Convert latitude and longitude to a human-readable address
       List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
       Placemark place = placemarks[0];
 
       setState(() {
-        currentLocation = "${place.locality}, ${place.country}"; // or use place.name for more specific names
+        currentLocation = "${place.locality}, ${place.country}";
       });
     } catch (e) {
       setState(() {
@@ -110,7 +109,7 @@ class _UserHomePageState extends State<UserHomePage> {
 
               Get.back();
               _showLogoutSnackbar();
-              Get.offAllNamed('/role-selection'); // Navigate to the role selection page
+              Get.offAllNamed('/role-selection');
             },
           ),
         ],
@@ -119,108 +118,33 @@ class _UserHomePageState extends State<UserHomePage> {
         padding: const EdgeInsets.all(16.0),
         child: PageView(
           controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(), // Disable swiping
+          physics: const NeverScrollableScrollPhysics(),
           children: [
-            const HomePage(), // Home page content
+            HomePage(
+              greeting: 'Hello, User!',
+              featureCards: [
+                FeatureCardData(
+                  icon: Icons.chat,
+                  title: 'Chat',
+                  onTap: () => Get.toNamed('/user-chat'),
+                ),
+                FeatureCardData(
+                  icon: Icons.notifications,
+                  title: 'Notifications',
+                  onTap: () => Get.toNamed('/notifications'),
+                ),
+                // Add more feature cards as needed
+              ],
+            ),
             GoogleMapScreen(),
             const ContentPage(),
-            const UserProfilePage(), // Your Profile page
+            const UserProfilePage(),
           ],
         ),
       ),
       bottomNavigationBar: CustomNavBar(
         currentIndex: _currentIndex,
         onTap: _onNavItemTapped,
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Hello, User!',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'What would you like to do today?',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildFeatureCard(Icons.chat, 'Chat', () {
-                  Get.toNamed('/user-chat'); // Navigate to chat
-                }),
-                _buildFeatureCard(Icons.notifications, 'Notifications', () {
-                  Get.toNamed('/notifications'); // Placeholder for notifications
-                }),
-                // Add more feature cards as needed
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard(IconData icon, String title, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 4,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF3B8B5), Color(0xFFFFE0B2)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 40,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -8,6 +8,7 @@ import '../views/auth_pages/signup_page.dart';
 import '../views/auth_pages/therapist_login_page.dart';
 import '../views/auth_pages/user_login_page.dart';
 import '../views/chat_pages/therapist_chat_page.dart';
+import '../views/chat_pages/user_chat_page.dart';
 import '../views/home_pages/therapist_home_page.dart';
 import '../views/home_pages/user_home_page.dart';
 import '../views/map_pages/google_map_screen.dart';
@@ -21,7 +22,7 @@ import '../views/setiings_pages/user_settings_page.dart';
 class AppRouter {
   static List<GetPage> routes = [
     GetPage(name: '/role-selection', page: () => const RoleSelectionPage()),
-    GetPage(name: '/user-login', page: () => const UserLoginPage()),
+    GetPage(name: '/user-login', page: () => UserLoginPage()),
     GetPage(name: '/therapist-login', page: () => TherapistLoginPage()),
     GetPage(name: '/signup', page: () => SignUpPage()),
     GetPage(name: '/forgot-password', page: () => const ForgotPage()),
@@ -30,6 +31,7 @@ class AppRouter {
     GetPage(name: '/user-settings', page: () => const UserSettingsPage()),
     GetPage(name: '/therapist-settings', page: () => const TherapistSettingsPage()),
     GetPage(name: '/therapist-chat', page: () => const TherapistChatPage()),
+    GetPage(name: '/user-chat', page: () => const UserChatPage()),
     GetPage(name: '/user-profile', page: () => const UserProfilePage()),
     GetPage(name: '/therapist-profile', page: () => const TherapistProfilePage()),
     GetPage(name: '/map', page: () => GoogleMapScreen()),
