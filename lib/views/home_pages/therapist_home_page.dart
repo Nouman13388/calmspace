@@ -126,7 +126,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                 FeatureCardData(
                   icon: Icons.calendar_today,
                   title: 'Appointments',
-                  onTap: () => Get.toNamed('/appointments'),
+                  onTap: () => Get.toNamed('/therapist-appointment'),
                 ),
                 FeatureCardData(
                   icon: Icons.message,

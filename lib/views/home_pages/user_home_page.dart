@@ -129,9 +129,9 @@ class _UserHomePageState extends State<UserHomePage> {
                   onTap: () => Get.toNamed('/user-chat'),
                 ),
                 FeatureCardData(
-                  icon: Icons.notifications,
-                  title: 'Notifications',
-                  onTap: () => Get.toNamed('/notifications'),
+                  icon: Icons.calendar_today,
+                  title: 'Appointments',
+                  onTap: () => Get.toNamed('/user-appointment'),
                 ),
                 // Add more feature cards as needed
               ],

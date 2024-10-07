@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../content_page.dart';
+import '../views/appointment_pages/therapist_appointment_page.dart';
+import '../views/appointment_pages/user_appointment_page.dart';
 import '../views/auth_pages/forgot_page.dart';
 import '../views/auth_pages/signup_page.dart';
 import '../views/auth_pages/therapist_login_page.dart';
@@ -36,6 +38,8 @@ class AppRouter {
     GetPage(name: '/therapist-profile', page: () => const TherapistProfilePage()),
     GetPage(name: '/map', page: () => GoogleMapScreen()),
     GetPage(name: '/content-page', page: () => const ContentPage()),
+    GetPage(name: '/therapist-appointment', page: () => const TherapistAppointmentPage(therapistName: '',)),
+    GetPage(name: '/user-appointment', page: () => const UserAppointmentPage(userName: '',)),
   ];
 
   static void initRoutes(SharedPreferences prefs) {
