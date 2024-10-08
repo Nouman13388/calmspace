@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 
 ThemeData calmSpaceTheme() {
   return ThemeData(
-    colorScheme: ColorScheme(
+    colorScheme: const ColorScheme(
       brightness: Brightness.light,
-      primary: const Color(0xFFF3B8B5), // Soft pink primary color
+      primary: Color(0xFFF3B8B5), // Soft pink primary color
       onPrimary: Colors.white, // Text on primary color
-      secondary: const Color(0xFFFFE0B2), // Light peach for secondary color
+      secondary: Color(0xFFFFE0B2), // Light peach for secondary color
       onSecondary: Colors.white, // Text on secondary color
-      error: const Color(0xFFD32F2F), // Soft red for error
+      error: Color(0xFFD32F2F), // Soft red for error
       onError: Colors.white,
-      background: const Color(0xFFFFF8E1), // Light orange-peach for background
+      background: Color(0xFFFFF8E1), // Light orange-peach for background
       onBackground: Colors.black,
-      surface: const Color(0xFFFFF3E0), // Softer surface color for cards, dialogs
+      surface: Color(0xFFFFF3E0), // Softer surface color for cards, dialogs
       onSurface: Colors.black,
     ),
     scaffoldBackgroundColor: const Color(0xFFFFF8E1), // Background color

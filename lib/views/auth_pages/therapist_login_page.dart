@@ -104,14 +104,23 @@ class TherapistLoginPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Obx(() => Checkbox(
-                      value: _rememberMe.value,
-                      onChanged: (value) => _rememberMe.value = value!,
-                    )),
-                    Text('Remember Me', style: Theme.of(context).textTheme.titleMedium),
-                  ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Obx(() => Checkbox(
+                        value: _rememberMe.value,
+                        onChanged: (value) => _rememberMe.value = value!,
+                      )),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Remember Me',
+                          style: Theme.of(context).textTheme.titleMedium,
+                          overflow: TextOverflow.ellipsis, // Prevent overflow
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Get.toNamed('/forgot-password'),
