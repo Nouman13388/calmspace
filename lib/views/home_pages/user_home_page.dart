@@ -1,5 +1,3 @@
-// File: lib/views/home_pages/user_home_page.dart
-
 import 'package:calmspace/content_page.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
