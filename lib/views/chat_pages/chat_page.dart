@@ -1,30 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controllers/therapist_chat_controller.dart';
+import '../../controllers/user_chat_controller.dart';
+import '../../models/message_model.dart';
+import '../../models/chat_thread_model.dart';
 
-class ChatPage extends StatefulWidget {
-  final String userName; // Username for the chat participant
+class ChatThreadView extends StatefulWidget {
+  final String roomName;
+  final String userName;
 
-  const ChatPage({super.key, required this.userName});
+  const ChatThreadView(
+      {super.key, required this.roomName, required this.userName});
 
   @override
-  _ChatPageState createState() => _ChatPageState();
+  _ChatThreadViewState createState() => _ChatThreadViewState();
 }
 
-class _ChatPageState extends State<ChatPage> {
-  final List<Message> _messages = []; // List to store messages
-  final TextEditingController _controller = TextEditingController();
+class _ChatThreadViewState extends State<ChatThreadView> {
+  late final TextEditingController _controller;
+  late final dynamic controller;
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
-      setState(() {
-        _messages.add(Message(
-          text: _controller.text,
-          sender: "user", // or "therapist" based on who sends
-          timestamp: DateTime.now(),
-        ));
-        _controller.clear();
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    controller = widget.userName == 'User'
+        ? Get.find<UserChatController>()
+        : Get.find<TherapistChatController>();
+
+    controller
+        .connect(widget.roomName); // Connect to the WebSocket for this thread
+    controller.loadChatThreads(); // Load dummy data
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,28 +44,23 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat with ${widget.userName}'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (Get.previousRoute == '/user-homepage') {
-              Get.offAllNamed('/user-homepage');
-            } else if (Get.previousRoute == '/therapist-homepage') {
-              Get.offAllNamed('/therapist-homepage');
-            }
-          },
-        ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessage(message);
-              },
-            ),
+            child: Obx(() {
+              final messages = controller.chatThreads
+                  .firstWhere((thread) => thread.roomName == widget.roomName)
+                  .messages;
+
+              return ListView.builder(
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final message = messages[index];
+                  return _buildMessage(message);
+                },
+              );
+            }),
           ),
           _buildMessageInput(),
         ],
@@ -62,8 +69,10 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessage(Message message) {
-    final alignment = message.sender == "user" ? Alignment.centerRight : Alignment.centerLeft;
-    final color = message.sender == "user" ? Colors.blue[200] : Colors.grey[300];
+    final alignment =
+        message.sender == 'User' ? Alignment.centerRight : Alignment.centerLeft;
+    final color =
+        message.sender == 'User' ? Colors.blue[200] : Colors.grey[300];
 
     return Align(
       alignment: alignment,
@@ -77,10 +86,7 @@ class _ChatPageState extends State<ChatPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message.text,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(message.text, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 4),
             Text(
               _formatDateTime(message.timestamp),
@@ -110,13 +116,21 @@ class _ChatPageState extends State<ChatPage> {
                 fillColor: Colors.grey[200],
               ),
               onSubmitted: (value) {
-                _sendMessage();
+                if (value.isNotEmpty) {
+                  controller.sendMessage(value, widget.roomName);
+                  _controller.clear();
+                }
               },
             ),
           ),
           IconButton(
             icon: const Icon(Icons.send),
-            onPressed: _sendMessage,
+            onPressed: () {
+              if (_controller.text.isNotEmpty) {
+                controller.sendMessage(_controller.text, widget.roomName);
+                _controller.clear();
+              }
+            },
           ),
         ],
       ),
@@ -126,12 +140,4 @@ class _ChatPageState extends State<ChatPage> {
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
-}
-
-class Message {
-  final String text;
-  final String sender; // "user" or "therapist"
-  final DateTime timestamp;
-
-  Message({required this.text, required this.sender, required this.timestamp});
 }

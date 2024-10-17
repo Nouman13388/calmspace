@@ -1,11 +1,11 @@
 // services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import '../models/mental_health_content_model.dart';
 
 class ApiService {
-  final String apiUrl = "http://your-django-api-url/api/content"; // Update with your actual URL
+  final String apiUrl =
+      "http://your-django-api-url/api/content"; // Update with your actual URL
 
   Future<List<MentalHealthContent>> fetchContent() async {
     final response = await http.get(Uri.parse(apiUrl));
@@ -18,7 +18,8 @@ class ApiService {
     }
   }
 
-  Future<MentalHealthContent> createContent(String title, String description) async {
+  Future<MentalHealthContent> createContent(
+      String title, String description) async {
     final response = await http.post(
       Uri.parse(apiUrl),
       headers: {'Content-Type': 'application/json'},

@@ -1,23 +1,17 @@
-// models/mental_health_content.dart
+// models/mental_health_content_model.dart
 class MentalHealthContent {
   final int id;
   final String title;
   final String description;
-  final String createdAt;
 
-  MentalHealthContent({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.createdAt,
-  });
+  MentalHealthContent(
+      {required this.id, required this.title, required this.description});
 
   factory MentalHealthContent.fromMap(Map<String, dynamic> json) {
     return MentalHealthContent(
       id: json['id'],
       title: json['title'],
       description: json['description'],
-      createdAt: json['created_at'],
     );
   }
 
@@ -26,7 +20,6 @@ class MentalHealthContent {
       'id': id,
       'title': title,
       'description': description,
-      'created_at': createdAt,
     };
   }
 }

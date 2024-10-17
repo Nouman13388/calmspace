@@ -1,7 +1,6 @@
-import 'package:calmspace/views/auth_pages/user_login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'auth_pages/therapist_login_page.dart'; // Import Therapist Login Page
+// Import Therapist Login Page
 
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({super.key});

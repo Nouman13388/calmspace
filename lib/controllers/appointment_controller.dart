@@ -29,13 +29,13 @@ class AppointmentController extends GetxController {
       Appointment(
         user: "User A",
         therapist: "Therapist 1",
-        date: DateTime.now().add(Duration(hours: 2)),
+        date: DateTime.now().add(const Duration(hours: 2)),
         status: "Upcoming",
       ),
       Appointment(
         user: "User B",
         therapist: "Therapist 2",
-        date: DateTime.now().subtract(Duration(hours: 1)),
+        date: DateTime.now().subtract(const Duration(hours: 1)),
         status: "Completed",
       ),
     ];

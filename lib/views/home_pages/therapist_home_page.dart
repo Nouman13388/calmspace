@@ -1,4 +1,3 @@
-import 'package:calmspace/content_page.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/profile_pages/therapist_profile_page.dart';
 import 'package:calmspace/views/navbar.dart';
@@ -47,9 +46,12 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      Placemark place = placemarks.isNotEmpty ? placemarks[0] : Placemark();
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place =
+          placemarks.isNotEmpty ? placemarks[0] : const Placemark();
 
       setState(() {
         currentLocation = "${place.locality}, ${place.country}";
@@ -206,7 +208,8 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundImage: NetworkImage(user?.photoURL ?? 'https://via.placeholder.com/150'),
+            backgroundImage: NetworkImage(
+                user?.photoURL ?? 'https://via.placeholder.com/150'),
             radius: 40,
           ),
           const SizedBox(width: 16),
@@ -222,7 +225,10 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
     );
   }
 
-  Widget _buildDrawerItem({required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildDrawerItem(
+      {required String title,
+      required IconData icon,
+      required VoidCallback onTap}) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),

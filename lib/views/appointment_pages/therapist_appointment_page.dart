@@ -30,7 +30,7 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Therapist Appointments"),
+        title: const Text("Therapist Appointments"),
         centerTitle: true,
       ),
       body: Column(
@@ -51,7 +51,7 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
           Expanded(
             child: Obx(() {
               List<Appointment> filteredAppointments = _controller.appointments
-                  .where((appointment) => appointment?.therapist == widget.therapistName)
+                  .where((appointment) => appointment.therapist == widget.therapistName)
                   .toList();
 
               return ListView.builder(

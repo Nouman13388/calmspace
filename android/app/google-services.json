@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "878854246610-lqngcs771uet4pvqqfgp8btfo04u5rfp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nomdevs.calmspace",
+            "certificate_hash": "328715e57739f6354a615c729d1fcc33e17f4834"
+          }
+        },
+        {
           "client_id": "878854246610-3f7fsq8ip7vtgb2ivi13p5eqarerekjr.apps.googleusercontent.com",
           "client_type": 3
         }

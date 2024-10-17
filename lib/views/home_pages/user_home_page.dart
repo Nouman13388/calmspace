@@ -23,7 +23,8 @@ class _UserHomePageState extends State<UserHomePage> {
   final PageController _pageController = PageController();
   String currentLocation = "Fetching location...";
   final User? user = FirebaseAuth.instance.currentUser; // Get current user
-  final AuthController authController = Get.put(AuthController()); // Initialize AuthController
+  final AuthController authController =
+      Get.put(AuthController()); // Initialize AuthController
 
   @override
   void initState() {
@@ -45,8 +46,10 @@ class _UserHomePageState extends State<UserHomePage> {
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
       Placemark place = placemarks[0];
 
       setState(() {
@@ -99,7 +102,8 @@ class _UserHomePageState extends State<UserHomePage> {
         leading: Builder(
           builder: (context) => IconButton(
             icon: CircleAvatar(
-              backgroundImage: NetworkImage(user?.photoURL ?? 'https://via.placeholder.com/150'), // User profile picture
+              backgroundImage: NetworkImage(user?.photoURL ??
+                  'https://via.placeholder.com/150'), // User profile picture
             ),
             onPressed: () {
               Scaffold.of(context).openDrawer(); // Open the drawer
@@ -115,7 +119,8 @@ class _UserHomePageState extends State<UserHomePage> {
                 barrierDismissible: false,
               );
 
-              await authController.logout(prefs); // Call logout from AuthController
+              await authController
+                  .logout(prefs); // Call logout from AuthController
 
               Get.back();
               _showLogoutSnackbar();
@@ -123,7 +128,6 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
         ],
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: PageView(
@@ -204,7 +208,8 @@ class _UserHomePageState extends State<UserHomePage> {
                   barrierDismissible: false,
                 );
 
-                await authController.logout(prefs); // Call logout from AuthController
+                await authController
+                    .logout(prefs); // Call logout from AuthController
                 Get.back();
                 _showLogoutSnackbar();
               },
@@ -217,13 +222,12 @@ class _UserHomePageState extends State<UserHomePage> {
 
   Widget _buildDrawerHeader() {
     return DrawerHeader(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF3B8B5)
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFF3B8B5)),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundImage: NetworkImage(user?.photoURL ?? 'https://via.placeholder.com/150'),
+            backgroundImage: NetworkImage(
+                user?.photoURL ?? 'https://via.placeholder.com/150'),
             radius: 40,
           ),
           const SizedBox(width: 16),
@@ -239,7 +243,10 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  Widget _buildDrawerItem({required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildDrawerItem(
+      {required String title,
+      required IconData icon,
+      required VoidCallback onTap}) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
