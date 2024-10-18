@@ -1,56 +1,31 @@
 import 'package:get/get.dart';
 import '../models/mental_health_content_model.dart';
-import '../services/api_service.dart';
+import '../services/content_service.dart';
 
 class ContentController extends GetxController {
-  final ApiService _apiService = ApiService();
-  var contentList = <MentalHealthContent>[].obs; // Observable list
+  var contentList = <MentalHealthContent>[].obs; // Observable for content list
+  var isLoading = false.obs; // Observable for loading state
+
+  final ContentService contentService =
+      Get.put(ContentService()); // Instance of ContentService
 
   @override
   void onInit() {
-    fetchContent();
     super.onInit();
+    fetchContent(); // Fetch content when controller is initialized
   }
 
+  // Method to fetch content from ArticleUrl
   Future<void> fetchContent() async {
     try {
-      contentList.value = await _apiService.fetchContent(); // Fetching content from API
+      isLoading(true); // Start loading
+      contentList.value = await contentService
+          .fetchContentFromArticle(); // Fetch data from ArticleUrl
     } catch (e) {
-      // Handle error
-      print("Error fetching content: $e");
-    }
-  }
-
-  Future<void> addContent(String title, String description) async {
-    try {
-      final newContent = await _apiService.createContent(title, description);
-      contentList.add(newContent); // Add new content to the list
-    } catch (e) {
-      // Handle error
-      print("Error adding content: $e");
-    }
-  }
-
-  Future<void> updateContent(MentalHealthContent content) async {
-    try {
-      await _apiService.updateContent(content);
-      int index = contentList.indexWhere((c) => c.id == content.id);
-      if (index != -1) {
-        contentList[index] = content; // Update the list
-      }
-    } catch (e) {
-      // Handle error
-      print("Error updating content: $e");
-    }
-  }
-
-  Future<void> deleteContent(int id) async {
-    try {
-      await _apiService.deleteContent(id);
-      contentList.removeWhere((content) => content.id == id); // Remove from the list
-    } catch (e) {
-      // Handle error
-      print("Error deleting content: $e");
+      Get.snackbar("Error", e.toString());
+      print("Error fetching content: $e"); // Log error to the terminal
+    } finally {
+      isLoading(false); // Stop loading
     }
   }
 }
