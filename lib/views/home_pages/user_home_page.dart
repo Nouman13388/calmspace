@@ -7,7 +7,8 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import '../../controllers/auth_controller.dart';
 import 'home_page.dart';
 
 class UserHomePage extends StatefulWidget {
@@ -21,6 +22,9 @@ class _UserHomePageState extends State<UserHomePage> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
   String currentLocation = "Fetching location...";
+  final User? user = FirebaseAuth.instance.currentUser; // Get current user
+  final AuthController authController =
+      Get.put(AuthController()); // Initialize AuthController
 
   @override
   void initState() {
@@ -42,8 +46,10 @@ class _UserHomePageState extends State<UserHomePage> {
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
       Placemark place = placemarks[0];
 
       setState(() {
@@ -93,6 +99,17 @@ class _UserHomePageState extends State<UserHomePage> {
           ],
         ),
         centerTitle: true,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: CircleAvatar(
+              backgroundImage: NetworkImage(user?.photoURL ??
+                  'https://via.placeholder.com/150'), // User profile picture
+            ),
+            onPressed: () {
+              Scaffold.of(context).openDrawer(); // Open the drawer
+            },
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -102,12 +119,11 @@ class _UserHomePageState extends State<UserHomePage> {
                 barrierDismissible: false,
               );
 
-              await prefs.clear();
-              await Future.delayed(const Duration(seconds: 1));
+              await authController
+                  .logout(prefs); // Call logout from AuthController
 
               Get.back();
               _showLogoutSnackbar();
-              Get.offAllNamed('/role-selection');
             },
           ),
         ],
@@ -144,6 +160,97 @@ class _UserHomePageState extends State<UserHomePage> {
         currentIndex: _currentIndex,
         onTap: _onNavItemTapped,
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            _buildDrawerHeader(),
+            _buildDrawerItem(
+              title: 'Account',
+              icon: Icons.account_circle,
+              onTap: () => Get.toNamed('/user-profile'),
+            ),
+            _buildDrawerItem(
+              title: 'Notification Preferences',
+              icon: Icons.notifications,
+              onTap: () {
+                // Add navigation to Notification Preferences
+              },
+            ),
+            _buildDrawerItem(
+              title: 'News Preferences',
+              icon: Icons.article,
+              onTap: () {
+                // Add navigation to News Preferences
+              },
+            ),
+            _buildDrawerItem(
+              title: 'Privacy Policy',
+              icon: Icons.privacy_tip,
+              onTap: () {
+                // Add navigation to Privacy Policy
+              },
+            ),
+            _buildDrawerItem(
+              title: 'Terms of Service',
+              icon: Icons.description,
+              onTap: () {
+                // Add navigation to Terms of Service
+              },
+            ),
+            const Divider(),
+            _buildDrawerItem(
+              title: 'Logout',
+              icon: Icons.exit_to_app,
+              onTap: () async {
+                Get.dialog(
+                  const Center(child: CircularProgressIndicator()),
+                  barrierDismissible: false,
+                );
+
+                await authController
+                    .logout(prefs); // Call logout from AuthController
+                Get.back();
+                _showLogoutSnackbar();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerHeader() {
+    return DrawerHeader(
+      decoration: const BoxDecoration(color: Color(0xFFF3B8B5)),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(
+                user?.photoURL ?? 'https://via.placeholder.com/150'),
+            radius: 40,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              user?.displayName ?? 'User Name',
+              style: const TextStyle(color: Colors.white, fontSize: 20),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      {required String title,
+      required IconData icon,
+      required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      onTap: onTap,
     );
   }
 }

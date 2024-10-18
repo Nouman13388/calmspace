@@ -6,7 +6,8 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import '../../controllers/auth_controller.dart';
 import '../setiings_pages/therapist_settings_page.dart';
 import 'home_page.dart';
 
@@ -21,11 +22,14 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
   String currentLocation = "Fetching location...";
+  final AuthController authController = Get.put(AuthController());
+  User? user; // Firebase user
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    user = FirebaseAuth.instance.currentUser; // Get current user
   }
 
   Future<void> _getCurrentLocation() async {
@@ -42,9 +46,12 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      Placemark place = placemarks.isNotEmpty ? placemarks[0] : Placemark();
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place =
+          placemarks.isNotEmpty ? placemarks[0] : const Placemark();
 
       setState(() {
         currentLocation = "${place.locality}, ${place.country}";
@@ -102,9 +109,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                 barrierDismissible: false,
               );
 
-              await prefs.clear();
-              await Future.delayed(const Duration(seconds: 1));
-
+              await authController.logout(prefs);
               Get.back();
               _showLogoutSnackbar();
               Get.offAllNamed('/role-selection');
@@ -131,7 +136,6 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                   title: 'Chat',
                   onTap: () => Get.toNamed('/therapist-chat'),
                 ),
-                // Add more feature cards as needed
               ],
             ),
             GoogleMapScreen(),
@@ -144,6 +148,91 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
         currentIndex: _currentIndex,
         onTap: _onNavItemTapped,
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            _buildDrawerHeader(),
+            _buildDrawerItem(
+              title: 'Account',
+              icon: Icons.account_circle,
+              onTap: () => Get.toNamed('/therapist-profile'),
+            ),
+            _buildDrawerItem(
+              title: 'Notification Preferences',
+              icon: Icons.notifications,
+              onTap: () {
+                // Add navigation to Notification Preferences
+              },
+            ),
+            _buildDrawerItem(
+              title: 'Privacy Policy',
+              icon: Icons.privacy_tip,
+              onTap: () {
+                // Add navigation to Privacy Policy
+              },
+            ),
+            _buildDrawerItem(
+              title: 'Terms of Service',
+              icon: Icons.description,
+              onTap: () {
+                // Add navigation to Terms of Service
+              },
+            ),
+            const Divider(),
+            _buildDrawerItem(
+              title: 'Logout',
+              icon: Icons.exit_to_app,
+              onTap: () async {
+                Get.dialog(
+                  const Center(child: CircularProgressIndicator()),
+                  barrierDismissible: false,
+                );
+
+                await authController.logout(prefs);
+                Get.back();
+                _showLogoutSnackbar();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerHeader() {
+    return DrawerHeader(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF3B8B5),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: NetworkImage(
+                user?.photoURL ?? 'https://via.placeholder.com/150'),
+            radius: 40,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              user?.displayName ?? 'Therapist Name',
+              style: const TextStyle(color: Colors.white, fontSize: 20),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      {required String title,
+      required IconData icon,
+      required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      onTap: onTap,
     );
   }
 }

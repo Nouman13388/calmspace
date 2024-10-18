@@ -1,54 +1,33 @@
 // services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import '../models/mental_health_content_model.dart';
 
 class ApiService {
-  final String apiUrl = "http://your-django-api-url/api/content"; // Update with your actual URL
+  final String apiUrl = "https://api.nhs.uk/mental-health?api-version=1.0";
 
   Future<List<MentalHealthContent>> fetchContent() async {
-    final response = await http.get(Uri.parse(apiUrl));
+    try {
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Ocp-Apim-Subscription-Key':
+              'ba52539dd260499198a6c9ee97bef2b1', // Your Primary Key
+          'Content-Type': 'application/json',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => MentalHealthContent.fromMap(json)).toList();
-    } else {
+      if (response.statusCode == 200) {
+        List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => MentalHealthContent.fromMap(json)).toList();
+      } else {
+        print(
+            "Error fetching content: ${response.statusCode} - ${response.reasonPhrase}");
+        throw Exception('Failed to load content: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print("Exception in fetchContent: $e");
       throw Exception('Failed to load content');
-    }
-  }
-
-  Future<MentalHealthContent> createContent(String title, String description) async {
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'title': title, 'description': description}),
-    );
-
-    if (response.statusCode == 201) {
-      return MentalHealthContent.fromMap(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to create content');
-    }
-  }
-
-  Future<void> updateContent(MentalHealthContent content) async {
-    final response = await http.put(
-      Uri.parse('$apiUrl/${content.id}/'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(content.toMap()),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update content');
-    }
-  }
-
-  Future<void> deleteContent(int id) async {
-    final response = await http.delete(Uri.parse('$apiUrl/$id/'));
-
-    if (response.statusCode != 204) {
-      throw Exception('Failed to delete content');
     }
   }
 }

@@ -10,8 +10,6 @@ ThemeData calmSpaceTheme() {
       onSecondary: Colors.white, // Text on secondary color
       error: Color(0xFFD32F2F), // Soft red for error
       onError: Colors.white,
-      background: Color(0xFFFFF8E1), // Light orange-peach for background
-      onBackground: Colors.black,
       surface: Color(0xFFFFF3E0), // Softer surface color for cards, dialogs
       onSurface: Colors.black,
     ),
@@ -28,14 +26,14 @@ ThemeData calmSpaceTheme() {
         color: Colors.black.withOpacity(0.7),
         fontFamily: 'OpenSans', // Smooth font for body text
       ),
-      labelLarge: TextStyle(
+      labelLarge: const TextStyle(
         fontSize: 18.0,
         fontWeight: FontWeight.w600,
         color: Colors.white,
       ),
     ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFFF3B8B5), // Soft pink
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFFF3B8B5), // Soft pink
       foregroundColor: Colors.white,
       elevation: 2.0, // Small shadow for a calm effect
       centerTitle: true, // Centered title for balance
@@ -69,8 +67,8 @@ ThemeData calmSpaceTheme() {
       color: Color(0xFFF3B8B5), // Use primary color for icons
       size: 24.0, // Default icon size
     ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: const Color(0xFFF3B8B5), // Floating action button in soft pink
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: Color(0xFFF3B8B5), // Floating action button in soft pink
       foregroundColor: Colors.white, // White icon on the FAB
     ),
     useMaterial3: true, // Enable Material 3 features

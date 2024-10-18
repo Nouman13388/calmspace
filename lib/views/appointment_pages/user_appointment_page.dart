@@ -30,7 +30,7 @@ class _UserAppointmentPageState extends State<UserAppointmentPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("User Appointments"),
+        title: const Text("User Appointments"),
         centerTitle: true,
       ),
       body: Column(
@@ -51,7 +51,7 @@ class _UserAppointmentPageState extends State<UserAppointmentPage> {
           Expanded(
             child: Obx(() {
               List<Appointment> filteredAppointments = _controller.appointments
-                  .where((appointment) => appointment?.user == widget.userName)
+                  .where((appointment) => appointment.user == widget.userName)
                   .toList();
 
               return ListView.builder(

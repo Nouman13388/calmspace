@@ -6,6 +6,8 @@ import '../../controllers/google_map_controller.dart'; // Adjust the import path
 class GoogleMapScreen extends StatelessWidget {
   final MyGoogleMapController _controller = Get.put(MyGoogleMapController());
 
+  GoogleMapScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

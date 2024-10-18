@@ -7,15 +7,15 @@ class ForgotPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController _authController = Get.put(AuthController());
-    final TextEditingController _emailController = TextEditingController();
-    final Rx<ScreenState> _currentState = ScreenState.Forgot.obs; // Observable state
+    final AuthController authController = Get.put(AuthController());
+    final TextEditingController emailController = TextEditingController();
+    final Rx<ScreenState> currentState = ScreenState.Forgot.obs; // Observable state
 
     return Scaffold(
       appBar: AppBar(
-        title: Obx(() => Text(_currentState.value == ScreenState.Forgot ? 'Forgot Password' : 'Congratulations')),
+        title: Obx(() => Text(currentState.value == ScreenState.Forgot ? 'Forgot Password' : 'Congratulations')),
       ),
-      body: Obx(() => _buildScreen(_currentState.value, _emailController, _authController, _currentState)),
+      body: Obx(() => _buildScreen(currentState.value, emailController, authController, currentState)),
     );
   }
 
