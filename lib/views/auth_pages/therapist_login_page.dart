@@ -20,11 +20,11 @@ class TherapistLoginPage extends StatelessWidget {
     _rememberMe.value = prefs.getBool('rememberMe') ?? false;
   }
 
-  void _loginUser() async {
+  void _loginTherapist() async {
     _isLoading.value = true;
     try {
       final SharedPreferences prefs = Get.find<SharedPreferences>();
-      await _authController.authenticateUser(
+      await _authController.authenticateTherapist(
         _emailController.text,
         _passwordController.text,
         prefs,
@@ -86,7 +86,7 @@ class TherapistLoginPage extends StatelessWidget {
           children: [
             SizedBox(height: MediaQuery.of(context).size.height * 0.1),
             Text(
-              'Login to your Account',
+              'Login to Your Therapist Account',
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
@@ -116,7 +116,7 @@ class TherapistLoginPage extends StatelessWidget {
                         child: Text(
                           'Remember Me',
                           style: Theme.of(context).textTheme.titleMedium,
-                          overflow: TextOverflow.ellipsis, // Prevent overflow
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -130,7 +130,7 @@ class TherapistLoginPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Obx(() => ElevatedButton(
-              onPressed: _isLoading.value ? null : _loginUser,
+              onPressed: _isLoading.value ? null : _loginTherapist,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -170,7 +170,7 @@ class TherapistLoginPage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             GestureDetector(
-              onTap: () => Get.toNamed('/signup'),
+              onTap: () => Get.toNamed('/therapist-signup'),
               child: Text(
                 "Don't have an account? Sign up",
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.blue),

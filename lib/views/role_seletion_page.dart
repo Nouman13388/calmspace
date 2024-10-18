@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-// Import Therapist Login Page
 
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({super.key});
@@ -33,13 +32,13 @@ class RoleSelectionPage extends StatelessWidget {
                     context,
                     Icons.person,
                     'User',
-                        () => Get.toNamed('/user-login'), // Updated route to match '/user-login'
+                    () => Get.toNamed('/user-login'), // Updated route to match '/user-login'
                   ),
                   _buildFeatureCard(
                     context,
                     Icons.local_hospital,
                     'Therapist',
-                        () => Get.toNamed('/therapist-login'), // Ensure this route matches the defined route
+                    () => Get.toNamed('/therapist-login'), // Ensure this route matches the defined route
                   ),
                 ],
               ),

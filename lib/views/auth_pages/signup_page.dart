@@ -79,6 +79,9 @@ class SignUpPage extends StatelessWidget {
       Get.snackbar('Success', 'Account created successfully!'); // Success message
       Get.back(); // Navigate back on success
     } catch (e) {
+      // Print the error to the console for debugging
+      print('Sign Up Error: $e');
+      // Show error message to the user
       Get.snackbar('Error', authController.mapFirebaseAuthExceptionMessage(e.toString())); // Show error
     } finally {
       authController.isLoading.value = false; // Stop loading

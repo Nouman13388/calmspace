@@ -8,8 +8,7 @@ class ContentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ContentController contentController =
-        Get.put(ContentController()); // Initialize the controller
+    final ContentController contentController = Get.put(ContentController()); // Initialize the controller
 
     return Scaffold(
       appBar: AppBar(
@@ -29,6 +28,14 @@ class ContentPage extends StatelessWidget {
           itemCount: contentController.contentList.length,
           itemBuilder: (context, index) {
             final content = contentController.contentList[index];
+
+            // Handle null safety for content fields
+            final name = content.name ?? 'No Title';
+            final description = content.description ?? 'No description available.';
+            final lastReviewed = content.lastReviewed?.join(', ') ?? 'No review information available.';
+            final relatedLinks = content.relatedLinks ?? [];
+            final hasParts = content.hasParts ?? [];
+
             return Card(
               margin: const EdgeInsets.all(8.0),
               elevation: 4,
@@ -41,7 +48,7 @@ class ContentPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      content.name,
+                      name,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -49,7 +56,7 @@ class ContentPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      content.description,
+                      description,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
@@ -57,7 +64,7 @@ class ContentPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Last Reviewed: ${content.lastReviewed.join(', ')}',
+                      'Last Reviewed: $lastReviewed',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
@@ -88,6 +95,13 @@ class ContentPage extends StatelessWidget {
 
   // Method to show detailed information in a modal
   void _showDetails(BuildContext context, MentalHealthContent content) {
+    // Handle null safety for content fields
+    final name = content.name ?? 'No Title';
+    final description = content.description ?? 'No description available.';
+    final lastReviewed = content.lastReviewed?.join(', ') ?? 'No review information available.';
+    final relatedLinks = content.relatedLinks ?? [];
+    final hasParts = content.hasParts ?? [];
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -99,7 +113,7 @@ class ContentPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  content.name,
+                  name,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -107,7 +121,7 @@ class ContentPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  content.description,
+                  description,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey[800],
@@ -122,7 +136,7 @@ class ContentPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(content.lastReviewed.join(', ')),
+                Text(lastReviewed),
                 const SizedBox(height: 16),
                 const Text(
                   'Related Links:',
@@ -132,13 +146,18 @@ class ContentPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...content.relatedLinks.map((link) => Padding(
+                ...relatedLinks.map((link) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Text(
-                        link,
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Handle link tapping (open in a browser or WebView)
+                        },
+                        child: Text(
+                          link,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
                     )),
@@ -151,10 +170,10 @@ class ContentPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...content.hasParts.map((part) => Padding(
+                ...hasParts.map((part) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       child: Text(
-                        part.text,
+                        part.text!,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[700],

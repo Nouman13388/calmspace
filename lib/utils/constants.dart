@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AppConstants {
+class AppConstant {
   // Colors
   static const Color primaryColor = Color(0xFFF3B8B5); // Soft pink
   static const Color secondaryColor = Color(0xFFFFE0B2); // Light peach
