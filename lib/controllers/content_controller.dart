@@ -1,13 +1,12 @@
 import 'package:get/get.dart';
-import '../models/mental_health_content_model.dart';
+import '../models/content.dart';
 import '../services/content_service.dart';
 
 class ContentController extends GetxController {
   var contentList = <MentalHealthContent>[].obs; // Observable for content list
   var isLoading = false.obs; // Observable for loading state
 
-  final ContentService contentService =
-      Get.put(ContentService()); // Instance of ContentService
+  final ContentService contentService = Get.put(ContentService());
 
   @override
   void onInit() {
@@ -15,15 +14,15 @@ class ContentController extends GetxController {
     fetchContent(); // Fetch content when controller is initialized
   }
 
-  // Method to fetch content from ArticleUrl
   Future<void> fetchContent() async {
     try {
       isLoading(true); // Start loading
-      contentList.value = await contentService
-          .fetchContentFromArticle(); // Fetch data from ArticleUrl
+      final articles = await contentService.fetchContentFromArticle(); // Fetch articles
+      contentList.value = articles; // Update content list
+      print('Fetched ${contentList.length} articles'); // Debug output
     } catch (e) {
       Get.snackbar("Error", e.toString());
-      print("Error fetching content: $e"); // Log error to the terminal
+      print("Error fetching content: $e"); // Log error
     } finally {
       isLoading(false); // Stop loading
     }

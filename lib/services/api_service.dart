@@ -1,7 +1,7 @@
 // services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/mental_health_content_model.dart';
+import '../models/content.dart';
 
 class ApiService {
   final String apiUrl = "https://api.nhs.uk/mental-health?api-version=1.0";
