@@ -1,13 +1,13 @@
-import 'message_model.dart'; // Ensure this import exists
+import 'message_model.dart';
 
 class ChatThread {
-  final String userName;
   final String roomName;
-  List<Message> messages;
+  final String userName; // Add this line
+  final List<Message> messages;
 
   ChatThread({
-    required this.userName,
     required this.roomName,
-    List<Message>? messages,
-  }) : messages = messages ?? [];
+    required this.userName, // Initialize this in the constructor
+    this.messages = const [],
+  });
 }

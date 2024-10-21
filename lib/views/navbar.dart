@@ -17,9 +17,9 @@ class CustomNavBar extends StatelessWidget {
         title: 'Home',
       ),
       const TabData(
-        key: Key('Map'),
-        iconData: Icons.map,
-        title: 'Map',
+        key: Key('Dashboard'),
+        iconData: Icons.dashboard,
+        title: 'Dashboard',
       ),
       const TabData(
         key: Key('Browse'),

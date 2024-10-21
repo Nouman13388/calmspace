@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/therapist_chat_controller.dart';
-import 'chat_page.dart';
+import '../../controllers/chat_controller.dart';
+import 'chat_thread_view.dart';
 
 class TherapistChatPage extends StatelessWidget {
-  final TherapistChatController therapistChatController =
-      Get.put(TherapistChatController());
+  final TherapistChatController therapistChatController = Get.put(TherapistChatController());
 
   @override
   Widget build(BuildContext context) {

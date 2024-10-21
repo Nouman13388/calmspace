@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../controllers/appointment_controller.dart';
-import '../../models/appointment_model.dart';
-
+import '../../models/dashboard_model.dart';
 
 class TherapistAppointmentPage extends StatefulWidget {
   final String therapistName;
@@ -51,7 +50,7 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
           Expanded(
             child: Obx(() {
               List<Appointment> filteredAppointments = _controller.appointments
-                  .where((appointment) => appointment.therapist == widget.therapistName)
+                  .where((appointment) => appointment.status == "Upcoming" && appointment.therapist == widget.therapistName)
                   .toList();
 
               return ListView.builder(
@@ -77,7 +76,7 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
           color: appointment.status == "Upcoming" ? Colors.blue : Colors.green,
         ),
         title: Text(
-          "${appointment.user} at ${appointment.date.hour}:${appointment.date.minute}",
+          "${appointment.user} at ${DateTime.parse(appointment.startTime).hour}:${DateTime.parse(appointment.startTime).minute}",
         ),
         subtitle: Text("Status: ${appointment.status}"),
         trailing: appointment.status == "Upcoming"

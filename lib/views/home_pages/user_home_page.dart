@@ -1,4 +1,5 @@
 import 'package:calmspace/content_page.dart';
+import 'package:calmspace/views/dashboard_pages/dashboard_view.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
 import 'package:calmspace/views/navbar.dart';
@@ -143,14 +144,14 @@ class _UserHomePageState extends State<UserHomePage> {
                   onTap: () => Get.toNamed('/user-chat'),
                 ),
                 FeatureCardData(
-                  icon: Icons.calendar_today,
-                  title: 'Appointments',
-                  onTap: () => Get.toNamed('/user-appointment'),
+                  icon: Icons.map,
+                  title: 'Map',
+                  onTap: () => Get.toNamed('/map'),
                 ),
                 // Add more feature cards as needed
               ],
             ),
-            GoogleMapScreen(),
+            DashboardView(),
             const ContentPage(),
             const UserProfilePage(),
           ],
@@ -173,30 +174,22 @@ class _UserHomePageState extends State<UserHomePage> {
             _buildDrawerItem(
               title: 'Notification Preferences',
               icon: Icons.notifications,
-              onTap: () {
-                // Add navigation to Notification Preferences
-              },
+                onTap: () => Get.toNamed('/notification-preferences'),
             ),
             _buildDrawerItem(
               title: 'News Preferences',
               icon: Icons.article,
-              onTap: () {
-                // Add navigation to News Preferences
-              },
+              onTap: () => Get.toNamed('/news-preferences'),
             ),
             _buildDrawerItem(
               title: 'Privacy Policy',
               icon: Icons.privacy_tip,
-              onTap: () {
-                // Add navigation to Privacy Policy
-              },
+              onTap: () => Get.toNamed('/privacy-policy'),
             ),
             _buildDrawerItem(
               title: 'Terms of Service',
               icon: Icons.description,
-              onTap: () {
-                // Add navigation to Terms of Service
-              },
+              onTap: () => Get.toNamed('/terms-of-service'),
             ),
             const Divider(),
             _buildDrawerItem(

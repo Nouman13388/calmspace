@@ -1,33 +1,30 @@
-// services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/content.dart';
+import '../constants/app_constants.dart';
+import '../models/dashboard_model.dart';
 
 class ApiService {
-  final String apiUrl = "https://api.nhs.uk/mental-health?api-version=1.0";
+  Future<List<HealthData>> fetchHealthData() async {
+    final response = await http.get(Uri.parse(AppConstants.healthDataUrl));
 
-  Future<List<MentalHealthContent>> fetchContent() async {
-    try {
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: {
-          'Ocp-Apim-Subscription-Key':
-              'ba52539dd260499198a6c9ee97bef2b1', // Your Primary Key
-          'Content-Type': 'application/json',
-        },
-      );
+    if (response.statusCode == 200) {
+      List<dynamic> jsonData = json.decode(response.body);
+      print("Fetched Health Data: $jsonData");
+      return jsonData.map((data) => HealthData.fromMap(data)).toList();
+    } else {
+      throw Exception('Failed to load health data');
+    }
+  }
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
-        return data.map((json) => MentalHealthContent.fromMap(json)).toList();
-      } else {
-        print(
-            "Error fetching content: ${response.statusCode} - ${response.reasonPhrase}");
-        throw Exception('Failed to load content: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      print("Exception in fetchContent: $e");
-      throw Exception('Failed to load content');
+  Future<List<Appointment>> fetchAppointments(String role, String name) async {
+    final response = await http.get(Uri.parse('${AppConstants.appointmentsUrl}$role/$name'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonData = json.decode(response.body);
+      print("Fetched Appointments: $jsonData");
+      return jsonData.map((data) => Appointment.fromJson(data)).toList(); // Use fromJson for consistency
+    } else {
+      throw Exception('Failed to load appointments');
     }
   }
 }

@@ -1,15 +1,16 @@
 import 'package:get/get.dart';
-import '../models/appointment_model.dart';
 import 'package:http/http.dart' as http; // For future API calls
 import 'dart:convert'; // For JSON encoding/decoding
+import '../constants/app_constants.dart';
+import '../models/dashboard_model.dart';
 
 class AppointmentController extends GetxController {
   RxList<Appointment> appointments = <Appointment>[].obs;
 
-  // Simulating fetching data from an API (Django backend)
+  // Fetching data from the API (Django backend)
   Future<void> fetchAppointments(String role, String name) async {
-    // Replace with your API endpoint
-    var url = Uri.parse('https://your-django-api.com/appointments/$role/$name');
+    // Using the AppConstants for the base URL
+    var url = Uri.parse('${AppConstants.appointmentsUrl}$role/$name');
     try {
       var response = await http.get(url);
       if (response.statusCode == 200) {
@@ -27,16 +28,20 @@ class AppointmentController extends GetxController {
   void addSampleAppointments() {
     appointments.value = [
       Appointment(
-        user: "User A",
-        therapist: "Therapist 1",
-        date: DateTime.now().add(const Duration(hours: 2)),
+        id: 1, // Sample ID
         status: "Upcoming",
+        startTime: DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
+        endTime: DateTime.now().add(const Duration(hours: 3)).toIso8601String(),
+        therapist: 'Sample Therapist', // Provide a sample therapist name
+        user: 'Sample User', // Provide a sample user name
       ),
       Appointment(
-        user: "User B",
-        therapist: "Therapist 2",
-        date: DateTime.now().subtract(const Duration(hours: 1)),
+        id: 2, // Sample ID
         status: "Completed",
+        startTime: DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
+        endTime: DateTime.now().toIso8601String(),
+        therapist: 'Sample Therapist', // Provide a sample therapist name
+        user: 'Sample User', // Provide a sample user name
       ),
     ];
   }
@@ -46,10 +51,12 @@ class AppointmentController extends GetxController {
     int index = appointments.indexOf(appointment);
     if (index != -1) {
       appointments[index] = Appointment(
-        user: appointment.user,
-        therapist: appointment.therapist,
-        date: appointment.date,
+        id: appointment.id, // Retaining the original ID
         status: "Completed",
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        therapist: appointment.therapist, // Retain the therapist
+        user: appointment.user, // Retain the user
       );
     }
   }

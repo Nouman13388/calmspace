@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/user_chat_controller.dart';
-import 'chat_page.dart';
+import '../../controllers/chat_controller.dart';
+import 'chat_thread_view.dart';
 
 class UserChatPage extends StatelessWidget {
   final UserChatController userChatController = Get.put(UserChatController());
