@@ -26,26 +26,27 @@ class Appointment {
   final String status;
   final String startTime;
   final String endTime;
-  final String therapist; // Add this field
-  final String user; // Add this field
+  final int therapist; // Changed to int
+  final int user; // Changed to int
 
   Appointment({
     required this.id,
     required this.status,
     required this.startTime,
     required this.endTime,
-    required this.therapist, // Include in constructor
-    required this.user, // Include in constructor
+    required this.therapist, // Include as int
+    required this.user, // Include as int
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
     return Appointment(
       id: json['id'],
-      status: json['status'],
-      startTime: json['start_time'],
-      endTime: json['end_time'],
-      therapist: json['therapist'], // Assuming your API returns this
-      user: json['user'], // Assuming your API returns this
+      status: json['status'] ?? 'unknown', // Default value if null
+      startTime: json['start_time'] ?? '', // Default value if null
+      endTime: json['end_time'] ?? '', // Default value if null
+      therapist: json['professional'] ?? 0, // Changed to get the correct field and handle null
+      user: json['user'] ?? 0, // Changed to handle null
     );
   }
 }
+

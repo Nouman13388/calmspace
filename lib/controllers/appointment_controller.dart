@@ -18,6 +18,8 @@ class AppointmentController extends GetxController {
         appointments.value = (data as List)
             .map((json) => Appointment.fromJson(json))
             .toList();
+      } else {
+        print('Failed to fetch appointments: ${response.statusCode}');
       }
     } catch (e) {
       print("Error fetching appointments: $e");
@@ -32,16 +34,16 @@ class AppointmentController extends GetxController {
         status: "Upcoming",
         startTime: DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
         endTime: DateTime.now().add(const Duration(hours: 3)).toIso8601String(),
-        therapist: 'Sample Therapist', // Provide a sample therapist name
-        user: 'Sample User', // Provide a sample user name
+        therapist: 1, // Sample therapist ID
+        user: 1, // Sample user ID
       ),
       Appointment(
         id: 2, // Sample ID
         status: "Completed",
         startTime: DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
         endTime: DateTime.now().toIso8601String(),
-        therapist: 'Sample Therapist', // Provide a sample therapist name
-        user: 'Sample User', // Provide a sample user name
+        therapist: 1, // Sample therapist ID
+        user: 1, // Sample user ID
       ),
     ];
   }

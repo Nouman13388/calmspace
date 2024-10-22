@@ -1,21 +1,15 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user_model.dart';
+import '../services/auth_services.dart';
 
 class AuthController extends GetxController {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthServices _authServices = AuthServices();
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final RxBool isLoading = false.obs;
 
-  final String apiUrl = 'http://127.0.0.1:8000/api'; // Your API endpoint
-
-  // Sign up with email and password
-  Future<UserCredential?> signUpWithEmail(
-      String email, String password, String confirmPassword) async {
+  Future<UserCredential?> signUpWithEmail(String fullName, String email, String password, String confirmPassword, bool isTherapist) async {
     if (password != confirmPassword) {
       throw FirebaseAuthException(
           code: 'passwords-not-match', message: 'The passwords do not match.');
@@ -25,127 +19,45 @@ class AuthController extends GetxController {
       isLoading.value = true;
 
       // Check if user or therapist exists in the database
-      bool userExists = await _checkUserExists(email);
-      print('user is $userExists');
-
-
-      if (userExists ) {
+      bool userExists = await _authServices.checkUserExists(email);
+      if (userExists) {
         throw Exception('A user or therapist with this email already exists.');
       }
 
-      // Store user data in the database first
-      String userId = await _storeUserData(email,password);
-      print('user Id is $userId');
+      // Create Firebase user
+      UserCredential userCredential = await _authServices.signUpWithEmail(fullName, email, password);
 
-
-      // If storing user data was successful, create a Firebase user
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
-
-      print('user issad  $userCredential');
+      // Store user data in the database
+      if (isTherapist) {
+        String specialization = "Default Specialization";
+        String bio = "Default Bio";
+        await _authServices.storeTherapistData(email, fullName, specialization, bio);
+      } else {
+        await _authServices.storeUserData(fullName, email, password);
+      }
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw e; // Rethrow the exception to handle it elsewhere
+      rethrow; // Rethrow the exception to handle it elsewhere
     } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
       return null;
     } finally {
       isLoading.value = false;
     }
   }
 
-Future<String> _storeUserData(String email,String password) async {
-    final response = await http.post(
-      Uri.parse('$apiUrl/users/'), // Ensure there's a trailing slash here
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email,
-        'name': 'Your Name Here',
-        'password':password // Ensure you include all required fields
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      final userData = jsonDecode(response.body);
-      EndUser user = EndUser.fromJson(userData); // Ensure this line is correct
-      return user.email!;
-    } else {
-      // Log the response for debugging
-      print("Error: ${response.statusCode} - ${response.body}");
-      throw Exception('Failed to store user data');
-    }
-}
-
-  // Store therapist data in the database
-  Future<void> _storeTherapistData(String email, String specialty) async {
-    final response = await http.post(
-      Uri.parse('$apiUrl/professionals/'), // Ensure there's a trailing slash here
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email,
-        'specialty': specialty, // Include other required fields as necessary
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      final therapistData = jsonDecode(response.body);
-      EndUser therapist = EndUser.fromJson(therapistData); // Ensure this line is correct
-    } else {
-      throw Exception('Failed to store therapist data');
-    }
-  }
-
-  // Authenticate user with email and password
-  Future<UserCredential?> authenticateUser(
-      String email, String password, SharedPreferences prefs, bool rememberMe) async {
+  Future<UserCredential?> authenticateTherapist(String email, String password, SharedPreferences prefs, bool rememberMe) async {
     try {
       isLoading.value = true;
 
-      // Check if user data exists in the database first
-      bool userExists = await _checkUserExists(email);
-      if (!userExists) {
-        throw Exception('User data not found in the database.');
-      }
+      UserCredential userCredential = await _authServices.signInWithEmail(email, password);
 
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
-
-      if (rememberMe) {
-        prefs.setString('email', email);
-        prefs.setString('password', password);
-        prefs.setBool('rememberMe', rememberMe);
-      }
-
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw e; // Rethrow to handle it elsewhere
-    } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
-      return null;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  // Authenticate therapist with email and password
-  Future<UserCredential?> authenticateTherapist(
-      String email, String password, SharedPreferences prefs, bool rememberMe) async {
-    try {
-      isLoading.value = true;
-
-      // Check if therapist data exists in the database first
-      bool therapistExists = await _checkTherapistExists(email);
+      bool therapistExists = await _authServices.checkUserExists(email);
       if (!therapistExists) {
-        throw Exception('Therapist data not found in the database.');
+        Get.snackbar('Error', 'No therapist account found for this email.', snackPosition: SnackPosition.BOTTOM);
+        return null;
       }
-
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
 
       if (rememberMe) {
         prefs.setString('email', email);
@@ -155,76 +67,63 @@ Future<String> _storeUserData(String email,String password) async {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw e; // Rethrow to handle it elsewhere
+      throw e;
     } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
       return null;
     } finally {
       isLoading.value = false;
     }
   }
 
-// Check if user exists in the database
-Future<bool> _checkUserExists(String email) async {
-  final response = await http.get(Uri.parse('$apiUrl/users/?email=$email'));
-
-  // Log the response for debugging
-  print("Check User Exists Response: ${response.body}");
-
-  if (response.statusCode == 200) {
-    // If the response body contains user data, the user exists
-    List<dynamic> users = jsonDecode(response.body); // Assuming the response is a list
-    return users.isNotEmpty; // Return true if there's at least one user
-  } else if (response.statusCode == 404) {
-    return false; // User not found
-  } else {
-    throw Exception('Error checking user existence: ${response.body}');
-  }
-}
-
-// Check if therapist exists in the database
-Future<bool> _checkTherapistExists(String email) async {
-  final response = await http.get(Uri.parse('$apiUrl/professionals/?email=$email'));
-
-  // Log the response for debugging
-  print("Check Therapist Exists Response: ${response.body}");
-
-  if (response.statusCode == 200) {
-    // If the response body contains therapist data, the therapist exists
-    List<dynamic> therapists = jsonDecode(response.body); // Assuming the response is a list
-    return therapists.isNotEmpty; // Return true if there's at least one therapist
-  } else if (response.statusCode == 404) {
-    return false; // Therapist not found
-  } else {
-    throw Exception('Error checking therapist existence: ${response.body}');
-  }
-}
-
-  // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
       isLoading.value = true;
-      print("Attempting Google Sign-In...");
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google sign-in aborted');
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        ),
-      );
-
-      print("Google Sign-In successful: ${userCredential.user?.email}");
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      UserCredential userCredential = await _authServices.signInWithGoogle(googleAuth.accessToken, googleAuth.idToken);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw e; // Rethrow to handle it elsewhere
+      rethrow;
+    } catch (e) {
+      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      isLoading.value = true;
+      await _authServices.sendPasswordResetEmail(email);
+      Get.snackbar('Success', 'Password reset email sent.', snackPosition: SnackPosition.BOTTOM);
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.message ?? 'An error occurred.'), snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> logout(SharedPreferences prefs) async {
+    try {
+      isLoading.value = true;
+      await _authServices.logout();
+
+      if (await _googleSignIn.isSignedIn()) {
+        await _googleSignIn.signOut();
+      }
+
+      await prefs.clear();
+      Get.snackbar('Logged Out', 'You have successfully logged out.', snackPosition: SnackPosition.BOTTOM);
+      Get.offAllNamed('/role-selection');
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to log out. Please try again later.', snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }
@@ -244,38 +143,16 @@ Future<bool> _checkTherapistExists(String email) async {
     return 'An unknown error occurred.';
   }
 
-  // Forgot password
-  Future<void> forgotPassword(String email) async {
+  Future<void> authenticateUser(String email, String password, SharedPreferences prefs, bool rememberMe) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw e; // Rethrow to handle it elsewhere
-    }
-  }
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
 
-  // Logout user and clear session
-  Future<void> logout(SharedPreferences prefs) async {
-    try {
-      isLoading.value = true;
-
-      await _auth.signOut();
-
-      if (await _googleSignIn.isSignedIn()) {
-        await _googleSignIn.signOut();
+      if (rememberMe) {
+        await prefs.setString('email', email);
+        await prefs.setString('password', password);
       }
-
-      await prefs.clear();
-
-      Get.snackbar('Logged Out', 'You have successfully logged out.',
-          snackPosition: SnackPosition.BOTTOM);
-
-      Get.offAllNamed('/role-selection');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to log out. Please try again later.',
-          snackPosition: SnackPosition.BOTTOM);
-      throw e; // Rethrow to handle it elsewhere
-    } finally {
-      isLoading.value = false;
+      throw Exception('Authentication failed: ${e.toString()}');
     }
   }
 }

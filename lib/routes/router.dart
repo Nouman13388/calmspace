@@ -1,11 +1,12 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../views/auth_pages/therapist_signup_page.dart';
+import '../views/auth_pages/user_signup_page.dart';
 import '../views/chat_pages/therapist_chat_page.dart';
 import '../views/chat_pages/user_chat_page.dart';
 import '../views/appointment_pages/therapist_appointment_page.dart';
 import '../views/appointment_pages/user_appointment_page.dart';
 import '../views/auth_pages/forgot_page.dart';
-import '../views/auth_pages/signup_page.dart';
 import '../views/auth_pages/therapist_login_page.dart';
 import '../views/auth_pages/user_login_page.dart';
 import '../views/drawer_item_page.dart';
@@ -25,14 +26,15 @@ class AppRouter {
     GetPage(name: '/role-selection', page: () => const RoleSelectionPage()),
     GetPage(name: '/user-login', page: () => UserLoginPage()),
     GetPage(name: '/therapist-login', page: () => TherapistLoginPage()),
-    GetPage(name: '/signup', page: () => SignUpPage()),
+    GetPage(name: '/user-signup', page: () => UserSignUpPage()),
+    GetPage(name: '/therapist-signup', page: () => TherapistSignUpPage()),
     GetPage(name: '/forgot-password', page: () => const ForgotPage()),
     GetPage(name: '/user-homepage', page: () => const UserHomePage()),
     GetPage(name: '/therapist-homepage', page: () => const TherapistHomePage()),
     GetPage(name: '/user-settings', page: () => const UserSettingsPage()),
     GetPage(name: '/therapist-settings', page: () => const TherapistSettingsPage()),
-    GetPage(name: '/therapist-chat', page: () => TherapistChatPage()),
-    GetPage(name: '/user-chat', page: () => UserChatPage()),
+    // GetPage(name: '/therapist-chat', page: () => TherapistChatPage()),
+    // GetPage(name: '/user-chat', page: () => UserChatPage()),
     GetPage(name: '/user-profile', page: () => const UserProfilePage()),
     GetPage(name: '/therapist-profile', page: () => const TherapistProfilePage()),
     GetPage(name: '/map', page: () => GoogleMapScreen()),

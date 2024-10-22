@@ -170,7 +170,7 @@ class UserLoginPage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             GestureDetector(
-              onTap: () => Get.toNamed('/signup'),
+              onTap: () => Get.toNamed('/user-signup'),
               child: Text(
                 "Don't have an account? Sign up",
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.blue),

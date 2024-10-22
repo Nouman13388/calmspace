@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/dashboard_model.dart';
 import '../services/api_service.dart';
@@ -18,7 +19,13 @@ class DashboardController extends GetxController {
     try {
       healthDataList.value = await apiService.fetchHealthData();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load health data: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to load health data: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent, // Change to orange accent
+        colorText: Colors.white, // Optional: change text color for better contrast
+      );
     }
   }
 
@@ -26,9 +33,16 @@ class DashboardController extends GetxController {
     try {
       appointmentList.value = await apiService.fetchAppointments(role, name);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load appointments: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to load appointments: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent, // Change to orange accent
+        colorText: Colors.white, // Optional: change text color for better contrast
+      );
     }
   }
+
 
   List<List<double>> getChartData() {
     return healthDataList.map((data) {

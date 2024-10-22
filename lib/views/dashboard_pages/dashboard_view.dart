@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../models/dashboard_model.dart';
+import 'package:intl/intl.dart'; // For date formatting
+
 
 class DashboardView extends StatelessWidget {
   final DashboardController controller = Get.put(DashboardController());
@@ -140,6 +142,12 @@ class DashboardView extends StatelessWidget {
   }
 
   Widget _buildUpcomingAppointment(Appointment appointment) {
+    // Method to format date strings
+    String formatDate(String dateTime) {
+      DateTime parsedDate = DateTime.parse(dateTime);
+      return DateFormat.yMMMMd().add_jm().format(parsedDate);
+    }
+
     return Card(
       margin: const EdgeInsets.all(8.0),
       elevation: 4,
@@ -156,9 +164,16 @@ class DashboardView extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text("Status: ${appointment.status}", style: const TextStyle(fontSize: 14)),
-            Text("Start Time: ${appointment.startTime}", style: const TextStyle(fontSize: 14)),
-            Text("End Time: ${appointment.endTime}", style: const TextStyle(fontSize: 14)),
+            ListTile(
+              title: Text("Status: ${appointment.status}"),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Start Time: ${formatDate(appointment.startTime)}"),
+                  Text("End Time: ${formatDate(appointment.endTime)}"),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {

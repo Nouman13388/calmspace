@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 
-class SignUpPage extends StatelessWidget {
-  SignUpPage({super.key});
+class UserSignUpPage extends StatelessWidget {
+  UserSignUpPage({super.key});
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _fullNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    // Use GetX to manage the controller and SharedPreferences
     final AuthController authController = Get.put(AuthController());
 
     return Scaffold(
@@ -20,7 +20,7 @@ class SignUpPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Sign Up'),
+        title: const Text('User Sign Up'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -28,10 +28,15 @@ class SignUpPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              'Sign Up for an Account',
+              'Sign Up for a User Account',
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
+            TextField(
+              controller: _fullNameController,
+              decoration: _inputDecoration('Full Name'),
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: _emailController,
               decoration: _inputDecoration('Email'),
@@ -49,42 +54,42 @@ class SignUpPage extends StatelessWidget {
               decoration: _inputDecoration('Confirm Password'),
             ),
             const SizedBox(height: 30),
-            // Using Obx to observe the loading state
-            Obx(() {
-              return ElevatedButton(
-                onPressed: authController.isLoading.value
-                    ? null
-                    : () => _registerUser(authController, _emailController.text, _passwordController.text, _confirmPasswordController.text),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+            ElevatedButton(
+              onPressed: authController.isLoading.value
+                  ? null
+                  : () => _registerUser(authController),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: authController.isLoading.value
-                    ? const CircularProgressIndicator()
-                    : const Text('Sign Up'),
-              );
-            }),
+              ),
+              child: authController.isLoading.value
+                  ? const CircularProgressIndicator()
+                  : const Text('Sign Up'),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _registerUser(AuthController authController, String email, String password, String confirmPassword) async {
-    authController.isLoading.value = true; // Start loading
+  Future<void> _registerUser(AuthController authController) async {
+    authController.isLoading.value = true;
     try {
-      await authController.signUpWithEmail(email, password, confirmPassword);
-      Get.snackbar('Success', 'Account created successfully!'); // Success message
-      Get.back(); // Navigate back on success
+      await authController.signUpWithEmail(
+        _fullNameController.text,
+        _emailController.text,
+        _passwordController.text,
+        _confirmPasswordController.text,
+        false, // isTherapist
+      );
+      Get.snackbar('Success', 'User account created successfully!');
+      Get.back(); // Navigate back only after a successful signup
     } catch (e) {
-      // Print the error to the console for debugging
-      print('Sign Up Error: $e');
-      // Show error message to the user
-      Get.snackbar('Error', authController.mapFirebaseAuthExceptionMessage(e.toString())); // Show error
+      Get.snackbar('Error', authController.mapFirebaseAuthExceptionMessage(e.toString()));
     } finally {
-      authController.isLoading.value = false; // Stop loading
+      authController.isLoading.value = false;
     }
   }
 

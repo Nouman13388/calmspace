@@ -9,5 +9,4 @@ class AppConstants {
   static const String appointmentsUrl = '${baseUrl}appointments/';
   static const String clinicsUrl = '${baseUrl}clinics/';
   static const String articlesUrl = '${baseUrl}articles/';
-  static const String websocketUrl = 'ws://16.171.9.75:8000/chat/'; // Example WebSocket URL
 }

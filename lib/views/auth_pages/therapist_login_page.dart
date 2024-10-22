@@ -13,8 +13,8 @@ class TherapistLoginPage extends StatelessWidget {
 
   TherapistLoginPage({super.key});
 
-  void _initSharedPreferences() {
-    final SharedPreferences prefs = Get.find<SharedPreferences>();
+  void _initSharedPreferences() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     _emailController.text = prefs.getString('email') ?? '';
     _passwordController.text = prefs.getString('password') ?? '';
     _rememberMe.value = prefs.getBool('rememberMe') ?? false;
@@ -23,7 +23,7 @@ class TherapistLoginPage extends StatelessWidget {
   void _loginTherapist() async {
     _isLoading.value = true;
     try {
-      final SharedPreferences prefs = Get.find<SharedPreferences>();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       await _authController.authenticateTherapist(
         _emailController.text,
         _passwordController.text,
@@ -42,30 +42,30 @@ class TherapistLoginPage extends StatelessWidget {
     }
   }
 
-  void _signInWithGoogle() async {
-    _isLoading.value = true;
-    try {
-      await _authController.signInWithGoogle();
-      Get.snackbar(
-        'Logged in',
-        'Welcome back!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
-      );
-      Get.offAllNamed('/therapist-homepage');
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        _authController.mapFirebaseAuthExceptionMessage(e.toString()),
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      _isLoading.value = false;
-    }
-  }
+  // void _signInWithGoogle() async {
+  //   _isLoading.value = true;
+  //   try {
+  //     await _authController.signInWithGoogle();
+  //     Get.snackbar(
+  //       'Logged in',
+  //       'Welcome back!',
+  //       snackPosition: SnackPosition.BOTTOM,
+  //       backgroundColor: Colors.orangeAccent,
+  //       colorText: Colors.white,
+  //       duration: const Duration(seconds: 2),
+  //       margin: const EdgeInsets.all(16),
+  //     );
+  //     Get.offAllNamed('/therapist-homepage');
+  //   } catch (e) {
+  //     Get.snackbar(
+  //       'Error',
+  //       _authController.mapFirebaseAuthExceptionMessage(e.toString()),
+  //       snackPosition: SnackPosition.BOTTOM,
+  //     );
+  //   } finally {
+  //     _isLoading.value = false;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -141,33 +141,33 @@ class TherapistLoginPage extends StatelessWidget {
                   ? const CircularProgressIndicator()
                   : const Text('Sign in'),
             )),
-            const SizedBox(height: 20),
-            Text(
-              'Or sign in with',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: _isLoading.value ? null : _signInWithGoogle,
-                  child: Container(
-                    width: 80,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      FontAwesomeIcons.google,
-                      size: 40,
-                      color: Colors.red,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // const SizedBox(height: 20),
+            // Text(
+            //   'Or sign in with',
+            //   style: Theme.of(context).textTheme.titleMedium,
+            // ),
+            // const SizedBox(height: 20),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     InkWell(
+            //       onTap: _isLoading.value ? null : _signInWithGoogle,
+            //       child: Container(
+            //         width: 80,
+            //         height: 70,
+            //         decoration: BoxDecoration(
+            //           color: Colors.grey[200],
+            //           borderRadius: BorderRadius.circular(10),
+            //         ),
+            //         child: const Icon(
+            //           FontAwesomeIcons.google,
+            //           size: 40,
+            //           color: Colors.red,
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
             const SizedBox(height: 40),
             GestureDetector(
               onTap: () => Get.toNamed('/therapist-signup'),
