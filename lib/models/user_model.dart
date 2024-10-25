@@ -1,19 +1,22 @@
 class EndUser {
+  int? id; // Add this field
   String? email; // Nullable
   String? name; // Nullable
   DateTime? createdAt; // Nullable
   DateTime? updatedAt; // Nullable
 
   EndUser({
+    this.id,
     this.email,
     this.name,
     this.createdAt,
     this.updatedAt,
   });
 
-  // Factory constructor to create a User from JSON
+  // Factory constructor to create a EndUser from JSON
   factory EndUser.fromJson(Map<String, dynamic> json) {
     return EndUser(
+      id: json['id'], // Parse id from JSON
       email: json['email'],
       name: json['name'],
       createdAt: json['created_at'] != null
@@ -25,9 +28,10 @@ class EndUser {
     );
   }
 
-  // Method to convert User to JSON
+  // Method to convert EndUser to JSON
   Map<String, dynamic> toJson() {
     return {
+      'id': id, // Include id in JSON
       'email': email,
       'name': name,
       'created_at': createdAt?.toIso8601String(),

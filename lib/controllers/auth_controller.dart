@@ -9,7 +9,8 @@ class AuthController extends GetxController {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final RxBool isLoading = false.obs;
 
-  Future<UserCredential?> signUpWithEmail(String fullName, String email, String password, String confirmPassword, bool isTherapist) async {
+  Future<UserCredential?> signUpWithEmail(
+      String fullName, String email, String password, String confirmPassword, bool isTherapist) async {
     if (password != confirmPassword) {
       throw FirebaseAuthException(
           code: 'passwords-not-match', message: 'The passwords do not match.');
@@ -33,7 +34,7 @@ class AuthController extends GetxController {
         String bio = "Default Bio";
         await _authServices.storeTherapistData(email, fullName, specialization, bio);
       } else {
-        await _authServices.storeUserData(fullName, email, password);
+        await _authServices.storeUserData(fullName, email, password); // Include password
       }
 
       return userCredential;
@@ -86,7 +87,19 @@ class AuthController extends GetxController {
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      UserCredential userCredential = await _authServices.signInWithGoogle(googleAuth.accessToken, googleAuth.idToken);
+      UserCredential? userCredential = await _authServices.signInWithGoogle();
+
+      // Fetch user data from backend
+      final userEmail = googleUser.email;
+      final userName = googleUser.displayName;
+
+      // Check if user exists in backend
+      bool userExists = await _authServices.checkUserExists(userEmail);
+      if (!userExists) {
+        // Store user data if they don't exist
+        await _authServices.storeUserData(userName!, userEmail, 'defaultPassword123'); // Placeholder password
+      }
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       rethrow;

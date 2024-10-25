@@ -9,4 +9,6 @@ class AppConstants {
   static const String appointmentsUrl = '${baseUrl}appointments/';
   static const String clinicsUrl = '${baseUrl}clinics/';
   static const String articlesUrl = '${baseUrl}articles/';
+  static const String userUrl = '${baseUrl}users/get_by_email/';
+
 }

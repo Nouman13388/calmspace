@@ -23,8 +23,8 @@ class DashboardController extends GetxController {
         'Error',
         'Failed to load health data: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent, // Change to orange accent
-        colorText: Colors.white, // Optional: change text color for better contrast
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
       );
     }
   }
@@ -37,12 +37,11 @@ class DashboardController extends GetxController {
         'Error',
         'Failed to load appointments: $e',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent, // Change to orange accent
-        colorText: Colors.white, // Optional: change text color for better contrast
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
       );
     }
   }
-
 
   List<List<double>> getChartData() {
     return healthDataList.map((data) {
