@@ -12,11 +12,37 @@ class GoogleMapScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Map'),
+        title: const Text(
+          'Clinic Locator',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+        elevation: 5,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              // Add action for info button
+              Get.snackbar(
+                'Info',
+                'Find clinics near your location.',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.orangeAccent,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 3),
+              );
+            },
+          ),
+        ],
       ),
       body: Obx(() {
         if (_controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+            ),
+          );
         }
         return GoogleMap(
           initialCameraPosition: const CameraPosition(
@@ -27,7 +53,6 @@ class GoogleMapScreen extends StatelessWidget {
           myLocationEnabled: true,
           myLocationButtonEnabled: true,
           onMapCreated: (GoogleMapController mapController) {
-            // Animate the camera to the user's location if available
             if (_controller.currentLocation.isNotEmpty) {
               mapController.animateCamera(
                 CameraUpdate.newCameraPosition(
@@ -44,6 +69,25 @@ class GoogleMapScreen extends StatelessWidget {
           },
         );
       }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // Refresh current location and clinic data
+          await _controller.getCurrentLocation();
+          await _controller.fetchClinics(); // Fetch clinics after refreshing location
+          Get.snackbar(
+            'Data Refreshed',
+            'Your location and clinics have been refreshed.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orangeAccent,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+
+          );
+        },
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.refresh),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat, // Moved to left side
     );
   }
 }

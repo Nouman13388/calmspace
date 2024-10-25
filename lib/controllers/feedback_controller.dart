@@ -1,6 +1,6 @@
 import 'package:calmspace/services/api_service.dart'; // Ensure this import is correct
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/feedback_model.dart';
 
 class FeedbackController extends GetxController {
@@ -21,13 +21,19 @@ class FeedbackController extends GetxController {
       final feedbackData = await ApiService().getAllFeedback();
       if (feedbackData != null) {
         feedbackList.value = feedbackData;
-        print(feedbackData);
+        if (kDebugMode) {
+          print(feedbackData);
+        }
       } else {
-        print('Failed to load feedback');
+        if (kDebugMode) {
+          print('Failed to load feedback');
+        }
         Get.snackbar('Error', 'Failed to load feedback');
       }
     } catch (e) {
-      print('Something went wrong: $e');
+      if (kDebugMode) {
+        print('Something went wrong: $e');
+      }
       Get.snackbar('Error', 'Something went wrong: $e');
     } finally {
       isLoading.value = false;
@@ -53,20 +59,29 @@ class FeedbackController extends GetxController {
       // Call ApiService to submit feedback
       final success = await ApiService().submitFeedback(feedback);
       if (success) {
-        print('Feedback submitted successfully');
+        if (kDebugMode) {
+          print('Feedback submitted successfully');
+        }
         Get.snackbar('Success', 'Feedback submitted successfully!');
         feedbackMessage.value = '';
         fetchAllFeedback(); // Refresh the list to include the new feedback
       } else {
-        print('Failed to submit feedback');
+        if (kDebugMode) {
+          print('Failed to submit feedback');
+        }
         Get.snackbar('Error', 'Failed to submit feedback');
       }
     } catch (e) {
-      print('Something went wrong: $e');
+      if (kDebugMode) {
+        print('Something went wrong: $e');
+      }
       Get.snackbar('Error', 'Something went wrong: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
+  void refreshFeedbackList() {
+    fetchAllFeedback(); // Call the method to refresh the feedback list
+  }
 }

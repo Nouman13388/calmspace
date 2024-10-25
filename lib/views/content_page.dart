@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/content_controller.dart';
-import '../models/content.dart';
+import '../../controllers/content_controller.dart';
+import '../../models/content.dart';
 
 class ContentPage extends StatelessWidget {
   const ContentPage({super.key});

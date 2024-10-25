@@ -1,4 +1,4 @@
-import 'package:calmspace/content_page.dart';
+import 'package:calmspace/views/content_page.dart';
 import 'package:calmspace/views/dashboard_pages/dashboard_view.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
@@ -144,13 +144,13 @@ class _UserHomePageState extends State<UserHomePage> {
                   onTap: () => Get.toNamed('/chat-page'),
                 ),
                 FeatureCardData(
-                  icon: Icons.map,
-                  title: 'Map',
+                  icon: Icons.location_on,
+                  title: 'Clinic Locator',
                   onTap: () => Get.toNamed('/map'),
                 ),
                 FeatureCardData(
                   icon: Icons.feedback,
-                  title: 'FeedBcak',
+                  title: 'Feedback',
                   onTap: () => Get.toNamed('/feedback'),
                 ),
                 // Add more feature cards as needed

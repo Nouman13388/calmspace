@@ -21,7 +21,7 @@ import '../views/profile_pages/user_profile_page.dart';
 import '../views/role_seletion_page.dart';
 import '../views/setiings_pages/therapist_settings_page.dart';
 import '../views/setiings_pages/user_settings_page.dart';
-import '../content_page.dart';
+import '../views/content_page.dart';
 
 class AppRouter {
   static List<GetPage> routes = [
