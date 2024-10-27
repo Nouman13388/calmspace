@@ -1,3 +1,4 @@
+import 'package:calmspace/views/assessment_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +48,7 @@ class AppRouter {
     GetPage(name: '/terms-of-service', page: () => TermsOfServicePage()), // New route
     GetPage(name: '/chat-page', page: () => ChatPage()), // New route
     GetPage(name: '/feedback', page: () => FeedbackPage()), // New route
+    GetPage(name: '/assessment', page: () => AssessmentPage()), // New route
   ];
 
   static void initRoutes(SharedPreferences prefs) {

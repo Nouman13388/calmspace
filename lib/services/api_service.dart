@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get_connect/connect.dart';
 import 'package:http/http.dart' as http;
 import '../constants/app_constants.dart';
+import '../models/assessment_question.dart';
 import '../models/content.dart';
 import '../models/dashboard_model.dart';
 import '../models/feedback_model.dart';
@@ -99,6 +100,18 @@ class ApiService {
     }
     return false;
   }
+  Future<List<AssessmentQuestion>> fetchAssessmentQuestions() async {
+    final response = await http.get(Uri.parse(AppConstants.assessmentsUrl));
+
+    if (response.statusCode == 200) {
+      // Assuming your backend returns a list of assessment questions in JSON format
+      List<dynamic> jsonData = json.decode(response.body);
+      return jsonData.map((item) => AssessmentQuestion.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load assessment questions');
+    }
+  }
+
 }
 
 
@@ -172,4 +185,4 @@ class ContentService extends GetConnect {
     return false;
   }
 
-  }
+}

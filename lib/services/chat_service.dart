@@ -19,7 +19,8 @@ class ChatService {
       if (response.statusCode == 200) {
         print("Message sent successfully: ${response.body}");
       } else {
-        print("Failed to send message: ${response.statusCode} ${response.body}");
+        print(
+            "Failed to send message: ${response.statusCode} ${response.body}");
       }
     } on SocketException catch (e) {
       print("Network error: $e");

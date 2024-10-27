@@ -147,6 +147,10 @@ class _UserHomePageState extends State<UserHomePage> {
                   icon: Icons.location_on,
                   title: 'Clinic Locator',
                   onTap: () => Get.toNamed('/map'),
+                ), FeatureCardData(
+                  icon: Icons.assessment,
+                  title: 'Assessments',
+                  onTap: () => Get.toNamed('/assessment'),
                 ),
                 FeatureCardData(
                   icon: Icons.feedback,
