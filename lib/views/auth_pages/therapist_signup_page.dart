@@ -1,17 +1,53 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../controllers/auth_controller.dart';
 
-class TherapistSignUpPage extends StatelessWidget {
-  TherapistSignUpPage({super.key});
+class TherapistSignUpPage extends StatefulWidget {
+  const TherapistSignUpPage({super.key});
 
+  @override
+  _TherapistSignUpPageState createState() => _TherapistSignUpPageState();
+}
+
+class _TherapistSignUpPageState extends State<TherapistSignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _specializationController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
+
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _emailController.text = prefs.getString('email') ?? '';
+      _passwordController.text = prefs.getString('password') ?? '';
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+    });
+  }
+
+  Future<void> _savePreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      prefs.setString('email', _emailController.text);
+      prefs.setString('password', _passwordController.text);
+      prefs.setBool('rememberMe', true);
+    } else {
+      prefs.remove('email');
+      prefs.remove('password');
+      prefs.setBool('rememberMe', false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +102,28 @@ class TherapistSignUpPage extends StatelessWidget {
               controller: _bioController,
               decoration: _inputDecoration('Bio'),
             ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Checkbox(
+                  value: _rememberMe,
+                  onChanged: (value) {
+                    setState(() {
+                      _rememberMe = value!;
+                    });
+                  },
+                ),
+                const Text('Remember Me'),
+              ],
+            ),
             const SizedBox(height: 30),
-            ElevatedButton(
+            Obx(() => ElevatedButton(
               onPressed: authController.isLoading.value
                   ? null
-                  : () => _registerTherapist(authController),
+                  : () async {
+                await _registerTherapist(authController);
+                await _savePreferences();
+              },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -78,9 +131,9 @@ class TherapistSignUpPage extends StatelessWidget {
                 ),
               ),
               child: authController.isLoading.value
-                  ? const CircularProgressIndicator()
+                  ? const CircularProgressIndicator(color: Colors.white)
                   : const Text('Sign Up'),
-            ),
+            )),
           ],
         ),
       ),
@@ -90,6 +143,12 @@ class TherapistSignUpPage extends StatelessWidget {
   Future<void> _registerTherapist(AuthController authController) async {
     authController.isLoading.value = true;
     try {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        throw FirebaseAuthException(
+          code: 'password-mismatch',
+          message: 'Passwords do not match.',
+        );
+      }
       await authController.signUpWithEmail(
         _fullNameController.text,
         _emailController.text,
@@ -98,10 +157,20 @@ class TherapistSignUpPage extends StatelessWidget {
         true, // isTherapist
       );
 
-      // Navigate to the therapist-login route
-      Get.toNamed('/therapist-login', arguments: {'showSnackbar': true});
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Account created successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(16),
+      );
+
+      // Navigate to therapist login page after successful sign-up
+      Get.offNamed('/therapist-login', arguments: {'showSnackbar': true});
     } on FirebaseAuthException catch (firebaseError) {
-      // Handle Firebase-specific errors
       String message;
       switch (firebaseError.code) {
         case 'email-already-in-use':
@@ -112,6 +181,9 @@ class TherapistSignUpPage extends StatelessWidget {
           break;
         case 'invalid-email':
           message = 'The email address is not valid.';
+          break;
+        case 'password-mismatch':
+          message = firebaseError.message ?? 'Passwords do not match.';
           break;
         default:
           message = 'An error occurred. Please try again.';
@@ -139,7 +211,6 @@ class TherapistSignUpPage extends StatelessWidget {
       authController.isLoading.value = false;
     }
   }
-
 
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(

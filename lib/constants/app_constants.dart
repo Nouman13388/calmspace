@@ -1,5 +1,6 @@
 class AppConstants {
-  static const String baseUrl = 'http://16.171.9.75:8000/api/';
+  static const String baseUrl = 'http://50.19.24.133:8000/api/';
+  // static const String baseUrl = 'https://127.0.0.1:8000/api/';
   static const String usersUrl = '${baseUrl}users/';
   static const String profilesUrl = '${baseUrl}profiles/';
   static const String assessmentsUrl = '${baseUrl}assessments/';

@@ -25,6 +25,16 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
     _controller.fetchAppointments('therapist', widget.therapistName);
   }
 
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+    });
+
+    // Fetch appointments for the selected day
+    _controller.fetchAppointmentsForDate(widget.therapistName, selectedDay);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,18 +49,15 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
             firstDay: DateTime(2022),
             lastDay: DateTime(2030),
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
+            onDaySelected: _onDaySelected,
           ),
           const SizedBox(height: 10),
           Expanded(
             child: Obx(() {
               List<Appointment> filteredAppointments = _controller.appointments
-                  .where((appointment) => appointment.status == "Upcoming" && appointment.therapist == widget.therapistName)
+                  .where((appointment) =>
+              appointment.status == "Upcoming" &&
+                  appointment.therapist == widget.therapistName)
                   .toList();
 
               return ListView.builder(

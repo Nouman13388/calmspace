@@ -9,7 +9,6 @@ class AppointmentController extends GetxController {
 
   // Fetching data from the API (Django backend)
   Future<void> fetchAppointments(String role, String name) async {
-    // Using the AppConstants for the base URL
     var url = Uri.parse('${AppConstants.appointmentsUrl}$role/$name');
     try {
       var response = await http.get(url);
@@ -26,26 +25,24 @@ class AppointmentController extends GetxController {
     }
   }
 
-  // For local testing, simulating appointments
-  void addSampleAppointments() {
-    appointments.value = [
-      Appointment(
-        id: 1, // Sample ID
-        status: "Upcoming",
-        startTime: DateTime.now().add(const Duration(hours: 2)).toIso8601String(),
-        endTime: DateTime.now().add(const Duration(hours: 3)).toIso8601String(),
-        therapist: 1, // Sample therapist ID
-        user: 1, // Sample user ID
-      ),
-      Appointment(
-        id: 2, // Sample ID
-        status: "Completed",
-        startTime: DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
-        endTime: DateTime.now().toIso8601String(),
-        therapist: 1, // Sample therapist ID
-        user: 1, // Sample user ID
-      ),
-    ];
+  // Fetch appointments for a specific date
+  Future<void> fetchAppointmentsForDate(String therapistName, DateTime date) async {
+    var formattedDate = date.toIso8601String().split('T')[0]; // Format date to YYYY-MM-DD
+    var url = Uri.parse('${AppConstants.appointmentsUrl}date/$therapistName/$formattedDate'); // Adjust endpoint as needed
+
+    try {
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        appointments.value = (data as List)
+            .map((json) => Appointment.fromJson(json))
+            .toList();
+      } else {
+        print('Failed to fetch appointments for the date: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error fetching appointments for the date: $e");
+    }
   }
 
   // Mark appointment as completed

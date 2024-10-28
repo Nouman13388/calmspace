@@ -20,7 +20,6 @@ import '../views/map_pages/google_map_screen.dart';
 import '../views/profile_pages/therapist_profile_page.dart';
 import '../views/profile_pages/user_profile_page.dart';
 import '../views/role_seletion_page.dart';
-import '../views/setiings_pages/therapist_settings_page.dart';
 import '../views/setiings_pages/user_settings_page.dart';
 import '../views/content_page.dart';
 
@@ -35,7 +34,6 @@ class AppRouter {
     GetPage(name: '/user-homepage', page: () => const UserHomePage()),
     GetPage(name: '/therapist-homepage', page: () => const TherapistHomePage()),
     GetPage(name: '/user-settings', page: () => const UserSettingsPage()),
-    GetPage(name: '/therapist-settings', page: () => const TherapistSettingsPage()),
     GetPage(name: '/user-profile', page: () => const UserProfilePage()),
     GetPage(name: '/therapist-profile', page: () => const TherapistProfilePage()),
     GetPage(name: '/map', page: () => GoogleMapScreen()),
@@ -46,7 +44,7 @@ class AppRouter {
     GetPage(name: '/news-preferences', page: () => NewsPreferencesPage()), // New route
     GetPage(name: '/privacy-policy', page: () => PrivacyPolicyPage()), // New route
     GetPage(name: '/terms-of-service', page: () => TermsOfServicePage()), // New route
-    GetPage(name: '/chat-page', page: () => ChatPage()), // New route
+    GetPage(name: '/chat-page', page: () => const ChatPage()), // New route
     GetPage(name: '/feedback', page: () => FeedbackPage()), // New route
     GetPage(name: '/assessment', page: () => AssessmentPage()), // New route
   ];

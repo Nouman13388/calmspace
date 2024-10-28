@@ -175,12 +175,6 @@ class DashboardView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Get.toNamed('/appointments');
-              },
-              child: const Text("View All Appointments"),
-            ),
           ],
         ),
       ),

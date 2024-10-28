@@ -39,15 +39,15 @@ class AuthController extends GetxController {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      Get.snackbar('Error', e.message ?? 'An error occurred', snackPosition: SnackPosition.BOTTOM);
       rethrow; // Rethrow the exception to handle it elsewhere
     } catch (e) {
-      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
       return null;
     } finally {
       isLoading.value = false;
     }
   }
-
   Future<UserCredential?> authenticateTherapist(String email, String password, SharedPreferences prefs, bool rememberMe) async {
     try {
       isLoading.value = true;
@@ -68,7 +68,7 @@ class AuthController extends GetxController {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      throw e;
+      rethrow;
     } catch (e) {
       Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
       return null;

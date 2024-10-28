@@ -1,3 +1,5 @@
+import 'package:calmspace/views/appointment_pages/appointments_page.dart';
+import 'package:calmspace/views/content_page.dart';
 import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/profile_pages/therapist_profile_page.dart';
 import 'package:calmspace/views/navbar.dart';
@@ -8,7 +10,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import '../../controllers/auth_controller.dart';
-import '../setiings_pages/therapist_settings_page.dart';
 import 'home_page.dart';
 
 class TherapistHomePage extends StatefulWidget {
@@ -134,12 +135,12 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                 FeatureCardData(
                   icon: Icons.message,
                   title: 'Chat',
-                  onTap: () => Get.toNamed('/therapist-chat'),
+                  onTap: () => Get.toNamed('/chat-page'),
                 ),
               ],
             ),
             GoogleMapScreen(),
-            const TherapistSettingsPage(),
+            const ContentPage(),
             const TherapistProfilePage(),
           ],
         ),

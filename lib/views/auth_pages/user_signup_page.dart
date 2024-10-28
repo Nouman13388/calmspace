@@ -34,27 +34,27 @@ class UserSignUpPage extends StatelessWidget {
             const SizedBox(height: 30),
             TextField(
               controller: _fullNameController,
-              decoration: _inputDecoration('Full Name'),
+              decoration: _inputDecoration('Full Name', context),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _emailController,
-              decoration: _inputDecoration('Email'),
+              decoration: _inputDecoration('Email', context),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: _inputDecoration('Password'),
+              decoration: _inputDecoration('Password', context),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _confirmPasswordController,
               obscureText: true,
-              decoration: _inputDecoration('Confirm Password'),
+              decoration: _inputDecoration('Confirm Password', context),
             ),
             const SizedBox(height: 30),
-            ElevatedButton(
+            Obx(() => ElevatedButton(
               onPressed: authController.isLoading.value
                   ? null
                   : () => _registerUser(authController),
@@ -65,9 +65,9 @@ class UserSignUpPage extends StatelessWidget {
                 ),
               ),
               child: authController.isLoading.value
-                  ? const CircularProgressIndicator()
+                  ? const CircularProgressIndicator(color: Colors.white)
                   : const Text('Sign Up'),
-            ),
+            )),
           ],
         ),
       ),
@@ -84,16 +84,18 @@ class UserSignUpPage extends StatelessWidget {
         _confirmPasswordController.text,
         false, // isTherapist
       );
+
       Get.snackbar('Success', 'User account created successfully!');
-      Get.back(); // Navigate back only after a successful signup
+      // Navigate to login page after successful sign-up
+      Get.offNamed('/user-login'); // Navigate to UserLoginPage
     } catch (e) {
-      Get.snackbar('Error', authController.mapFirebaseAuthExceptionMessage(e.toString()));
+      Get.snackbar('Error', authController.mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
     } finally {
       authController.isLoading.value = false;
     }
   }
 
-  InputDecoration _inputDecoration(String hintText) {
+  InputDecoration _inputDecoration(String hintText, BuildContext context) {
     return InputDecoration(
       labelText: hintText,
       border: OutlineInputBorder(
@@ -104,7 +106,7 @@ class UserSignUpPage extends StatelessWidget {
       fillColor: Colors.grey[200],
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Theme.of(Get.context!).primaryColor),
+        borderSide: BorderSide(color: Theme.of(context).primaryColor),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );

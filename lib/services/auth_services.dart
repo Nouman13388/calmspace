@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:calmspace/services/api_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -79,15 +80,32 @@ class AuthServices {
     }
   }
 
+  Future<bool> checkTherapistExists(String email) async {
+    final response = await http.get(Uri.parse('${AppConstants.professionalsUrl}?email=$email'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> therapist = jsonDecode(response.body);
+      return therapist.isNotEmpty;
+    } else if (response.statusCode == 404) {
+      return false;
+    } else {
+      throw Exception('Error checking Therapist existence: ${response.body}');
+    }
+  }
+
   Future<UserCredential> signInWithEmail(String email, String password) async {
     UserCredential credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
 
     // Fetch user data from backend
     final userData = await ApiService().getUserByEmail(email);
     if (userData != null) {
-      print("Fetched user data from backend: ${userData.toJson()}");
+      if (kDebugMode) {
+        print("Fetched user data from backend: ${userData.toJson()}");
+      }
     } else {
-      print("Failed to fetch user data for $email");
+      if (kDebugMode) {
+        print("Failed to fetch user data for $email");
+      }
     }
 
     return credential;
