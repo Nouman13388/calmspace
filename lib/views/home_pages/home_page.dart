@@ -1,29 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../controllers/auth_controller.dart';
 
 class HomePage extends StatelessWidget {
-  final String greeting;
   final List<FeatureCardData> featureCards;
 
   const HomePage({
     super.key,
-    required this.greeting,
     required this.featureCards,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Initialize the AuthController using GetX dependency injection
+    final authController = Get.find<AuthController>();
+    print('AuthController initialized: ${authController.userData}'); // Print statement for AuthController
+    authController.printUserData();
+    print('-----------------------------------');
+    authController.loadUserData();
+    print('-----------------------------------');
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            greeting,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Obx(() {
+            // Use the greeting based on the user's name from AuthController
+            final userName = authController.userData.value?.name ?? 'Guest';
+            print('User data: ${authController.userData.value}'); // Print statement for user data
+            final greeting = 'Hello, $userName';
+            return Text(
+              greeting,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            );
+          }),
           const SizedBox(height: 10),
           const Text(
             'What would you like to do today?',
@@ -79,7 +93,6 @@ class HomePage extends StatelessWidget {
                 color: Colors.white,
               ),
               const SizedBox(height: 10),
-              // Using FittedBox to prevent text overflow
               FittedBox(
                 child: Text(
                   data.title,

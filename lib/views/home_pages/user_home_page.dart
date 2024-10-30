@@ -24,8 +24,7 @@ class _UserHomePageState extends State<UserHomePage> {
   final PageController _pageController = PageController();
   String currentLocation = "Fetching location...";
   final User? user = FirebaseAuth.instance.currentUser; // Get current user
-  final AuthController authController =
-      Get.put(AuthController()); // Initialize AuthController
+  final authController = Get.find<AuthController>();
 
   @override
   void initState() {
@@ -136,7 +135,6 @@ class _UserHomePageState extends State<UserHomePage> {
           physics: const NeverScrollableScrollPhysics(),
           children: [
             HomePage(
-              greeting: 'Hello, User!',
               featureCards: [
                 FeatureCardData(
                   icon: Icons.chat,

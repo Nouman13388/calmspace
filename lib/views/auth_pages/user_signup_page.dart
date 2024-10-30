@@ -12,7 +12,7 @@ class UserSignUpPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController authController = Get.put(AuthController());
+    final authController = Get.find<AuthController>();
 
     return Scaffold(
       appBar: AppBar(

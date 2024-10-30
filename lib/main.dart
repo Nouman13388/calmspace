@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'initialbinding/initialbinding.dart';
 import 'routes/router.dart'; // Your router file
 import 'firebase_options.dart'; // Firebase options
 import 'utils/themes.dart'; // Custom theme
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
       title: 'Calm Space',
       theme: calmSpaceTheme(), // Use the custom theme
       initialRoute: '/role-selection',
+      initialBinding: InitialBinding(),
       getPages: AppRouter.routes,
       debugShowCheckedModeBanner: false,
     );

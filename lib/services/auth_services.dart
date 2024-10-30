@@ -12,7 +12,28 @@ class AuthServices {
 
   // Loading state management
   bool isLoading = false;
+  final String baseUrl = 'http://127.0.0.1:8000/api/users';
 
+  // Fetch user by email
+  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    final url = Uri.parse('${AppConstants.usersUrl}get_by_email?email=$email');
+    // final url = Uri.parse('https://192.168.1.100:8000/api/users/get_by_email?email=$email');
+    try {
+      final response = await http.get(url);
+      print('---------------------------------------------');
+      print('response ${response.body}');
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else if (response.statusCode == 404) {
+        return null;
+      } else {
+        throw Exception('Failed to fetch user data');
+      }
+    } catch (e) {
+      print('Error fetching user by email: $e');
+      rethrow;
+    }
+  }
   Future<UserCredential> signUpWithEmail(String fullName, String email, String password) async {
     isLoading = true;
     try {

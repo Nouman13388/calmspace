@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class TherapistLoginPage extends StatelessWidget {
-  final AuthController _authController = Get.put(AuthController());
+  final _authController = Get.find<AuthController>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final RxBool _isLoading = false.obs;

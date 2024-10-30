@@ -23,7 +23,8 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
   String currentLocation = "Fetching location...";
-  final AuthController authController = Get.put(AuthController());
+  final authController = Get.find<AuthController>();
+
   User? user; // Firebase user
 
   @override
@@ -125,7 +126,6 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
           physics: const NeverScrollableScrollPhysics(),
           children: [
             HomePage(
-              greeting: 'Hello, Therapist!',
               featureCards: [
                 FeatureCardData(
                   icon: Icons.calendar_today,

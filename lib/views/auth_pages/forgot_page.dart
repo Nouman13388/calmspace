@@ -7,7 +7,7 @@ class ForgotPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController authController = Get.put(AuthController());
+    final authController = Get.find<AuthController>();
     final TextEditingController emailController = TextEditingController();
     final Rx<ScreenState> currentState = ScreenState.Forgot.obs; // Observable state
 
