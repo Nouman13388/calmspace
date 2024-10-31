@@ -160,7 +160,7 @@ class _UserHomePageState extends State<UserHomePage> {
             ),
             DashboardView(),
             const ContentPage(),
-            const UserProfilePage(),
+            UserProfilePage(),
           ],
         ),
       ),

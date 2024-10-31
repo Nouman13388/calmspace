@@ -141,7 +141,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
             ),
             GoogleMapScreen(),
             const ContentPage(),
-            const TherapistProfilePage(),
+            TherapistProfilePage(),
           ],
         ),
       ),

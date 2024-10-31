@@ -1,127 +1,86 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class TherapistProfilePage extends StatefulWidget {
-  const TherapistProfilePage({super.key});
+import '../../controllers/therapist_profile_controller.dart';
 
-  @override
-  _TherapistProfilePageState createState() => _TherapistProfilePageState();
-}
+class TherapistProfilePage extends StatelessWidget {
+  final TherapistProfileController controller = Get.put(TherapistProfileController());
 
-class _TherapistProfilePageState extends State<TherapistProfilePage> {
-  final _formKey = GlobalKey<FormState>();
-  bool _isEditing = false;
-  late User _user;
-  String _username = '';
-  String _email = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserDetails();
-  }
-
-  void _fetchUserDetails() {
-    _user = FirebaseAuth.instance.currentUser!;
-    setState(() {
-      _username = _user.displayName ?? 'No Name';
-      _email = _user.email ?? 'No Email';
-    });
-  }
-
-  void _toggleEditing() {
-    setState(() {
-      _isEditing = !_isEditing;
-    });
-  }
-
-  void _saveProfile() async {
-    try {
-      if (_formKey.currentState!.validate()) {
-        _formKey.currentState!.save();
-
-        // Update user details
-        await _user.updateDisplayName(_username);
-        await _user.updateEmail(_email);
-
-        setState(() {
-          _isEditing = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully!')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update profile: $e')),
-      );
-    }
-  }
+  TherapistProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Profile'),
-        leading: _isEditing
+        leading: Obx(() => controller.isEditing.value
             ? IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: _toggleEditing,
+          onPressed: controller.toggleEditing,
         )
-            : null,
+            : Container()),
         actions: [
-          if (!_isEditing)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: _toggleEditing,
-            ),
+          Obx(() => !controller.isEditing.value
+              ? IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: controller.toggleEditing,
+          )
+              : Container()),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 100,
-                  backgroundImage: NetworkImage(
-                      _user.photoURL ?? 'https://via.placeholder.com/150'),
+        child: Obx(() {
+          return Form(
+            child: ListView(
+              children: [
+                Center(
+                  child: GestureDetector(
+                    onTap: controller.isEditing.value ? controller.pickImage : null,
+                    child: CircleAvatar(
+                      radius: 100,
+                      backgroundImage: controller.photoUrl.value.startsWith('http')
+                          ? NetworkImage(controller.photoUrl.value)
+                          : FileImage(File(controller.photoUrl.value)),
+                      child: controller.photoUrl.value.isEmpty && controller.isEditing.value
+                          ? const Icon(Icons.camera_alt, color: Colors.white)
+                          : null,
+                    )
+
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16.0),
-              if (_isEditing)
-                TextFormField(
+                const SizedBox(height: 16.0),
+                controller.isEditing.value
+                    ? TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Username',
                     border: OutlineInputBorder(),
                   ),
-                  initialValue: _username,
+                  initialValue: controller.username.value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a username';
                     }
                     return null;
                   },
-                  onSaved: (value) {
-                    _username = value!;
+                  onChanged: (value) {
+                    controller.username.value = value;
                   },
                 )
-              else
-                ListTile(
+                    : ListTile(
                   title: const Text('Username'),
-                  subtitle: Text(_username),
+                  subtitle: Text(controller.username.value),
                 ),
-              const SizedBox(height: 16.0),
-              if (_isEditing)
-                TextFormField(
+                const SizedBox(height: 16.0),
+                controller.isEditing.value
+                    ? TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
-                  initialValue: _email,
+                  initialValue: controller.email.value,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter an email';
@@ -131,24 +90,24 @@ class _TherapistProfilePageState extends State<TherapistProfilePage> {
                     }
                     return null;
                   },
-                  onSaved: (value) {
-                    _email = value!;
+                  onChanged: (value) {
+                    controller.email.value = value;
                   },
                 )
-              else
-                ListTile(
+                    : ListTile(
                   title: const Text('Email'),
-                  subtitle: Text(_email),
+                  subtitle: Text(controller.email.value),
                 ),
-              const SizedBox(height: 16.0),
-              if (_isEditing)
-                ElevatedButton(
-                  onPressed: _saveProfile,
-                  child: const Text('Save Profile'),
-                ),
-            ],
-          ),
-        ),
+                const SizedBox(height: 16.0),
+                if (controller.isEditing.value)
+                  ElevatedButton(
+                    onPressed: controller.saveProfile,
+                    child: const Text('Save Profile'),
+                  ),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }

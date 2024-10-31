@@ -85,14 +85,24 @@ class UserSignUpPage extends StatelessWidget {
         false, // isTherapist
       );
 
-      Get.snackbar('Success', 'User account created successfully!');
+      _showSnackbar('Success', 'User account created successfully!', Colors.orangeAccent);
       // Navigate to login page after successful sign-up
       Get.offNamed('/user-login'); // Navigate to UserLoginPage
     } catch (e) {
-      Get.snackbar('Error', authController.mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
+      print(authController.mapFirebaseAuthExceptionMessage(e.toString()));
     } finally {
       authController.isLoading.value = false;
     }
+  }
+
+  void _showSnackbar(String title, String message, Color color) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: color,
+      colorText: Colors.white,
+    );
   }
 
   InputDecoration _inputDecoration(String hintText, BuildContext context) {

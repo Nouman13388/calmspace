@@ -1,19 +1,32 @@
+import 'dart:io';
+
 import 'package:calmspace/controllers/auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class TherapistLoginPage extends StatelessWidget {
+class TherapistLoginPage extends StatefulWidget {
+  TherapistLoginPage({super.key});
+
+  @override
+  _TherapistLoginPageState createState() => _TherapistLoginPageState();
+}
+
+class _TherapistLoginPageState extends State<TherapistLoginPage> {
   final _authController = Get.find<AuthController>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final RxBool _isLoading = false.obs;
   final RxBool _rememberMe = false.obs;
 
-  TherapistLoginPage({super.key});
+  @override
+  void initState() {
+    super.initState();
+    _initSharedPreferences();
+  }
 
-  void _initSharedPreferences() async {
+  Future<void> _initSharedPreferences() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     _emailController.text = prefs.getString('email') ?? '';
     _passwordController.text = prefs.getString('password') ?? '';
@@ -32,9 +45,14 @@ class TherapistLoginPage extends StatelessWidget {
       );
       Get.offAllNamed('/therapist-homepage');
     } catch (e) {
+      print('Caught error: $e');
+
+      String errorMessage = _getErrorMessage(e);
       Get.snackbar(
         'Error',
-        _authController.mapFirebaseAuthExceptionMessage(e.toString()),
+        errorMessage,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -42,35 +60,31 @@ class TherapistLoginPage extends StatelessWidget {
     }
   }
 
-  // void _signInWithGoogle() async {
-  //   _isLoading.value = true;
-  //   try {
-  //     await _authController.signInWithGoogle();
-  //     Get.snackbar(
-  //       'Logged in',
-  //       'Welcome back!',
-  //       snackPosition: SnackPosition.BOTTOM,
-  //       backgroundColor: Colors.orangeAccent,
-  //       colorText: Colors.white,
-  //       duration: const Duration(seconds: 2),
-  //       margin: const EdgeInsets.all(16),
-  //     );
-  //     Get.offAllNamed('/therapist-homepage');
-  //   } catch (e) {
-  //     Get.snackbar(
-  //       'Error',
-  //       _authController.mapFirebaseAuthExceptionMessage(e.toString()),
-  //       snackPosition: SnackPosition.BOTTOM,
-  //     );
-  //   } finally {
-  //     _isLoading.value = false;
-  //   }
-  // }
+  String _getErrorMessage(dynamic error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'user-not-found':
+          return 'No user found for that email.';
+        case 'wrong-password':
+          return 'Incorrect password. Please try again.';
+        case 'user-disabled':
+          return 'This user has been disabled.';
+        case 'too-many-requests':
+          return 'Too many login attempts. Please try again later.';
+        case 'invalid-credential':
+          return 'Invalid Credentials. Please check your email and password.';
+        default:
+          return 'An unknown error occurred. Please try again.';
+      }
+    } else if (error is SocketException) {
+      return 'Network error. Please check your connection.';
+    } else {
+      return 'An unexpected error occurred. Please try again later.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    _initSharedPreferences();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Therapist Login'),
@@ -141,33 +155,6 @@ class TherapistLoginPage extends StatelessWidget {
                   ? const CircularProgressIndicator()
                   : const Text('Sign in'),
             )),
-            // const SizedBox(height: 20),
-            // Text(
-            //   'Or sign in with',
-            //   style: Theme.of(context).textTheme.titleMedium,
-            // ),
-            // const SizedBox(height: 20),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     InkWell(
-            //       onTap: _isLoading.value ? null : _signInWithGoogle,
-            //       child: Container(
-            //         width: 80,
-            //         height: 70,
-            //         decoration: BoxDecoration(
-            //           color: Colors.grey[200],
-            //           borderRadius: BorderRadius.circular(10),
-            //         ),
-            //         child: const Icon(
-            //           FontAwesomeIcons.google,
-            //           size: 40,
-            //           color: Colors.red,
-            //         ),
-            //       ),
-            //     ),
-            //   ],
-            // ),
             const SizedBox(height: 40),
             GestureDetector(
               onTap: () => Get.toNamed('/therapist-signup'),

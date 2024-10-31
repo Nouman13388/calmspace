@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +18,6 @@ class AuthController extends GetxController {
     print("AuthController initialized");
   }
 
-  // Rename the method to avoid conflict
   void onControllerDeleted() {
     print("AuthController removed");
     super.onDelete(); // This calls the parent class's onDelete method
@@ -25,7 +25,6 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    // Call your renamed method here instead
     onControllerDeleted();
   }
 
@@ -41,22 +40,28 @@ class AuthController extends GetxController {
         userData.value = EndUser.fromJson(fetchedData);
         print('User data value ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
 
-        // Store user data in shared preferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', userData.value!.email!);
         await prefs.setString('user_name', userData.value!.name!);
         await prefs.setInt('user_id', userData.value!.id!);
 
-        Get.snackbar('User Found', 'User data fetched successfully', snackPosition: SnackPosition.BOTTOM);
+        print('User data fetched successfully!');
       } else {
-        Get.snackbar('User Not Found', 'No user found with this email.', snackPosition: SnackPosition.BOTTOM);
+        print('No user found with this email.'); // Changed snackbar to print
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to fetch user data: ${e.toString()}', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Oops!',
+        'Something went wrong while fetching user data: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
+
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('user_email');
@@ -77,16 +82,13 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
-      // Check if user or therapist exists in the database
       bool userExists = await _authServices.checkUserExists(email);
       if (userExists) {
         throw Exception('A user or therapist with this email already exists.');
       }
 
-      // Create Firebase user
       UserCredential userCredential = await _authServices.signUpWithEmail(fullName, email, password);
 
-      // Store user data in the database and set global user data
       if (isTherapist) {
         String specialization = "Default Specialization";
         String bio = "Default Bio";
@@ -94,14 +96,27 @@ class AuthController extends GetxController {
       } else {
         await _authServices.storeUserData(fullName, email, password);
       }
-      userData.value = EndUser(email: email, name: fullName); // Populate EndUser model
+      userData.value = EndUser(email: email, name: fullName);
 
+      Get.snackbar(
+        'Welcome!',
+        'You have successfully signed up, ${fullName}!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      Get.snackbar('Error', e.message ?? 'An error occurred', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Registration Failed',
+        e.message ?? 'An unexpected error occurred during registration.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
       rethrow;
     } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      print('Something went wrong: ${e.toString()}');
       return null;
     } finally {
       isLoading.value = false;
@@ -114,10 +129,16 @@ class AuthController extends GetxController {
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
+        Get.snackbar(
+          'Sign-In Aborted',
+          'Please try signing in with Google again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orangeAccent,
+          colorText: Colors.white,
+        );
         throw Exception('Google sign-in aborted');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       UserCredential? userCredential = await _authServices.signInWithGoogle();
 
       final userEmail = googleUser.email;
@@ -128,14 +149,20 @@ class AuthController extends GetxController {
         await _authServices.storeUserData(userName!, userEmail, 'defaultPassword123');
       }
 
-      // Populate EndUser model
       await fetchUserByEmail(userEmail);
 
+      Get.snackbar(
+        'Welcome Back!',
+        'You are now signed in as $userName!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       rethrow;
     } catch (e) {
-      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
+      print('An error occurred while signing in: ${mapFirebaseAuthExceptionMessage(e.toString())}');
       return null;
     } finally {
       isLoading.value = false;
@@ -152,16 +179,27 @@ class AuthController extends GetxController {
       }
 
       await prefs.clear();
-      userData.value = null; // Clear EndUser data on logout
-      Get.snackbar('Logged Out', 'You have successfully logged out.', snackPosition: SnackPosition.BOTTOM);
+      userData.value = null;
+      Get.snackbar(
+        'Goodbye!',
+        'You have successfully logged out. Come back soon!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
       Get.offAllNamed('/role-selection');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to log out. Please try again later.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Error',
+        'Failed to log out. Please try again later.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
-
 
   Future<UserCredential?> authenticateTherapist(String email, String password, SharedPreferences prefs, bool rememberMe) async {
     try {
@@ -171,7 +209,13 @@ class AuthController extends GetxController {
 
       bool therapistExists = await _authServices.checkUserExists(email);
       if (!therapistExists) {
-        Get.snackbar('Error', 'No therapist account found for this email.', snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          'Not Found',
+          'No therapist account found for this email. Please check and try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orangeAccent,
+          colorText: Colors.white,
+        );
         return null;
       }
 
@@ -181,11 +225,18 @@ class AuthController extends GetxController {
         prefs.setBool('rememberMe', rememberMe);
       }
 
+      Get.snackbar(
+        'Welcome!',
+        'You have successfully signed in!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
       return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       rethrow;
     } catch (e) {
-      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.toString()), snackPosition: SnackPosition.BOTTOM);
+      print('An error occurred during authentication: ${mapFirebaseAuthExceptionMessage(e.toString())}');
       return null;
     } finally {
       isLoading.value = false;
@@ -196,32 +247,41 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authServices.sendPasswordResetEmail(email);
-      Get.snackbar('Success', 'Password reset email sent.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Success!',
+        'A password reset email has been sent to $email. Please check your inbox!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
     } on FirebaseAuthException catch (e) {
-      Get.snackbar('Error', mapFirebaseAuthExceptionMessage(e.message ?? 'An error occurred.'), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Error',
+        'Failed to send password reset email: ${mapFirebaseAuthExceptionMessage(e.message ?? 'An error occurred.')}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
-
-  // Map Firebase Auth exception messages to user-friendly messages
   String mapFirebaseAuthExceptionMessage(String errorMessage) {
     if (errorMessage.contains('wrong-password')) {
-      return 'The password is incorrect.';
+      return 'The password is incorrect. Please try again.';
     } else if (errorMessage.contains('user-not-found')) {
-      return 'No user found with this email.';
+      return 'No user found with this email. Please check your entry.';
     } else if (errorMessage.contains('invalid-email')) {
-      return 'The email address is not valid.';
+      return 'The email address is not valid. Please enter a valid email.';
     } else if (errorMessage.contains('user-disabled')) {
-      return 'This user has been disabled.';
+      return 'This account has been disabled. Please contact support.';
     }
-    return 'An unknown error occurred.';
+    return 'An unknown error occurred. Please try again later.';
   }
 
   Future<void> authenticateUser(String email, String password, SharedPreferences prefs, bool rememberMe) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
       await fetchUserByEmail(email);
       if (rememberMe) {
         await prefs.setString('email', email);
@@ -231,6 +291,7 @@ class AuthController extends GetxController {
       throw Exception('Authentication failed: ${e.toString()}');
     }
   }
+
   void printUserData() {
     if (userData.value != null) {
       print('User Data:');

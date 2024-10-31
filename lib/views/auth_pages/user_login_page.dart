@@ -5,16 +5,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserLoginPage extends StatelessWidget {
-  final  _authController = Get.find<AuthController>();
+  final AuthController _authController = Get.find<AuthController>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final RxBool _isLoading = false.obs;
   final RxBool _rememberMe = false.obs;
 
-  UserLoginPage({super.key});
+  UserLoginPage({super.key}) {
+    _initSharedPreferences();
+  }
 
-  void _initSharedPreferences() {
-    final SharedPreferences prefs = Get.find<SharedPreferences>();
+  void _initSharedPreferences() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     _emailController.text = prefs.getString('email') ?? '';
     _passwordController.text = prefs.getString('password') ?? '';
     _rememberMe.value = prefs.getBool('rememberMe') ?? false;
@@ -23,7 +25,7 @@ class UserLoginPage extends StatelessWidget {
   void _loginUser() async {
     _isLoading.value = true;
     try {
-      final SharedPreferences prefs = Get.find<SharedPreferences>();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       await _authController.authenticateUser(
         _emailController.text,
         _passwordController.text,
@@ -32,11 +34,7 @@ class UserLoginPage extends StatelessWidget {
       );
       Get.offAllNamed('/user-homepage');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        _authController.mapFirebaseAuthExceptionMessage(e.toString()),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      _showError(_authController.mapFirebaseAuthExceptionMessage(e.toString()));
     } finally {
       _isLoading.value = false;
     }
@@ -46,31 +44,26 @@ class UserLoginPage extends StatelessWidget {
     _isLoading.value = true;
     try {
       await _authController.signInWithGoogle();
-      Get.snackbar(
-        'Logged in',
-        'Welcome back!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
-      );
       Get.offAllNamed('/user-homepage');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        _authController.mapFirebaseAuthExceptionMessage(e.toString()),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      _showError(_authController.mapFirebaseAuthExceptionMessage(e.toString()));
     } finally {
       _isLoading.value = false;
     }
   }
 
+  void _showError(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.redAccent,
+      colorText: Colors.white,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    _initSharedPreferences();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Login'),
