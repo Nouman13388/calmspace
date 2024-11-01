@@ -1,9 +1,16 @@
+<<<<<<< Updated upstream
 import 'dart:convert';
+=======
+>>>>>>> Stashed changes
 import 'package:get/get.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
+import 'package:flutter/material.dart';
 
 class ChatController extends GetxController {
+  final TextEditingController messageController = TextEditingController();
   late WebSocketChannel channel;
+<<<<<<< Updated upstream
   RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
   bool isReconnecting = false; // Flag to prevent infinite reconnect attempts
 
@@ -36,6 +43,32 @@ class ChatController extends GetxController {
           if (!isReconnecting) {
             reconnect(roomName);
           }
+=======
+  RxList<String> messages = <String>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _connectToWebSocket();
+  }
+
+  void _connectToWebSocket() {
+    try {
+      channel = WebSocketChannel.connect(
+        Uri.parse('ws://127.0.0.1:8001/ws/chat/'),
+      );
+      print('WebSocket connection established');
+      channel.stream.listen(
+            (message) {
+          print('Received message: $message');
+          messages.add(message);
+        },
+        onError: (error) {
+          print('WebSocket stream error: $error');
+        },
+        onDone: () {
+          print('WebSocket connection closed');
+>>>>>>> Stashed changes
         },
       );
     } catch (e) {
@@ -43,17 +76,27 @@ class ChatController extends GetxController {
     }
   }
 
+<<<<<<< Updated upstream
   void sendMessage(String message) {
     if (channel != null) {
       print('Sending message: $message');
       channel.sink.add(json.encode({'message': message}));
       messages.add({'message': message, 'isSent': true});
       print('Message sent successfully: $message');
+=======
+  void sendMessage() {
+    if (messageController.text.isNotEmpty) {
+      print('Sending message: ${messageController.text}');
+      channel.sink.add(messageController.text);
+      messages.add(messageController.text);
+      messageController.clear();
+>>>>>>> Stashed changes
     } else {
-      print('Channel is not initialized. Cannot send message.');
+      print('Message text is empty; not sending.');
     }
   }
 
+<<<<<<< Updated upstream
   void reconnect(String roomName) {
     print('Attempting to reconnect to room: $roomName');
     isReconnecting = true; // Set flag to true to prevent further reconnection attempts
@@ -70,11 +113,13 @@ class ChatController extends GetxController {
     });
   }
 
+=======
+>>>>>>> Stashed changes
   @override
   void onClose() {
     print('Closing WebSocket connection');
-    channel.sink.close();
-    print('WebSocket connection closed successfully');
+    channel.sink.close(status.goingAway);
+    messageController.dispose();
     super.onClose();
   }
 }
