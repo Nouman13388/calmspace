@@ -1,4 +1,3 @@
-// chat_controller.dart
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -6,45 +5,41 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class ChatController extends GetxController {
   late WebSocketChannel channel;
   RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
+  bool isReconnecting = false; // Flag to prevent infinite reconnect attempts
 
   void connect(String roomName) {
-    print('Connecting to room: $roomName');
+    print('Attempting to connect to room: $roomName');
 
-    // Initialize the WebSocket channel
     try {
-      channel = WebSocketChannel.connect(Uri.parse('ws://16.171.9.75:8000/ws/chat/$roomName/'));
-      print('WebSocket channel initialized: $channel');
+      channel = WebSocketChannel.connect(Uri.parse('ws://50.19.24.133:8000/ws/chat/$roomName/'));
+      print('WebSocket connection established to: $roomName');
 
       channel.stream.listen(
             (data) {
-          print('Raw data received: $data');
+          print('Received data: $data');
           final decodedMessage = json.decode(data);
-          print('Decoded message: $decodedMessage');
-
           if (decodedMessage['message'] != null) {
             messages.add({'message': decodedMessage['message'], 'isSent': false});
-            print('Messages updated: ${messages.map((m) => m['message']).join(', ')}');
+            print('Message received: ${decodedMessage['message']}');
           } else {
-            print('Received message has an invalid format: $decodedMessage');
+            print('Invalid message format: $decodedMessage');
           }
         },
         onError: (error) {
-          printError(info: 'WebSocket error: ${error.toString()}');
-          print('Error type: ${error.runtimeType}');
-          print('Error stack trace: ${StackTrace.current}');
-          // Attempt to reconnect
-          reconnect(roomName);
+          print('WebSocket error: $error');
+          if (!isReconnecting) {
+            reconnect(roomName);
+          }
         },
         onDone: () {
           print('WebSocket connection closed');
-          // Attempt to reconnect
-          reconnect(roomName);
+          if (!isReconnecting) {
+            reconnect(roomName);
+          }
         },
       );
-
-      print('Successfully connected to the room: $roomName');
     } catch (e) {
-      printError(info: 'Error connecting to the room: $e');
+      print('Error connecting to WebSocket: $e');
     }
   }
 
@@ -52,30 +47,25 @@ class ChatController extends GetxController {
     if (channel != null) {
       print('Sending message: $message');
       channel.sink.add(json.encode({'message': message}));
-      messages.add({'message': message, 'isSent': true}); // Add sent message
-      print('Message sent: $message');
+      messages.add({'message': message, 'isSent': true});
+      print('Message sent successfully: $message');
     } else {
       print('Channel is not initialized. Cannot send message.');
     }
   }
 
   void reconnect(String roomName) {
-    int attempt = 1;
+    print('Attempting to reconnect to room: $roomName');
+    isReconnecting = true; // Set flag to true to prevent further reconnection attempts
 
     Future.delayed(Duration(seconds: 2), () {
-      while (attempt <= 5) {
-        print('Attempting to reconnect (Attempt $attempt) to room: $roomName...');
-        try {
-          connect(roomName);  // Call connect without await
-          break; // Exit if connection is successful
-        } catch (e) {
-          print('Reconnect attempt $attempt failed: $e');
-        }
-        attempt++;
-        Future.delayed(Duration(seconds: attempt * 2)); // Exponential backoff
-      }
-      if (attempt > 5) {
-        print('Max reconnect attempts reached. Giving up.');
+      try {
+        connect(roomName);
+      } catch (e) {
+        print('Reconnect attempt failed: $e');
+        // Optionally, you could set isReconnecting to false here after a certain number of attempts
+      } finally {
+        isReconnecting = false; // Reset the flag after trying to reconnect
       }
     });
   }

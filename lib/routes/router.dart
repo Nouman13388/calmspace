@@ -44,7 +44,7 @@ class AppRouter {
     GetPage(name: '/news-preferences', page: () => NewsPreferencesPage()), // New route
     GetPage(name: '/privacy-policy', page: () => PrivacyPolicyPage()), // New route
     GetPage(name: '/terms-of-service', page: () => TermsOfServicePage()), // New route
-    GetPage(name: '/chat-page', page: () => const ChatPage()), // New route
+    GetPage(name: '/chat-page', page: () => ChatPage(roomName: '',)), // New route
     GetPage(name: '/feedback', page: () => FeedbackPage()), // New route
     GetPage(name: '/assessment', page: () => AssessmentPage()), // New route
   ];

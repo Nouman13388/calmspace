@@ -1,132 +1,90 @@
-// chat_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../controllers/chat_controller.dart';
 
-class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+class ChatPage extends StatelessWidget {
+  final String roomName;
+  final ChatController controller = Get.put(ChatController());
 
-  @override
-  _ChatPageState createState() => _ChatPageState();
-}
-
-class _ChatPageState extends State<ChatPage> {
-  final ChatController chatController = Get.put(ChatController());
-  final TextEditingController messageController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Get the room name from the user
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _getRoomName();
-    });
-  }
-
-  void _getRoomName() async {
-    String? roomName = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        String tempRoomName = '';
-        return AlertDialog(
-          title: Text('Enter Room Name'),
-          content: TextField(
-            onChanged: (value) {
-              tempRoomName = value;
-            },
-            decoration: InputDecoration(hintText: 'Room name'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(tempRoomName);
-              },
-              child: Text('Join'),
-            ),
-          ],
-        );
-      },
-    );
-
-    // Connect to the chat room
-    if (roomName != null && roomName.isNotEmpty) {
-      chatController.connect(roomName);
-    } else {
-      chatController.connect('default_room'); // Connect with a default room name
-    }
+  ChatPage({Key? key, required this.roomName}) : super(key: key) {
+    controller.connect(roomName);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Chat Room')),
+      appBar: AppBar(
+        title: const Text('Chat Room'),
+      ),
       body: Column(
         children: [
           Expanded(
             child: Obx(() {
               return ListView.builder(
-                itemCount: chatController.messages.length,
+                itemCount: controller.messages.length,
                 itemBuilder: (context, index) {
-                  return Align(
-                    alignment: chatController.messages[index]['isSent']
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: chatController.messages[index]['isSent']
-                            ? Colors.blue[200]
-                            : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
+                  final message = controller.messages[index];
+                  bool isSent = message['isSent'] == true;
+                  return Container(
+                    alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
+                    padding: const EdgeInsets.all(8.0),
+                    child: Material(
+                      borderRadius: BorderRadius.circular(8.0),
+                      elevation: 1.0,
+                      color: isSent ? Colors.blue[200] : Colors.grey[300],
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Text(message['message'] ?? ''),
                       ),
-                      child: Text(chatController.messages[index]['message']),
                     ),
                   );
                 },
               );
             }),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: messageController,
-                    decoration: InputDecoration(hintText: 'Enter your message'),
-                    onSubmitted: (message) {
-                      _sendMessage();
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    _sendMessage();
-                  },
-                ),
-              ],
-            ),
-          ),
+          MessageInput(controller: controller),
         ],
       ),
     );
   }
+}
+
+class MessageInput extends StatelessWidget {
+  final ChatController controller;
+  final TextEditingController _controller = TextEditingController();
+
+  MessageInput({Key? key, required this.controller}) : super(key: key);
 
   void _sendMessage() {
-    String message = messageController.text.trim();
-    if (message.isNotEmpty) {
-      chatController.sendMessage(message);
-      messageController.clear();
+    if (_controller.text.isNotEmpty) {
+      controller.sendMessage(_controller.text);
+      _controller.clear();
     }
   }
 
   @override
-  void dispose() {
-    chatController.onClose();
-    messageController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'Send a message',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (_) => _sendMessage(),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.send),
+            onPressed: _sendMessage,
+          ),
+        ],
+      ),
+    );
   }
 }
