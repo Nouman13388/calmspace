@@ -62,7 +62,7 @@ class ChatController extends GetxController {
   void reconnect(String roomName) {
     int attempt = 1;
 
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       while (attempt <= 5) {
         print('Attempting to reconnect (Attempt $attempt) to room: $roomName...');
         try {
