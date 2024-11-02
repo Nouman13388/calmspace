@@ -1,14 +1,14 @@
 import 'package:calmspace/views/content_page.dart';
 import 'package:calmspace/views/dashboard_pages/dashboard_view.dart';
-import 'package:calmspace/views/map_pages/google_map_screen.dart';
-import 'package:calmspace/views/profile_pages/user_profile_page.dart';
 import 'package:calmspace/views/navbar.dart';
+import 'package:calmspace/views/profile_pages/user_profile_page.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+
 import '../../controllers/auth_controller.dart';
 import 'home_page.dart';
 
@@ -86,123 +86,34 @@ class _UserHomePageState extends State<UserHomePage> {
     final SharedPreferences prefs = Get.find<SharedPreferences>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                currentLocation,
-                style: const TextStyle(fontSize: 11),
-                overflow: TextOverflow.ellipsis,
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  currentLocation,
+                  style: const TextStyle(fontSize: 11),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-          ],
-        ),
-        centerTitle: true,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: CircleAvatar(
-              backgroundImage: NetworkImage(user?.photoURL ??
-                  'https://via.placeholder.com/150'), // User profile picture
-            ),
-            onPressed: () {
-              Scaffold.of(context).openDrawer(); // Open the drawer
-            },
+            ],
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              Get.dialog(
-                const Center(child: CircularProgressIndicator()),
-                barrierDismissible: false,
-              );
-
-              await authController
-                  .logout(prefs); // Call logout from AuthController
-
-              Get.back();
-              _showLogoutSnackbar();
-            },
+          centerTitle: true,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: CircleAvatar(
+                backgroundImage: NetworkImage(user?.photoURL ??
+                    'https://via.placeholder.com/150'), // User profile picture
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer(); // Open the drawer
+              },
+            ),
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: PageView(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            HomePage(
-              featureCards: [
-                FeatureCardData(
-                  icon: Icons.chat,
-                  title: 'Chat',
-                  onTap: () => Get.toNamed('/chat-page'),
-                ),
-                FeatureCardData(
-                  icon: Icons.location_on,
-                  title: 'Clinic Locator',
-                  onTap: () => Get.toNamed('/map'),
-                ), FeatureCardData(
-                  icon: Icons.assessment,
-                  title: 'Assessments',
-                  onTap: () => Get.toNamed('/assessment'),
-                ),
-                FeatureCardData(
-                  icon: Icons.feedback,
-                  title: 'Feedback',
-                  onTap: () => Get.toNamed('/feedback'),
-                ),
-                // Add more feature cards as needed
-              ],
-            ),
-            DashboardView(),
-            const ContentPage(),
-            UserProfilePage(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: CustomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavItemTapped,
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            _buildDrawerHeader(),
-            _buildDrawerItem(
-              title: 'Account',
-              icon: Icons.account_circle,
-              onTap: () => Get.toNamed('/user-profile'),
-            ),
-            _buildDrawerItem(
-              title: 'Notification Preferences',
-              icon: Icons.notifications,
-                onTap: () => Get.toNamed('/notification-preferences'),
-            ),
-            _buildDrawerItem(
-              title: 'News Preferences',
-              icon: Icons.article,
-              onTap: () => Get.toNamed('/news-preferences'),
-            ),
-            _buildDrawerItem(
-              title: 'Privacy Policy',
-              icon: Icons.privacy_tip,
-              onTap: () => Get.toNamed('/privacy-policy'),
-            ),
-            _buildDrawerItem(
-              title: 'Terms of Service',
-              icon: Icons.description,
-              onTap: () => Get.toNamed('/terms-of-service'),
-            ),
-            const Divider(),
-            _buildDrawerItem(
-              title: 'Logout',
-              icon: Icons.exit_to_app,
-              onTap: () async {
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
                 Get.dialog(
                   const Center(child: CircularProgressIndicator()),
                   barrierDismissible: false,
@@ -210,14 +121,102 @@ class _UserHomePageState extends State<UserHomePage> {
 
                 await authController
                     .logout(prefs); // Call logout from AuthController
+
                 Get.back();
                 _showLogoutSnackbar();
               },
             ),
           ],
         ),
-      ),
-    );
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              HomePage(
+                featureCards: [
+                  FeatureCardData(
+                    icon: Icons.chat,
+                    title: 'Chat',
+                    onTap: () => Get.toNamed('/chat-page'),
+                  ),
+                  FeatureCardData(
+                    icon: Icons.location_on,
+                    title: 'Clinic Locator',
+                    onTap: () => Get.toNamed('/map'),
+                  ),
+                  FeatureCardData(
+                    icon: Icons.assessment,
+                    title: 'Assessments',
+                    onTap: () => Get.toNamed('/assessment'),
+                  ),
+                  FeatureCardData(
+                    icon: Icons.feedback,
+                    title: 'Feedback',
+                    onTap: () => Get.toNamed('/feedback'),
+                  ),
+                  // Add more feature cards as needed
+                ],
+              ),
+              DashboardView(),
+              const ContentPage(),
+              UserProfilePage(),
+            ],
+          ),
+        ),
+        bottomNavigationBar: CustomNavBar(
+          currentIndex: _currentIndex,
+          onTap: _onNavItemTapped,
+        ),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              _buildDrawerHeader(),
+              _buildDrawerItem(
+                title: 'Account',
+                icon: Icons.account_circle,
+                onTap: () => Get.toNamed('/user-profile'),
+              ),
+              _buildDrawerItem(
+                title: 'Notification Preferences',
+                icon: Icons.notifications,
+                onTap: () => Get.toNamed('/notification-preferences'),
+              ),
+              _buildDrawerItem(
+                title: 'Privacy Policy',
+                icon: Icons.privacy_tip,
+                onTap: () => Get.toNamed('/privacy-policy'),
+              ),
+              _buildDrawerItem(
+                title: 'Terms of Service',
+                icon: Icons.description,
+                onTap: () => Get.toNamed('/terms-of-service'),
+              ),
+              _buildDrawerItem(
+                title: 'Emergency Support',
+                icon: Icons.support,
+                onTap: () => Get.toNamed('/emergency'),
+              ),
+              const Divider(),
+              _buildDrawerItem(
+                title: 'Logout',
+                icon: Icons.exit_to_app,
+                onTap: () async {
+                  Get.dialog(
+                    const Center(child: CircularProgressIndicator()),
+                    barrierDismissible: false,
+                  );
+
+                  await authController.logout(prefs);
+                  Get.back();
+                  _showLogoutSnackbar();
+                },
+              ),
+            ],
+          ),
+        ));
   }
 
   Widget _buildDrawerHeader() {
