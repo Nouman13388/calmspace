@@ -16,7 +16,8 @@ class ChatController extends GetxController {
 
     try {
       channel = WebSocketChannel.connect(
-          Uri.parse('ws://50.19.24.133:8000/ws/chat/$roomName/'));
+        Uri.parse('ws://50.19.24.133:8000/ws/chat/$roomName/'),
+      );
       print('WebSocket connection established to: $roomName');
 
       channel.stream.listen(
@@ -63,18 +64,22 @@ class ChatController extends GetxController {
   }
 
   void reconnect(String roomName) {
-    print('Attempting to reconnect to room: $roomName');
-    isReconnecting =
-        true; // Set flag to true to prevent further reconnection attempts
+    if (isReconnecting)
+      return; // Prevent further attempts if already reconnecting
 
-      }
+    isReconnecting = true;
+    print('Attempting to reconnect to room: $roomName');
+
+    Future.delayed(Duration(seconds: 2), () {
+      connect(roomName);
+      isReconnecting = false; // Reset flag after attempting to reconnect
     });
   }
 
   @override
   void onInit() {
     super.onInit();
-    // You might want to connect to a default room here
+    // Connect to a default room if necessary
     // connect('defaultRoomName');
   }
 

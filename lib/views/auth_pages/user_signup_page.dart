@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../controllers/auth_controller.dart';
 
 class UserSignUpPage extends StatelessWidget {
@@ -7,7 +8,8 @@ class UserSignUpPage extends StatelessWidget {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _fullNameController = TextEditingController();
 
   @override
@@ -29,7 +31,10 @@ class UserSignUpPage extends StatelessWidget {
           children: [
             Text(
               'Sign Up for a User Account',
-              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall!
+                  .copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
             TextField(
@@ -55,19 +60,20 @@ class UserSignUpPage extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             Obx(() => ElevatedButton(
-              onPressed: authController.isLoading.value
-                  ? null
-                  : () => _registerUser(authController),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: authController.isLoading.value
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Sign Up'),
-            )),
+                  onPressed: authController.isLoading.value
+                      ? null
+                      : () => _registerUser(authController),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: authController.isLoading.value
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Sign Up'),
+                )),
           ],
         ),
       ),
@@ -85,11 +91,15 @@ class UserSignUpPage extends StatelessWidget {
         false, // isTherapist
       );
 
-      _showSnackbar('Success', 'User account created successfully!', Colors.orangeAccent);
+      _showSnackbar(
+          'Success', 'User account created successfully!', Colors.orangeAccent);
       // Navigate to login page after successful sign-up
       Get.offNamed('/user-login'); // Navigate to UserLoginPage
     } catch (e) {
-      print(authController.mapFirebaseAuthExceptionMessage(e.toString()));
+      String errorMessage =
+          authController.mapFirebaseAuthExceptionMessage(e.toString());
+      _showSnackbar('Error', errorMessage, Colors.red);
+      print(errorMessage); // Log the error for debugging
     } finally {
       authController.isLoading.value = false;
     }
