@@ -1,90 +1,88 @@
-// chat_controller.dart
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatController extends GetxController {
+  final TextEditingController messageController = TextEditingController();
   late WebSocketChannel channel;
   RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
+  bool isReconnecting = false; // Flag to prevent infinite reconnect attempts
 
   void connect(String roomName) {
-    print('Connecting to room: $roomName');
+    print('Attempting to connect to room: $roomName');
 
-    // Initialize the WebSocket channel
     try {
-      channel = WebSocketChannel.connect(Uri.parse('ws://16.171.9.75:8000/ws/chat/$roomName/'));
-      print('WebSocket channel initialized: $channel');
+      channel = WebSocketChannel.connect(
+          Uri.parse('ws://50.19.24.133:8000/ws/chat/$roomName/'));
+      print('WebSocket connection established to: $roomName');
 
       channel.stream.listen(
-            (data) {
-          print('Raw data received: $data');
+        (data) {
+          print('Received data: $data');
           final decodedMessage = json.decode(data);
-          print('Decoded message: $decodedMessage');
-
           if (decodedMessage['message'] != null) {
-            messages.add({'message': decodedMessage['message'], 'isSent': false});
-            print('Messages updated: ${messages.map((m) => m['message']).join(', ')}');
+            messages
+                .add({'message': decodedMessage['message'], 'isSent': false});
+            print('Message received: ${decodedMessage['message']}');
           } else {
-            print('Received message has an invalid format: $decodedMessage');
+            print('Invalid message format: $decodedMessage');
           }
         },
         onError: (error) {
-          printError(info: 'WebSocket error: ${error.toString()}');
-          print('Error type: ${error.runtimeType}');
-          print('Error stack trace: ${StackTrace.current}');
-          // Attempt to reconnect
-          reconnect(roomName);
+          print('WebSocket error: $error');
+          if (!isReconnecting) {
+            reconnect(roomName);
+          }
         },
         onDone: () {
           print('WebSocket connection closed');
-          // Attempt to reconnect
-          reconnect(roomName);
+          if (!isReconnecting) {
+            reconnect(roomName);
+          }
         },
       );
-
-      print('Successfully connected to the room: $roomName');
     } catch (e) {
-      printError(info: 'Error connecting to the room: $e');
+      print('Error connecting to WebSocket: $e');
     }
   }
 
-  void sendMessage(String message) {
-    if (channel != null) {
+  void sendMessage() {
+    if (messageController.text.isNotEmpty) {
+      final message = messageController.text;
       print('Sending message: $message');
       channel.sink.add(json.encode({'message': message}));
-      messages.add({'message': message, 'isSent': true}); // Add sent message
-      print('Message sent: $message');
+      messages.add({'message': message, 'isSent': true});
+      messageController.clear();
+      print('Message sent successfully: $message');
     } else {
-      print('Channel is not initialized. Cannot send message.');
+      print('Message text is empty; not sending.');
     }
   }
 
   void reconnect(String roomName) {
-    int attempt = 1;
+    print('Attempting to reconnect to room: $roomName');
+    isReconnecting =
+        true; // Set flag to true to prevent further reconnection attempts
 
-    Future.delayed(const Duration(seconds: 2), () {
-      while (attempt <= 5) {
-        print('Attempting to reconnect (Attempt $attempt) to room: $roomName...');
-        try {
-          connect(roomName);  // Call connect without await
-          break; // Exit if connection is successful
-        } catch (e) {
-          print('Reconnect attempt $attempt failed: $e');
-        }
-        attempt++;
-        Future.delayed(Duration(seconds: attempt * 2)); // Exponential backoff
-      }
-      if (attempt > 5) {
-        print('Max reconnect attempts reached. Giving up.');
       }
     });
   }
 
   @override
+  void onInit() {
+    super.onInit();
+    // You might want to connect to a default room here
+    // connect('defaultRoomName');
+  }
+
+  @override
   void onClose() {
     print('Closing WebSocket connection');
-    channel.sink.close();
-    print('WebSocket connection closed successfully');
+    channel.sink.close(status.goingAway);
+    messageController.dispose();
     super.onClose();
   }
 }
