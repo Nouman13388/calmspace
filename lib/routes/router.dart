@@ -12,7 +12,6 @@ import '../views/auth_pages/user_signup_page.dart';
 import '../views/chat_pages/chat_page.dart';
 import '../views/content_page.dart';
 import '../views/drawer_item_page.dart';
-import '../views/emergency_page.dart';
 import '../views/feedback_page.dart';
 import '../views/home_pages/therapist_home_page.dart';
 import '../views/home_pages/user_home_page.dart';
@@ -71,8 +70,8 @@ class AppRouter {
     GetPage(
         name: '/terms-of-service',
         page: () => TermsOfServicePage()), // New route
-    GetPage(
-        name: '/emergency', page: () => EmergencySupportPage()), // New route
+    // GetPage(
+    //     name: '/emergency', page: () => EmergencySupportPage()),
   ];
 
   static void initRoutes(SharedPreferences prefs) {

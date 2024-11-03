@@ -6,6 +6,7 @@ plugins {
 
 android {
     namespace = "com.nomdevs.calmspace"
+    testNamespace "com.nomdevs.calmspace"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

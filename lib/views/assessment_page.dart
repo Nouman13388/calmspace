@@ -14,25 +14,32 @@ class AssessmentPage extends StatelessWidget {
         backgroundColor: const Color(0xFFF3B8B5),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            print("Navigating back from assessment page.");
+            Get.back();
+          },
         ),
       ),
       backgroundColor: const Color(0xFFFFF8E1),
       body: Obx(() {
         if (controller.isAssessmentComplete.value) {
           // Display result when assessment is complete
+          print("Displaying results to the user.");
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  controller.result.value,
+                  controller.mood.value, // Use mood instead of result
                   style: Theme.of(context).textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: controller.resetAssessment,
+                  onPressed: () {
+                    print("Retaking assessment...");
+                    controller.resetAssessment();
+                  },
                   child: const Text("Retake Assessment"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF3B8B5),
@@ -45,6 +52,8 @@ class AssessmentPage extends StatelessWidget {
           // Display current question
           final question =
               controller.questions[controller.currentQuestionIndex.value];
+          print(
+              "Displaying question ${controller.currentQuestionIndex.value + 1}");
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -70,6 +79,7 @@ class AssessmentPage extends StatelessWidget {
                                 controller.currentQuestionIndex.value],
                             onChanged: (value) {
                               if (value != null) {
+                                print("User selected answer: $value");
                                 controller.evaluateAnswer(value);
                               }
                             },
