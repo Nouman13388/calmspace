@@ -67,13 +67,6 @@ class ChatController extends GetxController {
     isReconnecting =
         true; // Set flag to true to prevent further reconnection attempts
 
-    Future.delayed(Duration(seconds: 2), () {
-      try {
-        connect(roomName);
-      } catch (e) {
-        print('Reconnect attempt failed: $e');
-      } finally {
-        isReconnecting = false; // Reset the flag after trying to reconnect
       }
     });
   }
