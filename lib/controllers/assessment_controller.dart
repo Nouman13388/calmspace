@@ -1,54 +1,88 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../models/assessment_question.dart';
-import '../services/api_service.dart';
-
 class AssessmentController extends GetxController {
-  var questions = <AssessmentQuestion>[].obs;
-  var isLoading = false.obs;
+  var currentQuestionIndex = 0.obs; // Track current question
+  var selectedAnswers = <int, String>{}.obs; // Store answers by question index
+  var isAssessmentComplete = false.obs; // Track if assessment is complete
+  var result = ''.obs; // Store final result
 
-  final ApiService apiService = Get.put(ApiService());
+  // Predefined questions
+  final questions = [
+    {
+      "question": "How are you feeling today?",
+      "options": ["Good", "Okay", "Stressed", "Anxious"]
+    },
+    {
+      "question": "How often do you feel relaxed?",
+      "options": ["Always", "Often", "Sometimes", "Rarely"]
+    },
+    {
+      "question": "Do you find it difficult to focus?",
+      "options": ["Yes", "No"]
+    },
+    // Add more questions as needed
+  ];
 
-  @override
-  void onInit() {
-    super.onInit();
-    fetchAssessmentQuestions();
-  }
+  // Logic to determine the next question or result based on answers
+  void evaluateAnswer(String answer) {
+    // Store answer
+    selectedAnswers[currentQuestionIndex.value] = answer;
 
-  Future<void> fetchAssessmentQuestions() async {
-    isLoading(true);
-    try {
-      final fetchedQuestions = await apiService.fetchAssessmentQuestions();
-      if (fetchedQuestions.isNotEmpty) {
-        questions.assignAll(fetchedQuestions);
-        if (kDebugMode) {
-          print('Fetched ${questions.length} questions from the backend');
-        }
-      } else {
-        _showSnackbar("Notice", "No questions found.");
-      }
-    } catch (e) {
-      _showSnackbar("Error", "Failed to load questions");
-      if (kDebugMode) {
-        print("Error fetching questions: $e");
-      }
-    } finally {
-      isLoading(false);
+    // Example logic to determine if assessment is complete
+    if (currentQuestionIndex.value >= questions.length - 1) {
+      calculateResult();
+      isAssessmentComplete(true);
+    } else {
+      // Go to the next question
+      currentQuestionIndex.value++;
     }
   }
 
-  void _showSnackbar(String title, String message) {
-    Get.snackbar(
-      title,
-      message,
-      backgroundColor: Colors.orangeAccent,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 8,
-    );
+  // Simple logic to calculate result based on answers
+  void calculateResult() {
+    int score = 0;
+
+    // Example scoring: adjust based on real scoring criteria
+    for (var answer in selectedAnswers.values) {
+      switch (answer) {
+        case "Good":
+        case "Always":
+          score += 10;
+          break;
+        case "Okay":
+        case "Often":
+          score += 5;
+          break;
+        case "Stressed":
+        case "Anxious":
+        case "Sometimes":
+          score += 3;
+          break;
+        case "Rarely":
+        case "Yes":
+          score += 1;
+          break;
+        case "No":
+          score += 7;
+          break;
+      }
+    }
+
+    // Example result calculation based on total score
+    if (score >= 20) {
+      result("You seem to be doing well mentally!");
+    } else if (score >= 10) {
+      result("You may be experiencing some stress.");
+    } else {
+      result("Consider practicing mindfulness or seeking support.");
+    }
+  }
+
+  // Reset assessment for a new attempt
+  void resetAssessment() {
+    currentQuestionIndex.value = 0;
+    selectedAnswers.clear();
+    isAssessmentComplete(false);
+    result('');
   }
 }

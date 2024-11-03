@@ -64,6 +64,14 @@ class AppRouter {
     GetPage(name: '/feedback', page: () => FeedbackPage()), // New route
     GetPage(name: '/assessment', page: () => AssessmentPage()), // New route
     GetPage(
+        name: '/privacy-policy', page: () => PrivacyPolicyPage()), // New route
+    GetPage(
+        name: '/notification-preference',
+        page: () => NotificationPreferencesPage()), // New route
+    GetPage(
+        name: '/terms-of-service',
+        page: () => TermsOfServicePage()), // New route
+    GetPage(
         name: '/emergency', page: () => EmergencySupportPage()), // New route
   ];
 
