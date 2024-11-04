@@ -6,10 +6,10 @@ class AppConstants {
   static const String assessmentsUrl = '${baseUrl}assessments/';
   static const String healthDataUrl = '${baseUrl}healthdata/';
   static const String feedbackUrl = '${baseUrl}feedback/';
-  static const String professionalsUrl = '${baseUrl}professionals/';
+  static const String professionalsUrl = '${baseUrl}therapists/';
+  static const String chat = '${baseUrl}chat/';
   static const String appointmentsUrl = '${baseUrl}appointments/';
   static const String clinicsUrl = '${baseUrl}clinics/';
   static const String articlesUrl = '${baseUrl}articles/';
   static const String userUrl = '${baseUrl}users/get_by_email/';
-
 }
