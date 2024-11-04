@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/dashboard_model.dart';
 import '../services/api_service.dart';
@@ -9,17 +10,41 @@ class DashboardController extends GetxController {
   var healthDataList = <HealthData>[].obs;
   var appointmentList = <Appointment>[].obs;
 
+  var points = 0.obs;
+  var badge = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
-    fetchHealthData();
-    fetchAppointments(
-        'userRole', 'userName'); // Replace with actual role and name
+    loadDashboardData(); // Consolidated loading method
   }
 
+  // New consolidated method to load all dashboard data
+  Future<void> loadDashboardData() async {
+    await loadStoredData(); // Load points and badge
+    await fetchHealthData(); // Load health data
+    await fetchAppointments('userRole', 'userName'); // Load appointments
+  }
+
+  // Load points and badge from SharedPreferences
+  Future<void> loadStoredData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      points.value = prefs.getInt('assessment_points') ?? 0;
+      badge.value = prefs.getString('assessment_badge') ?? '';
+      print(
+          "Stored data loaded: points = ${points.value}, badge = '${badge.value}'"); // Debugging
+    } catch (e) {
+      print("Error loading stored data: $e"); // Debugging
+    }
+  }
+
+  // Fetch health data from API
   Future<void> fetchHealthData() async {
     try {
       healthDataList.value = await apiService.fetchHealthData();
+      print(
+          "Health data fetched: ${healthDataList.length} entries"); // Debugging
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -31,9 +56,12 @@ class DashboardController extends GetxController {
     }
   }
 
+  // Fetch appointments from API
   Future<void> fetchAppointments(String role, String name) async {
     try {
       appointmentList.value = await apiService.fetchAppointments(role, name);
+      print(
+          "Appointments fetched: ${appointmentList.length} entries"); // Debugging
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -45,17 +73,17 @@ class DashboardController extends GetxController {
     }
   }
 
-  // New method to update health data based on assessment results
+  // Update health data based on assessment results
   void updateHealthData(String mood, String symptoms) {
     final newHealthData = HealthData(
-      id: healthDataList.length + 1, // Temporary ID, should be unique
+      id: healthDataList.length + 1,
       mood: mood,
       symptoms: symptoms,
-      createdAt: DateTime.now(), // Record the current timestamp
+      createdAt: DateTime.now(),
     );
-
-    // Add the new health data entry to the list
     healthDataList.add(newHealthData);
+    print(
+        "Health data updated: Mood = $mood, Symptoms = $symptoms"); // Debugging
   }
 
   // Helper method to convert health data into chart data

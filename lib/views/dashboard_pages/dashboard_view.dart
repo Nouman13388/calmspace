@@ -1,27 +1,21 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+
 import '../../controllers/dashboard_controller.dart';
 import '../../models/dashboard_model.dart';
-import 'package:intl/intl.dart'; // For date formatting
-
 
 class DashboardView extends StatelessWidget {
   final DashboardController controller = Get.put(DashboardController());
 
   DashboardView({super.key}) {
-    // Fetch health data and appointments during initialization
-    controller.fetchHealthData();
-    // controller.fetchAppointments('userRole', 'userName');
+    controller.loadDashboardData(); // Load data on initialization
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('User Dashboard'),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -40,6 +34,8 @@ class DashboardView extends StatelessWidget {
               }
             }),
             const SizedBox(height: 20),
+            _buildScoreAndBadgeInfo(), // Updated section
+            const SizedBox(height: 20),
             _buildHealthDataSection(),
             const SizedBox(height: 20),
             Obx(() {
@@ -49,13 +45,58 @@ class DashboardView extends StatelessWidget {
                   child: Text("No upcoming appointments."),
                 );
               } else {
-                return _buildUpcomingAppointment(controller.appointmentList.first);
+                return _buildUpcomingAppointment(
+                    controller.appointmentList.first);
               }
             }),
           ],
         ),
       ),
     );
+  }
+
+  // Display score and badge using icons
+  Widget _buildScoreAndBadgeInfo() {
+    return Obx(() {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.score, color: Colors.blue, size: 30),
+                const SizedBox(width: 8),
+                Text(
+                  "${controller.points.value}",
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(
+                  controller.badge.value.isNotEmpty
+                      ? Icons.star
+                      : Icons.star_border,
+                  color: Colors.amber,
+                  size: 30,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  controller.badge.value.isNotEmpty
+                      ? controller.badge.value
+                      : "No Badge",
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildMoodChart() {
@@ -110,7 +151,9 @@ class DashboardView extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              ...controller.healthDataList.map((healthData) => _buildHealthDataCard(healthData)).toList(),
+              ...controller.healthDataList
+                  .map((healthData) => _buildHealthDataCard(healthData))
+                  .toList(),
             ],
           ),
         );
@@ -130,11 +173,15 @@ class DashboardView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Mood: ${healthData.mood}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("Mood: ${healthData.mood}",
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text("Symptoms: ${healthData.symptoms}", style: const TextStyle(fontSize: 14)),
+            Text("Symptoms: ${healthData.symptoms}",
+                style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 8),
-            Text("Recorded At: ${healthData.createdAt.toLocal().toString()}", style: const TextStyle(fontSize: 14)), // Format as needed
+            Text("Recorded At: ${healthData.createdAt.toLocal().toString()}",
+                style: const TextStyle(fontSize: 14)),
           ],
         ),
       ),
@@ -142,7 +189,6 @@ class DashboardView extends StatelessWidget {
   }
 
   Widget _buildUpcomingAppointment(Appointment appointment) {
-    // Method to format date strings
     String formatDate(String dateTime) {
       DateTime parsedDate = DateTime.parse(dateTime);
       return DateFormat.yMMMMd().add_jm().format(parsedDate);
