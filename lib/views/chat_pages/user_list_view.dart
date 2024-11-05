@@ -23,14 +23,13 @@ class UserListPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select User'),
-        backgroundColor: Colors.greenAccent,
+        title: const Text('Select User'),
       ),
       body: Obx(() {
         // Show loading indicator if data is not available
         if (userController.users.isEmpty ||
             therapistController.therapists.isEmpty) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         // Print fetched data for debugging

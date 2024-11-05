@@ -20,14 +20,13 @@ class TherapistListPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Therapist'),
-        backgroundColor: Colors.greenAccent, // Add color for app bar
+        title: const Text('Select Therapist'),
       ),
       body: Obx(() {
         // Check if data is empty, then show loading indicator
         if (therapistController.therapists.isEmpty ||
             userController.users.isEmpty) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         // Print fetched data for debugging

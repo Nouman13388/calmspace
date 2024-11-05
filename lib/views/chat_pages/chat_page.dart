@@ -10,7 +10,6 @@ class ChatPage extends StatelessWidget {
       therapistId: Get.arguments['therapistId']));
   final ScrollController _scrollController = ScrollController();
 
-  // This method scrolls to the bottom of the list when a new message is added or after sending a message.
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -19,6 +18,8 @@ class ChatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    chatController.fetchMessages();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat with Therapist'),
@@ -28,16 +29,13 @@ class ChatPage extends StatelessWidget {
         children: [
           Expanded(
             child: Obx(() {
-              // If no messages, show a loading indicator
               if (chatController.messages.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              // Sorting messages to make sure they are ordered correctly
               chatController.messages
                   .sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-              // Scroll to the bottom when the messages are updated
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _scrollToBottom();
               });
@@ -63,8 +61,9 @@ class ChatPage extends StatelessWidget {
                         constraints: BoxConstraints(maxWidth: 250),
                         decoration: BoxDecoration(
                           color: isSentByUser
-                              ? Colors.blue[100]
-                              : Colors.grey[300],
+                              ? Colors.blue[300] // Distinct color for user
+                              : Colors
+                                  .grey[200], // Distinct color for therapist
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(12.0),
                             topRight: Radius.circular(12.0),
@@ -84,21 +83,34 @@ class ChatPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16.0,
                                 color: isSentByUser
-                                    ? Colors.black
-                                    : Colors.black87,
+                                    ? Colors
+                                        .white // Text color for user message
+                                    : Colors
+                                        .black87, // Text color for therapist message
                               ),
                             ),
                             const SizedBox(height: 5.0),
                             Align(
                               alignment: Alignment.bottomRight,
-                              child: Text(
-                                // Format the timestamp
-                                DateFormat('hh:mm a')
-                                    .format(message.createdAt.toLocal()),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black54,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    DateFormat('hh:mm a')
+                                        .format(message.createdAt.toLocal()),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                  if (isSentByUser) const SizedBox(width: 4.0),
+                                  if (isSentByUser)
+                                    Icon(
+                                      Icons.check,
+                                      size: 14,
+                                      color: Colors.black54,
+                                    ),
+                                ],
                               ),
                             ),
                           ],
@@ -110,11 +122,9 @@ class ChatPage extends StatelessWidget {
               );
             }),
           ),
-          // Message input widget
           MessageInput(
             messageController: chatController.messageController,
             sendMessage: () {
-              // Send message and scroll to the bottom
               chatController.sendMessage();
               _scrollToBottom();
             },
@@ -125,7 +135,6 @@ class ChatPage extends StatelessWidget {
   }
 }
 
-// Message input widget for typing and sending messages
 class MessageInput extends StatelessWidget {
   final TextEditingController messageController;
   final VoidCallback sendMessage;
@@ -147,16 +156,28 @@ class MessageInput extends StatelessWidget {
               controller: messageController,
               decoration: InputDecoration(
                 labelText: 'Type your message',
+                labelStyle: TextStyle(color: Colors.blueAccent),
+                filled: true,
+                fillColor: Colors.blue[50],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
                 ),
               ),
-              onSubmitted: (_) => sendMessage(), // Send message on submitting
+              onSubmitted: (_) => sendMessage(),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.send, color: Colors.blueAccent),
-            onPressed: sendMessage, // Send message on button press
+            onPressed: sendMessage,
           ),
         ],
       ),

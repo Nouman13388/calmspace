@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -16,23 +16,18 @@ class ChatController extends GetxController {
   var messages = <Message>[].obs;
   var messageController = TextEditingController();
 
-  // Fetch messages from the API and sort them
   Future<void> fetchMessages() async {
     try {
       final url = Uri.parse(
           '${AppConstants.chat}?user_id=${userId.toString()}&therapist_id=${therapistId.toString()}');
-      print('Request URL: $url'); // Log the URL for debugging
-
       final response = await http.get(url);
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         List<dynamic> jsonData = json.decode(response.body);
         var fetchedMessages =
             jsonData.map((msg) => Message.fromJson(msg)).toList();
         fetchedMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-        messages.value = fetchedMessages; // Assign sorted messages
+        messages.value = fetchedMessages;
       } else {
         throw Exception('Failed to load messages');
       }
@@ -41,40 +36,54 @@ class ChatController extends GetxController {
     }
   }
 
-  // Send a new message to the API
-  Future<void> sendMessage() async {
+  void addMessageLocally(String text) {
+    final message = Message(
+      id: DateTime.now().millisecondsSinceEpoch,
+      userId: userId,
+      therapistId: therapistId,
+      message: text,
+      createdAt: DateTime.now(),
+    );
+    messages.add(message);
+  }
+
+  Future<void> sendMessageToServer(String text) async {
+    final message = Message(
+      id: 0,
+      userId: userId,
+      therapistId: therapistId,
+      message: text,
+      createdAt: DateTime.now(),
+    );
+
+    try {
+      final response = await http.post(
+        Uri.parse(AppConstants.chat),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(message.toJson()),
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to send message');
+      }
+    } catch (e) {
+      print('Error sending message: $e');
+    }
+  }
+
+  void sendMessage() {
     final messageText = messageController.text.trim();
     if (messageText.isNotEmpty) {
-      try {
-        final message = Message(
-          id: 0, // API may generate the ID
-          userId: userId,
-          therapistId: therapistId,
-          message: messageText,
-          createdAt: DateTime.now(),
-        );
+      addMessageLocally(messageText);
+      messageController.clear();
 
-        final response = await http.post(
-          Uri.parse(AppConstants.chat),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(message.toJson()),
-        );
-
-        if (response.statusCode == 201) {
-          await fetchMessages(); // Refresh the message list after sending a new one
-          messageController.clear(); // Clear the input field
-        } else {
-          throw Exception('Failed to send message');
-        }
-      } catch (e) {
-        print('Error sending message: $e');
-      }
+      Future.microtask(() => sendMessageToServer(messageText));
     }
   }
 
   @override
   void onInit() {
     super.onInit();
-    fetchMessages(); // Fetch initial messages when the controller is initialized
+    fetchMessages();
   }
 }
