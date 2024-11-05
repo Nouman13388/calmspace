@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -10,12 +11,28 @@ import '../models/message_model.dart';
 class ChatController extends GetxController {
   final int userId;
   final int therapistId;
+  Timer? _refreshTimer;
 
   ChatController({required this.userId, required this.therapistId});
 
   var messages = <Message>[].obs;
   var messageController = TextEditingController();
+  var isFirstLoad = true.obs; // Track if it's the first load
 
+  @override
+  void onInit() {
+    super.onInit();
+    fetchMessages();
+    _startPeriodicRefresh();
+  }
+
+  @override
+  void onClose() {
+    _stopPeriodicRefresh();
+    super.onClose();
+  }
+
+  // Fetch messages from the API and log them to the console
   Future<void> fetchMessages() async {
     try {
       final url = Uri.parse(
@@ -25,15 +42,34 @@ class ChatController extends GetxController {
       if (response.statusCode == 200) {
         List<dynamic> jsonData = json.decode(response.body);
         var fetchedMessages =
-            jsonData.map((msg) => Message.fromJson(msg)).toList();
+            jsonData.map((msg) => Message.fromJson(msg, userId)).toList();
         fetchedMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-        messages.value = fetchedMessages;
+
+        messages.value = fetchedMessages; // Update the message list
+        isFirstLoad.value = false; // Set to false after first load
+
+        // Print fetched messages to the console
+        print("Fetched messages:");
+        for (var message in fetchedMessages) {
+          print(
+              "${message.isSentByUser ? 'You' : 'Therapist'}: ${message.message}");
+        }
       } else {
         throw Exception('Failed to load messages');
       }
     } catch (e) {
       print('Error fetching messages: $e');
     }
+  }
+
+  void _startPeriodicRefresh() {
+    _refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      fetchMessages();
+    });
+  }
+
+  void _stopPeriodicRefresh() {
+    _refreshTimer?.cancel();
   }
 
   void addMessageLocally(String text) {
@@ -43,6 +79,7 @@ class ChatController extends GetxController {
       therapistId: therapistId,
       message: text,
       createdAt: DateTime.now(),
+      isSentByUser: true,
     );
     messages.add(message);
   }
@@ -54,6 +91,7 @@ class ChatController extends GetxController {
       therapistId: therapistId,
       message: text,
       createdAt: DateTime.now(),
+      isSentByUser: true,
     );
 
     try {
@@ -79,11 +117,5 @@ class ChatController extends GetxController {
 
       Future.microtask(() => sendMessageToServer(messageText));
     }
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    fetchMessages();
   }
 }

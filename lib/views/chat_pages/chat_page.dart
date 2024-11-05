@@ -29,7 +29,8 @@ class ChatPage extends StatelessWidget {
         children: [
           Expanded(
             child: Obx(() {
-              if (chatController.messages.isEmpty) {
+              // Show loading indicator only for the first load
+              if (chatController.isFirstLoad.value) {
                 return const Center(child: CircularProgressIndicator());
               }
 
@@ -45,7 +46,7 @@ class ChatPage extends StatelessWidget {
                 itemCount: chatController.messages.length,
                 itemBuilder: (context, index) {
                   final message = chatController.messages[index];
-                  final isSentByUser = message.userId == chatController.userId;
+                  final isSentByUser = message.isSentByUser;
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(
@@ -58,21 +59,20 @@ class ChatPage extends StatelessWidget {
                           : Alignment.centerLeft,
                       child: Container(
                         padding: const EdgeInsets.all(10.0),
-                        constraints: BoxConstraints(maxWidth: 250),
+                        constraints: const BoxConstraints(maxWidth: 250),
                         decoration: BoxDecoration(
                           color: isSentByUser
-                              ? Colors.blue[300] // Distinct color for user
-                              : Colors
-                                  .grey[200], // Distinct color for therapist
+                              ? Colors.blue[300]
+                              : Colors.grey[200],
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(12.0),
-                            topRight: Radius.circular(12.0),
+                            topLeft: const Radius.circular(12.0),
+                            topRight: const Radius.circular(12.0),
                             bottomLeft: isSentByUser
-                                ? Radius.circular(12.0)
+                                ? const Radius.circular(12.0)
                                 : Radius.zero,
                             bottomRight: isSentByUser
                                 ? Radius.zero
-                                : Radius.circular(12.0),
+                                : const Radius.circular(12.0),
                           ),
                         ),
                         child: Column(
@@ -83,10 +83,8 @@ class ChatPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16.0,
                                 color: isSentByUser
-                                    ? Colors
-                                        .white // Text color for user message
-                                    : Colors
-                                        .black87, // Text color for therapist message
+                                    ? Colors.white
+                                    : Colors.black87,
                               ),
                             ),
                             const SizedBox(height: 5.0),
@@ -105,7 +103,7 @@ class ChatPage extends StatelessWidget {
                                   ),
                                   if (isSentByUser) const SizedBox(width: 4.0),
                                   if (isSentByUser)
-                                    Icon(
+                                    const Icon(
                                       Icons.check,
                                       size: 14,
                                       color: Colors.black54,
@@ -140,10 +138,10 @@ class MessageInput extends StatelessWidget {
   final VoidCallback sendMessage;
 
   const MessageInput({
-    Key? key,
+    super.key,
     required this.messageController,
     required this.sendMessage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -156,20 +154,23 @@ class MessageInput extends StatelessWidget {
               controller: messageController,
               decoration: InputDecoration(
                 labelText: 'Type your message',
-                labelStyle: TextStyle(color: Colors.blueAccent),
+                labelStyle: const TextStyle(color: Colors.blueAccent),
                 filled: true,
                 fillColor: Colors.blue[50],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                  borderSide:
+                      const BorderSide(color: Colors.blueAccent, width: 2),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                  borderSide:
+                      const BorderSide(color: Colors.blueAccent, width: 2),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+                  borderSide:
+                      const BorderSide(color: Colors.blueAccent, width: 2),
                 ),
               ),
               onSubmitted: (_) => sendMessage(),
