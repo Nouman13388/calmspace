@@ -135,7 +135,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
                   FeatureCardData(
                     icon: Icons.message,
                     title: 'Chat',
-                    onTap: () => Get.toNamed('/chat-page'),
+                    onTap: () => Get.toNamed('/therapist-thread'),
                   ),
                 ],
               ),

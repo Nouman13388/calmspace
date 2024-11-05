@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../constants/app_constants.dart';
 import '../../controllers/auth_controller.dart';
 
 class SignUpFormController extends GetxController {
@@ -54,7 +59,8 @@ class TherapistSignUpPage extends StatelessWidget {
         ),
         title: const Text('Therapist Sign Up'),
       ),
-      body: SignUpForm(authController: authController, formController: formController),
+      body: SignUpForm(
+          authController: authController, formController: formController),
     );
   }
 }
@@ -75,7 +81,10 @@ class SignUpForm extends StatelessWidget {
         children: [
           Text(
             'Sign Up for a Therapist Account',
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall!
+                .copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 30),
           _buildTextField(
@@ -113,42 +122,59 @@ class SignUpForm extends StatelessWidget {
           const SizedBox(height: 20),
           const SizedBox(height: 30),
           Obx(() => ElevatedButton(
-            onPressed: authController.isLoading.value ? null : () async {
-              await _registerTherapist(authController, formController);
-              await formController.savePreferences();
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: authController.isLoading.value
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Sign Up'),
-          )),
+                onPressed: authController.isLoading.value
+                    ? null
+                    : () async {
+                        await _registerTherapist(
+                            authController, formController);
+                        await formController.savePreferences();
+                      },
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: authController.isLoading.value
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Sign Up'),
+              )),
         ],
       ),
     );
   }
 
-  Future<void> _registerTherapist(AuthController authController, SignUpFormController formController) async {
+  Future<void> _registerTherapist(AuthController authController,
+      SignUpFormController formController) async {
     authController.isLoading.value = true;
     try {
-      if (formController.password.value != formController.confirmPassword.value) {
+      if (formController.password.value !=
+          formController.confirmPassword.value) {
         throw FirebaseAuthException(
           code: 'password-mismatch',
           message: 'Passwords do not match.',
         );
       }
+
+      // 1. Sign up with Firebase
       await authController.signUpWithEmail(
         formController.fullName.value,
         formController.email.value,
         formController.password.value,
         formController.confirmPassword.value,
-        true, // isTherapist
+        true, // isTherapist flag
       );
 
+      // 2. Send therapist data to backend
+      await _storeTherapistOnBackend(
+        formController.fullName.value,
+        formController.email.value,
+        formController.specialization.value,
+        formController.bio.value,
+      );
+
+      // Show success message
       Get.snackbar(
         'Success',
         'Account created successfully! Welcome!',
@@ -159,6 +185,7 @@ class SignUpForm extends StatelessWidget {
         margin: const EdgeInsets.all(16),
       );
 
+      // Redirect to login page
       Get.offNamed('/therapist-login', arguments: {'showSnackbar': true});
     } on FirebaseAuthException catch (firebaseError) {
       String message = _getFirebaseErrorMessage(firebaseError);
@@ -183,6 +210,34 @@ class SignUpForm extends StatelessWidget {
       );
     } finally {
       authController.isLoading.value = false;
+    }
+  }
+
+// Function to send therapist data to backend
+  Future<void> _storeTherapistOnBackend(
+      String fullName, String email, String specialization, String bio) async {
+    try {
+      final response = await http.post(
+        Uri.parse(AppConstants.professionalsUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'name': fullName,
+          'specialization': specialization,
+          'bio': bio,
+          'password':
+              'dummyPassword123', // Adding a dummy password to satisfy the backend requirement
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        print('Therapist successfully stored in backend');
+      } else {
+        print('Error response: ${response.body}');
+        throw Exception('Failed to store therapist in backend');
+      }
+    } catch (e) {
+      print('Error storing therapist data: $e');
     }
   }
 
@@ -219,10 +274,12 @@ class SignUpForm extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Theme.of(Get.context!).primaryColor),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       onChanged: onChanged,
-      controller: TextEditingController(text: initialValue), // Initial value for pre-filled fields
+      controller: TextEditingController(
+          text: initialValue), // Initial value for pre-filled fields
     );
   }
 }

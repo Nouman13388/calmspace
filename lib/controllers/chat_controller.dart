@@ -2,92 +2,79 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:web_socket_channel/status.dart' as status;
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:http/http.dart' as http;
+
+import '../constants/app_constants.dart';
+import '../models/message_model.dart';
 
 class ChatController extends GetxController {
-  final TextEditingController messageController = TextEditingController();
-  late WebSocketChannel channel;
-  RxList<Map<String, dynamic>> messages = <Map<String, dynamic>>[].obs;
-  bool isReconnecting = false; // Flag to prevent infinite reconnect attempts
+  final int userId;
+  final int therapistId;
 
-  void connect(String roomName) {
-    print('Attempting to connect to room: $roomName');
+  ChatController({required this.userId, required this.therapistId});
 
+  var messages = <Message>[].obs;
+  var messageController = TextEditingController();
+
+  // Fetch messages from the API and sort them
+  Future<void> fetchMessages() async {
     try {
-      channel = WebSocketChannel.connect(
-        Uri.parse('ws://50.19.24.133:8000/ws/chat/$roomName/'),
-      );
-      print('WebSocket connection established to: $roomName');
+      final url = Uri.parse(
+          '${AppConstants.chat}?user_id=${userId.toString()}&therapist_id=${therapistId.toString()}');
+      print('Request URL: $url'); // Log the URL for debugging
 
-      channel.stream.listen(
-        (data) {
-          print('Received data: $data');
-          final decodedMessage = json.decode(data);
-          if (decodedMessage['message'] != null) {
-            messages
-                .add({'message': decodedMessage['message'], 'isSent': false});
-            print('Message received: ${decodedMessage['message']}');
-          } else {
-            print('Invalid message format: $decodedMessage');
-          }
-        },
-        onError: (error) {
-          print('WebSocket error: $error');
-          if (!isReconnecting) {
-            reconnect(roomName);
-          }
-        },
-        onDone: () {
-          print('WebSocket connection closed');
-          if (!isReconnecting) {
-            reconnect(roomName);
-          }
-        },
-      );
+      final response = await http.get(url);
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonData = json.decode(response.body);
+        var fetchedMessages =
+            jsonData.map((msg) => Message.fromJson(msg)).toList();
+        fetchedMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        messages.value = fetchedMessages; // Assign sorted messages
+      } else {
+        throw Exception('Failed to load messages');
+      }
     } catch (e) {
-      print('Error connecting to WebSocket: $e');
+      print('Error fetching messages: $e');
     }
   }
 
-  void sendMessage() {
-    if (messageController.text.isNotEmpty) {
-      final message = messageController.text;
-      print('Sending message: $message');
-      channel.sink.add(json.encode({'message': message}));
-      messages.add({'message': message, 'isSent': true});
-      messageController.clear();
-      print('Message sent successfully: $message');
-    } else {
-      print('Message text is empty; not sending.');
+  // Send a new message to the API
+  Future<void> sendMessage() async {
+    final messageText = messageController.text.trim();
+    if (messageText.isNotEmpty) {
+      try {
+        final message = Message(
+          id: 0, // API may generate the ID
+          userId: userId,
+          therapistId: therapistId,
+          message: messageText,
+          createdAt: DateTime.now(),
+        );
+
+        final response = await http.post(
+          Uri.parse(AppConstants.chat),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(message.toJson()),
+        );
+
+        if (response.statusCode == 201) {
+          await fetchMessages(); // Refresh the message list after sending a new one
+          messageController.clear(); // Clear the input field
+        } else {
+          throw Exception('Failed to send message');
+        }
+      } catch (e) {
+        print('Error sending message: $e');
+      }
     }
-  }
-
-  void reconnect(String roomName) {
-    if (isReconnecting)
-      return; // Prevent further attempts if already reconnecting
-
-    isReconnecting = true;
-    print('Attempting to reconnect to room: $roomName');
-
-    Future.delayed(Duration(seconds: 2), () {
-      connect(roomName);
-      isReconnecting = false; // Reset flag after attempting to reconnect
-    });
   }
 
   @override
   void onInit() {
     super.onInit();
-    // Connect to a default room if necessary
-    // connect('defaultRoomName');
-  }
-
-  @override
-  void onClose() {
-    print('Closing WebSocket connection');
-    channel.sink.close(status.goingAway);
-    messageController.dispose();
-    super.onClose();
+    fetchMessages(); // Fetch initial messages when the controller is initialized
   }
 }

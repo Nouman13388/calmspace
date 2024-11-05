@@ -139,7 +139,7 @@ class _UserHomePageState extends State<UserHomePage> {
                   FeatureCardData(
                     icon: Icons.chat,
                     title: 'Chat',
-                    onTap: () => Get.toNamed('/chat-page'),
+                    onTap: () => Get.toNamed('/user-thread'),
                   ),
                   FeatureCardData(
                     icon: Icons.location_on,

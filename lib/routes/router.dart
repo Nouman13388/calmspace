@@ -9,7 +9,8 @@ import '../views/auth_pages/therapist_login_page.dart';
 import '../views/auth_pages/therapist_signup_page.dart';
 import '../views/auth_pages/user_login_page.dart';
 import '../views/auth_pages/user_signup_page.dart';
-import '../views/chat_pages/chat_page.dart';
+import '../views/chat_pages/therapist_list_view.dart';
+import '../views/chat_pages/user_list_view.dart';
 import '../views/content_page.dart';
 import '../views/drawer_item_page.dart';
 import '../views/emergency_page.dart';
@@ -55,12 +56,9 @@ class AppRouter {
         name: '/terms-of-service',
         page: () => TermsOfServicePage()), // New route
     GetPage(
-        name: '/chat-page',
-        page: () => ChatPage(
-              userId: '1',
-              professionalId: '1',
-              roomName: '',
-            )), // Updated route
+        name: '/user-thread',
+        page: () => TherapistListPage()), // Updated routeGetPage(
+    GetPage(name: '/therapist-thread', page: () => UserListPage()),
     GetPage(name: '/feedback', page: () => FeedbackPage()), // New route
     GetPage(name: '/assessment', page: () => AssessmentPage()), // New route
     GetPage(
