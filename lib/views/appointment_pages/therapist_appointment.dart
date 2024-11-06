@@ -6,19 +6,24 @@ import 'package:http/http.dart' as http;
 
 import '../../constants/app_constants.dart';
 
-class TherapistAppointmentPage extends StatelessWidget {
-  TherapistAppointmentPage({super.key});
+class TherapistAppointmentPage extends StatefulWidget {
+  const TherapistAppointmentPage({super.key});
 
-  // Rx variables to store data
-  var users = <Map<String, dynamic>>[].obs;
-  var appointments = <Map<String, dynamic>>[].obs;
-  var isLoading = true.obs; // Loading status for the page
+  @override
+  _TherapistAppointmentPageState createState() =>
+      _TherapistAppointmentPageState();
+}
+
+class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
+  var patients = <Map<String, dynamic>>[].obs; // Patients data
+  var appointments = <Map<String, dynamic>>[].obs; // Appointments data
+  var isLoading = true.obs; // Loading status
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Users and Appointments'),
+        title: const Text('Patients and Appointments'),
       ),
       body: Obx(() {
         if (isLoading.value) {
@@ -31,15 +36,15 @@ class TherapistAppointmentPage extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'Users',
+                  'Patients', // Replaced "Users" with "Patients"
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
-              // Displaying users
-              for (var user in users)
+              // Displaying patients
+              for (var patient in patients)
                 ListTile(
-                  title: Text(user['name']),
-                  subtitle: Text(user['email']),
+                  title: Text(patient['name']),
+                  subtitle: Text(patient['email']),
                 ),
 
               const Padding(
@@ -75,45 +80,46 @@ class TherapistAppointmentPage extends StatelessWidget {
     );
   }
 
-  // Function to fetch all data (users and appointments)
+  // Function to fetch all data (patients and appointments)
   Future<void> fetchData() async {
     isLoading(true); // Set loading to true before fetching
 
-    // Fetch Users
-    await fetchUsers();
-
-    // Fetch Appointments for a specific user
-    await fetchAppointments('victor@gmail.com');
+    // Fetch Users and Appointments concurrently
+    await Future.wait([
+      fetchPatients(), // Fetch patients
+      fetchAppointments(
+          'victor@gmail.com'), // Fetch appointments for a specific patient
+    ]);
 
     isLoading(false); // Set loading to false after fetching
   }
 
-  // Fetch users from the API
-  Future<void> fetchUsers() async {
+  // Fetch patients from the API
+  Future<void> fetchPatients() async {
     try {
       final response = await http.get(Uri.parse(AppConstants.usersUrl));
 
       if (response.statusCode == 200) {
-        List<dynamic> fetchedUsers = jsonDecode(response.body);
+        List<dynamic> fetchedPatients = jsonDecode(response.body);
         // Explicitly cast to List<Map<String, dynamic>>
-        users.value = List<Map<String, dynamic>>.from(fetchedUsers);
-        print('Users fetched:');
-        fetchedUsers.forEach((user) {
-          print('User: ${user['name']} (${user['email']})');
+        patients.value = List<Map<String, dynamic>>.from(fetchedPatients);
+        print('Patients fetched:');
+        fetchedPatients.forEach((patient) {
+          print('Patient: ${patient['name']} (${patient['email']})');
         });
       } else {
-        print('Failed to fetch users. Status Code: ${response.statusCode}');
+        print('Failed to fetch patients. Status Code: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching users: $e');
+      print('Error fetching patients: $e');
     }
   }
 
-  // Fetch appointments for a logged-in user (using a static email for now)
-  Future<void> fetchAppointments(String userEmail) async {
+  // Fetch appointments for a logged-in patient (using a static email for now)
+  Future<void> fetchAppointments(String patientEmail) async {
     try {
-      final response = await http.get(
-          Uri.parse('${AppConstants.appointmentsUrl}?user_email=$userEmail'));
+      final response = await http.get(Uri.parse(
+          '${AppConstants.appointmentsUrl}?user_email=$patientEmail'));
 
       if (response.statusCode == 200) {
         List<dynamic> fetchedAppointments = jsonDecode(response.body);

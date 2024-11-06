@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart'; // For formatting date and time
+import 'package:intl/intl.dart';
 
-import '../../controllers/booking_controller.dart'; // Import the BookingController
+import '../../controllers/booking_controller.dart';
 
 class BookingPage extends StatelessWidget {
   final int userId;
@@ -10,7 +10,6 @@ class BookingPage extends StatelessWidget {
   final String userEmail;
   final String therapistEmail;
 
-  // Initialize the controller
   final BookingController bookingController = Get.put(BookingController());
 
   BookingPage({
@@ -61,14 +60,14 @@ class BookingPage extends StatelessWidget {
               if (bookingController.selectedStartDateTime.value != null) {
                 return Text(
                   'Start Time: ${DateFormat('dd/MM/yyyy').format(bookingController.selectedStartDateTime.value!)} - ${DateFormat('HH:mm').format(bookingController.selectedStartDateTime.value!)}',
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 );
               }
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             }),
             const SizedBox(height: 20),
 
-            // End DateTime Picker
+            // End DateTime Pickers
             ListTile(
               title: const Text('End Time'),
               trailing: IconButton(
@@ -98,25 +97,31 @@ class BookingPage extends StatelessWidget {
               if (bookingController.selectedEndDateTime.value != null) {
                 return Text(
                   'End Time: ${DateFormat('dd/MM/yyyy').format(bookingController.selectedEndDateTime.value!)} - ${DateFormat('HH:mm').format(bookingController.selectedEndDateTime.value!)}',
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 );
               }
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             }),
             const SizedBox(height: 40),
 
-            // Book Appointment Button
-            ElevatedButton(
-              onPressed: () {
-                bookingController.bookAppointment(
-                  userId,
-                  therapistId,
-                  userEmail,
-                  therapistEmail,
-                );
-              },
-              child: const Text('Book Appointment'),
-            ),
+            // Book Appointment Button with Loader
+            Obx(() {
+              return ElevatedButton(
+                onPressed: bookingController.isLoading.value
+                    ? null // Disable button while loading
+                    : () {
+                        bookingController.bookAppointment(
+                          userId,
+                          therapistId,
+                          userEmail,
+                          therapistEmail,
+                        );
+                      },
+                child: bookingController.isLoading.value
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Book Appointment'),
+              );
+            }),
           ],
         ),
       ),
