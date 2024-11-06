@@ -1,114 +1,139 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 
-import '../../controllers/therapist_controller.dart';
-import '../../controllers/user_controller.dart';
-import 'booking_page.dart'; // Import the BookingPage
+import '../../constants/app_constants.dart';
 
 class TherapistAppointmentPage extends StatelessWidget {
-  final TherapistController therapistController =
-      Get.put(TherapistController());
-  final UserController userController = Get.put(UserController());
-
   TherapistAppointmentPage({super.key});
+
+  // Rx variables to store data
+  var users = <Map<String, dynamic>>[].obs;
+  var appointments = <Map<String, dynamic>>[].obs;
+  var isLoading = true.obs; // Loading status for the page
 
   @override
   Widget build(BuildContext context) {
-    // Fetch therapists and users on page load
-    therapistController.fetchTherapists();
-    userController.fetchUsers();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Therapist'),
+        title: const Text('Users and Appointments'),
       ),
       body: Obx(() {
-        // Show loading indicator if data is not available
-        if (therapistController.therapists.isEmpty ||
-            userController.users.isEmpty) {
+        if (isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return FutureBuilder<List<Therapist>>(
-          future: therapistController.getFilteredTherapists(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Users',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              // Displaying users
+              for (var user in users)
+                ListTile(
+                  title: Text(user['name']),
+                  subtitle: Text(user['email']),
+                ),
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('No therapists available.'));
-            }
-
-            final filteredTherapists = snapshot.data!;
-
-            return ListView.builder(
-              itemCount: filteredTherapists.length,
-              itemBuilder: (context, index) {
-                final therapist = filteredTherapists[index];
-
-                return GestureDetector(
-                  onTap: () async {
-                    // Get the logged-in user's email using Firebase Auth
-                    final firebase_auth.User? firebaseUser =
-                        firebase_auth.FirebaseAuth.instance.currentUser;
-
-                    if (firebaseUser != null) {
-                      final loggedInEmail = firebaseUser.email;
-
-                      // Find the matched user by email
-                      BackendUser? matchedUser =
-                          userController.users.firstWhere(
-                        (user) => user.email == loggedInEmail,
-                        orElse: () => BackendUser(id: -1, name: '', email: ''),
-                      );
-
-                      // If a matching user is found
-                      if (matchedUser.id != -1) {
-                        final userId = matchedUser.id;
-                        final therapistId = therapist.id;
-
-                        // Navigate to the BookingPage and pass userId, therapistId, and emails
-                        Get.to(
-                          () => BookingPage(
-                            userId: userId,
-                            therapistId: therapistId,
-                            userEmail: matchedUser.email, // Pass user email
-                            therapistEmail: therapist
-                                .email, // Pass therapist email directly
-                          ),
-                        );
-                      } else {
-                        // Handle case where no matching user is found
-                        Get.snackbar(
-                            'Error', 'No matching user found for this email');
-                      }
-                    } else {
-                      // Handle case where no user is logged in
-                      Get.snackbar('Error', 'User not logged in');
-                    }
-                  },
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    child: ListTile(
-                      leading: const CircleAvatar(),
-                      title: Text(therapist.name),
-                      subtitle: Text(therapist.specialization),
-                      trailing: const Icon(Icons.arrow_forward_ios),
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Appointments',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              // Displaying appointments
+              for (var appointment in appointments)
+                Card(
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+                  child: ListTile(
+                    title: Text('Appointment ID: ${appointment['id']}'),
+                    subtitle: Text(
+                      'Start: ${appointment['start_time']} \nEnd: ${appointment['end_time']} \nStatus: ${appointment['status']}',
                     ),
                   ),
-                );
-              },
-            );
-          },
+                ),
+            ],
+          ),
         );
       }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Fetch data when button is pressed
+          fetchData();
+        },
+        child: const Icon(Icons.refresh),
+      ),
     );
+  }
+
+  // Function to fetch all data (users and appointments)
+  Future<void> fetchData() async {
+    isLoading(true); // Set loading to true before fetching
+
+    // Fetch Users
+    await fetchUsers();
+
+    // Fetch Appointments for a specific user
+    await fetchAppointments('victor@gmail.com');
+
+    isLoading(false); // Set loading to false after fetching
+  }
+
+  // Fetch users from the API
+  Future<void> fetchUsers() async {
+    try {
+      final response = await http.get(Uri.parse(AppConstants.usersUrl));
+
+      if (response.statusCode == 200) {
+        List<dynamic> fetchedUsers = jsonDecode(response.body);
+        // Explicitly cast to List<Map<String, dynamic>>
+        users.value = List<Map<String, dynamic>>.from(fetchedUsers);
+        print('Users fetched:');
+        fetchedUsers.forEach((user) {
+          print('User: ${user['name']} (${user['email']})');
+        });
+      } else {
+        print('Failed to fetch users. Status Code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching users: $e');
+    }
+  }
+
+  // Fetch appointments for a logged-in user (using a static email for now)
+  Future<void> fetchAppointments(String userEmail) async {
+    try {
+      final response = await http.get(
+          Uri.parse('${AppConstants.appointmentsUrl}?user_email=$userEmail'));
+
+      if (response.statusCode == 200) {
+        List<dynamic> fetchedAppointments = jsonDecode(response.body);
+        // Explicitly cast to List<Map<String, dynamic>>
+        appointments.value =
+            List<Map<String, dynamic>>.from(fetchedAppointments);
+        print('Appointments fetched:');
+        fetchedAppointments.forEach((appointment) {
+          print('Appointment ID: ${appointment['id']}');
+          print('Start: ${appointment['start_time']}');
+          print('End: ${appointment['end_time']}');
+          print('Therapist ID: ${appointment['therapist']}');
+          print('Status: ${appointment['status']}');
+        });
+      } else {
+        print(
+            'Failed to fetch appointments. Status Code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching appointments: $e');
+    }
   }
 }
