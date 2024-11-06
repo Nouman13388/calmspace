@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get_connect/connect.dart';
 import 'package:http/http.dart' as http;
+
 import '../constants/app_constants.dart';
 import '../models/assessment_question.dart';
 import '../models/content.dart';
@@ -20,7 +21,8 @@ class ApiService {
         List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((data) => HealthData.fromMap(data)).toList();
       } else {
-        debugPrint("Failed to load health data: ${response.statusCode} - ${response.body}");
+        debugPrint(
+            "Failed to load health data: ${response.statusCode} - ${response.body}");
         throw Exception('Failed to load health data');
       }
     } catch (e) {
@@ -38,7 +40,8 @@ class ApiService {
         List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((data) => Appointment.fromJson(data)).toList();
       } else {
-        debugPrint("Failed to load appointments: ${response.statusCode} - ${response.body}");
+        debugPrint(
+            "Failed to load appointments: ${response.statusCode} - ${response.body}");
         throw Exception('Failed to load appointments');
       }
     } catch (e) {
@@ -50,7 +53,8 @@ class ApiService {
   // Get user by email
   Future<EndUser?> getUserByEmail(String email) async {
     try {
-      final response = await http.get(Uri.parse('${AppConstants.userUrl}?email=$email'));
+      final response =
+          await http.get(Uri.parse('${AppConstants.userUrl}?email=$email'));
 
       if (response.statusCode == 200) {
         return EndUser.fromJson(json.decode(response.body)); // Use EndUser here
@@ -93,13 +97,15 @@ class ApiService {
       if (response.statusCode == 201) {
         return true;
       } else {
-        debugPrint('Error submitting feedback: ${response.statusCode} - ${response.body}');
+        debugPrint(
+            'Error submitting feedback: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       debugPrint('Something went wrong while submitting feedback: $e');
     }
     return false;
   }
+
   Future<List<AssessmentQuestion>> fetchAssessmentQuestions() async {
     final response = await http.get(Uri.parse(AppConstants.assessmentsUrl));
 
@@ -111,9 +117,7 @@ class ApiService {
       throw Exception('Failed to load assessment questions');
     }
   }
-
 }
-
 
 class ContentService extends GetConnect {
   // Fetch content from ArticleUrl
@@ -121,24 +125,31 @@ class ContentService extends GetConnect {
     final response = await get(AppConstants.articlesUrl);
 
     if (response.statusCode == 200) {
-      final List<dynamic> contentList = response.body[0]['content']; // Ensure this structure matches your API response
-      return contentList.map((data) => MentalHealthContent.fromMap(data)).toList();
+      final List<dynamic> contentList = response.body[0]
+          ['content']; // Ensure this structure matches your API response
+      return contentList
+          .map((data) => MentalHealthContent.fromMap(data))
+          .toList();
     } else {
-      debugPrint("Failed to load articles: ${response.statusCode} - ${response.body}");
+      debugPrint(
+          "Failed to load articles: ${response.statusCode} - ${response.body}");
       throw Exception('Failed to load articles');
     }
   }
 
   Future<EndUser?> getUserByEmail(String email) async {
     try {
-      final response = await http.get(Uri.parse('${AppConstants.usersUrl}?email=$email'));
+      final response =
+          await http.get(Uri.parse('${AppConstants.usersUrl}?email=$email'));
       if (response.statusCode == 200) {
         List<dynamic> users = jsonDecode(response.body);
         if (users.isNotEmpty) {
-          return EndUser.fromJson(users[0]); // Assuming the first match is the user
+          return EndUser.fromJson(
+              users[0]); // Assuming the first match is the user
         }
       } else {
-        print('Error fetching user by email: ${response.statusCode} - ${response.body}');
+        print(
+            'Error fetching user by email: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Exception fetching user by email: $e');
@@ -177,12 +188,12 @@ class ContentService extends GetConnect {
       if (response.statusCode == 201) {
         return true;
       } else {
-        print('Error submitting feedback: ${response.statusCode} - ${response.body}');
+        print(
+            'Error submitting feedback: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Something went wrong while submitting feedback: $e');
     }
     return false;
   }
-
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -30,9 +31,21 @@ class UserController extends GetxController {
     }
   }
 
-  // Method to add a user locally for immediate UI update
-  void addUserLocally(BackendUser user) {
-    users.add(user); // Add the user directly to the UI
+  // Method to filter out the logged-in user from the list
+  Future<List<BackendUser>> getFilteredUsers() async {
+    final firebase_auth.User? firebaseUser =
+        firebase_auth.FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser != null) {
+      final loggedInEmail = firebaseUser.email;
+
+      // Filter out the logged-in user from the list
+      final filteredUsers =
+          users.where((user) => user.email != loggedInEmail).toList();
+      return filteredUsers;
+    } else {
+      throw Exception('No user logged in');
+    }
   }
 }
 

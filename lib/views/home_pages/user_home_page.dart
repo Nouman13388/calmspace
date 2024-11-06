@@ -142,6 +142,11 @@ class _UserHomePageState extends State<UserHomePage> {
                     onTap: () => Get.toNamed('/user-thread'),
                   ),
                   FeatureCardData(
+                    icon: Icons.calendar_month_outlined,
+                    title: 'Book Appointment',
+                    onTap: () => Get.toNamed('/user-appointment'),
+                  ),
+                  FeatureCardData(
                     icon: Icons.location_on,
                     title: 'Clinic Locator',
                     onTap: () => Get.toNamed('/map'),

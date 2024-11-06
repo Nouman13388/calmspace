@@ -54,6 +54,25 @@ class TherapistController extends GetxController {
       return null;
     }
   }
+
+  // Filter therapists by the logged-in user and return those therapists
+  Future<List<Therapist>> getFilteredTherapists() async {
+    final firebase_auth.User? firebaseUser =
+        firebase_auth.FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser != null) {
+      final loggedInEmail = firebaseUser.email;
+
+      // Filter out therapists who match the logged-in user's email
+      final filteredTherapists = therapists
+          .where((therapist) => therapist.email != loggedInEmail)
+          .toList();
+
+      return filteredTherapists;
+    } else {
+      throw Exception('No user logged in');
+    }
+  }
 }
 
 class Therapist {
