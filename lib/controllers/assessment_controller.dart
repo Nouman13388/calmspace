@@ -9,18 +9,23 @@ import '../constants/app_constants.dart';
 import '../controllers/dashboard_controller.dart';
 
 class AssessmentController extends GetxController {
-  var currentQuestionIndex = 0.obs;
-  var selectedAnswers = <int, String>{}.obs;
-  var isAssessmentComplete = false.obs;
+  var currentQuestionIndex = 0.obs; // Index of the current question
+  var selectedAnswers = <int, String>{}.obs; // Store selected answers
+  var isAssessmentComplete =
+      false.obs; // Flag to mark the completion of the assessment
   var mood = ''.obs; // Mood result
   var symptoms =
-      "Based on assessment responses".obs; // Default symptoms message
+      "Based on assessment responses".obs; // Default value for symptoms
 
   // Gamification properties
   var progress = 0.0.obs; // Progress tracker (0 to 1 scale)
   var points = 0.obs; // Total points earned
   var badge = ''.obs; // Badge awarded at the end
-  var skippedQuestions = 0.obs; // Tracks number of skipped questions
+  var skippedQuestions = 0
+      .obs; // Tracks number of skipped questions (you can ignore this since skipping is disabled)
+
+  // Add isLoading observable
+  var isLoading = false.obs;
 
   final questions = [
     {
@@ -52,31 +57,71 @@ class AssessmentController extends GetxController {
     loadStoredData(); // Load stored score and badge on initialization
   }
 
+  // Helper function to sanitize email (remove any special characters)
+  String _sanitizeEmail(String email) {
+    return email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+  }
+
   // Save score and badge to shared preferences
   Future<void> saveScoreAndBadge() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('assessment_points', points.value);
-    await prefs.setString('assessment_badge', badge.value);
-    print(
-        "Score and badge saved to shared preferences: points = ${points.value}, badge = ${badge.value}");
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final userEmail = currentUser.email ?? '';
+
+      if (userEmail.isEmpty) {
+        print("No email found for the user.");
+        return;
+      }
+
+      final sanitizedEmail = _sanitizeEmail(userEmail);
+
+      // Use string interpolation to create dynamic keys
+      await prefs.setInt('${sanitizedEmail}_assessment_points', points.value);
+      await prefs.setString('${sanitizedEmail}_assessment_badge', badge.value);
+
+      print(
+          "Score and badge saved to shared preferences for $sanitizedEmail: points = ${points.value}, badge = ${badge.value}");
+    } else {
+      print("No user is logged in. Can't save data.");
+    }
   }
 
   // Load score and badge from shared preferences
   Future<void> loadStoredData() async {
-    final prefs = await SharedPreferences.getInstance();
-    points.value = prefs.getInt('assessment_points') ?? 0;
-    badge.value = prefs.getString('assessment_badge') ?? '';
-    print(
-        "Loaded score: ${points.value}, badge: ${badge.value} from shared preferences.");
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final userEmail = currentUser.email ?? '';
+
+      if (userEmail.isEmpty) {
+        print("No email found for the user.");
+        return;
+      }
+
+      final sanitizedEmail = _sanitizeEmail(userEmail);
+
+      // Use string interpolation to create dynamic keys
+      points.value = prefs.getInt('${sanitizedEmail}_assessment_points') ?? 0;
+      badge.value = prefs.getString('${sanitizedEmail}_assessment_badge') ?? '';
+      print(
+          "Loaded score: ${points.value}, badge: ${badge.value} for $sanitizedEmail from shared preferences.");
+    } else {
+      print("No user is logged in. Can't load data.");
+    }
   }
 
   // Send health data to the backend
   Future<void> sendHealthData() async {
     final url = AppConstants.healthDataUrl;
     User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      print("No user logged in. Can't send health data.");
+      return;
+    }
 
-    print("Sending health data for user: ${currentUser?.email}");
-    int backendUserId = await getBackendUserId(currentUser?.email);
+    print("Sending health data for user: ${currentUser.email}");
+    int backendUserId = await getBackendUserId(currentUser.email);
     if (backendUserId == 0) {
       print("Invalid user ID. Cannot send data.");
       return;
@@ -103,9 +148,13 @@ class AssessmentController extends GetxController {
         print('Data sent successfully: ${response.body}');
       } else {
         print('Failed to send data: ${response.statusCode} - ${response.body}');
+        // Show an error message to the user
+        Get.snackbar('Error', 'Failed to send health data to the server.');
       }
     } catch (error) {
       print('Error sending data: $error');
+      // Notify the user of a network error
+      Get.snackbar('Network Error', 'Could not send data. Please try again.');
     }
   }
 
@@ -136,49 +185,47 @@ class AssessmentController extends GetxController {
     }
   }
 
-  // Skip the current question
-  void skipQuestion() {
-    skippedQuestions.value += 1;
-    print("Skipped question. Total skipped: ${skippedQuestions.value}");
-
-    if (currentQuestionIndex.value >= questions.length - 1) {
-      print("All questions completed. Calculating result...");
-      calculateResult();
-      awardBadge();
-      isAssessmentComplete(true);
-      sendHealthData();
-      saveScoreAndBadge();
-    } else {
-      currentQuestionIndex.value++;
-      print("Moved to question index: ${currentQuestionIndex.value}");
-      updateProgress();
-    }
-  }
-
   // Evaluate the selected answer, update progress and points
-  void evaluateAnswer(String answer) {
+  void evaluateAnswer(String answer) async {
     selectedAnswers[currentQuestionIndex.value] = answer;
     points.value += 10; // Award 10 points per answered question
     print("Evaluated answer: $answer. Total points: ${points.value}");
     updateProgress();
 
-    if (currentQuestionIndex.value >= questions.length - 1) {
-      print("All questions answered. Calculating result...");
-      calculateResult();
-      awardBadge();
-      isAssessmentComplete(true);
-      sendHealthData();
-      saveScoreAndBadge();
-    } else {
-      currentQuestionIndex.value++;
-      print("Moved to question index: ${currentQuestionIndex.value}");
+    // Show loading indicator and delay before moving to next question
+    isLoading.value = true;
+
+    try {
+      // Add delay before moving to the next question
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (currentQuestionIndex.value >= questions.length - 1) {
+        completeAssessment();
+      } else {
+        currentQuestionIndex.value++; // Proceed to next question
+      }
+    } catch (error) {
+      print('Error during evaluation: $error');
+    } finally {
+      isLoading.value = false; // Ensure it turns off no matter what
     }
+  }
+
+  // Marks the assessment as complete
+  void completeAssessment() {
+    isAssessmentComplete(true);
+    calculateResult();
+    awardBadge();
+    sendHealthData();
+    saveScoreAndBadge(); // Store score and badge to SharedPreferences
+    Get.find<DashboardController>()
+        .updateHealthData(mood.value, symptoms.value);
   }
 
   // Update the progress as a percentage of total questions
   void updateProgress() {
     progress.value = (currentQuestionIndex.value + 1) / questions.length;
-    print("Progress updated: ${progress.value * 100}%");
+    print("Progress updated: ${(progress.value * 100).toStringAsFixed(2)}%");
   }
 
   // Calculate the result based on answers
@@ -209,24 +256,22 @@ class AssessmentController extends GetxController {
           break;
       }
     }
-    mood(score >= 30
+    mood.value = score >= 30
         ? "Happy"
         : score >= 15
             ? "Anxious"
-            : "Sad");
+            : "Sad";
     print("Calculated mood: ${mood.value} based on score: $score");
-    Get.find<DashboardController>()
-        .updateHealthData(mood.value, symptoms.value);
   }
 
-  // Award a badge based on total points and skipped questions
+  // Award a badge based on total points
   void awardBadge() {
-    if (points.value >= 50 && skippedQuestions.value == 0) {
-      badge("Gold Star");
-    } else if (points.value >= 30 && skippedQuestions.value <= 1) {
-      badge("Silver Star");
+    if (points.value >= 50) {
+      badge.value = "Gold Star";
+    } else if (points.value >= 30) {
+      badge.value = "Silver Star";
     } else {
-      badge("Bronze Star");
+      badge.value = "Bronze Star";
     }
     print("Awarded badge: ${badge.value}");
   }

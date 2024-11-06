@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controllers/assessment_controller.dart';
 
@@ -23,8 +27,9 @@ class AssessmentPage extends StatelessWidget {
       backgroundColor: const Color(0xFFFFF8E1),
       body: Obx(() {
         if (controller.isAssessmentComplete.value) {
-          // Display result, points, and badge on assessment completion
           print("Displaying results to the user.");
+          _saveAssessmentResult(controller.mood.value, controller.points.value,
+              controller.badge.value);
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +71,6 @@ class AssessmentPage extends StatelessWidget {
             ),
           );
         } else {
-          // Display current question, progress, and points
           final question =
               controller.questions[controller.currentQuestionIndex.value];
           print(
@@ -112,42 +116,70 @@ class AssessmentPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ...List<Widget>.from(
-                  (question["options"] as List<String>).map(
-                    (option) => RadioListTile<String>(
-                      title: Text(option),
-                      value: option,
-                      groupValue: controller.selectedAnswers[
-                          controller.currentQuestionIndex.value],
-                      onChanged: (value) {
-                        if (value != null) {
-                          print("User selected answer: $value");
-                          controller.evaluateAnswer(value);
-                        }
-                      },
-                    ),
-                  ),
+                  (question["options"] as List<String>)
+                      .map((option) => Obx(() => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(vertical: 4.0),
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            decoration: BoxDecoration(
+                              color: controller.selectedAnswers[controller
+                                          .currentQuestionIndex.value] ==
+                                      option
+                                  ? Colors.lightGreenAccent.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: RadioListTile<String>(
+                              title: Text(option),
+                              value: option,
+                              groupValue: controller.selectedAnswers[
+                                  controller.currentQuestionIndex.value],
+                              onChanged: (value) async {
+                                if (value != null) {
+                                  print("User selected answer: $value");
+                                  controller.evaluateAnswer(value);
+
+                                  // Show loading and delay before moving to next question
+                                  controller.isLoading.value =
+                                      true; // Show loading indicator
+
+                                  // Add delay for processing
+                                  await Future.delayed(
+                                      const Duration(seconds: 1));
+                                }
+                              },
+                            ),
+                          ))),
                 ),
-                const SizedBox(height: 16),
-                // Skip Button
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      print(
-                          "User skipped question ${controller.currentQuestionIndex.value + 1}");
-                      controller
-                          .skipQuestion(); // Calls skip function in the controller
-                    },
-                    child: const Text("Skip Question"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                    ),
+                if (controller.isLoading.value)
+                  const Center(
+                    child:
+                        CircularProgressIndicator(), // Display loading spinner
                   ),
-                ),
               ],
             ),
           );
         }
       }),
     );
+  }
+
+  // Function to save the assessment result in shared preferences
+  Future<void> _saveAssessmentResult(
+      String mood, int points, String badge) async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser; // Get logged-in user
+    final email = user?.email ??
+        'guest@example.com'; // Default to guest if no user is logged in
+
+    final data = {
+      'mood': mood,
+      'points': points,
+      'badge': badge,
+    };
+
+    await prefs.setString(email, json.encode(data));
+    print("Assessment result saved for $email: $data");
   }
 }
