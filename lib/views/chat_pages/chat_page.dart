@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../controllers/chat_controller.dart';
+import '../video_call_pages/video_call_screen.dart';
 
 class ChatPage extends StatelessWidget {
   final ChatController chatController = Get.put(ChatController(
@@ -24,6 +25,20 @@ class ChatPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Chat with Therapist'),
         backgroundColor: Colors.blueAccent,
+        actions: [
+          // Video call button
+          IconButton(
+            icon: const Icon(Icons.video_call),
+            onPressed: () {
+              // Ensure userId and therapistId are strings
+              final userIdStr = chatController.userId.toString();
+              final therapistIdStr = chatController.therapistId.toString();
+
+              // Navigate to VideoCallPage with senderId and receiverId
+              Get.to(() => const VideoCallPage());
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

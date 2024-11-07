@@ -39,7 +39,8 @@ class AppRouter {
     GetPage(name: '/map', page: () => GoogleMapScreen()),
     GetPage(name: '/content-page', page: () => const ContentPage()),
     GetPage(
-        name: '/therapist-appointment', page: () => TherapistAppointmentPage()),
+        name: '/therapist-appointment',
+        page: () => const TherapistAppointmentPage()),
     GetPage(name: '/user-appointment', page: () => UserAppointmentPage()),
     GetPage(
         name: '/notification-preferences',

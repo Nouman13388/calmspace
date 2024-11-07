@@ -1,22 +1,37 @@
-import 'package:flutter/material.dart';
+import 'package:calmspace/views/video_call_pages/services/rtc_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart'; // Add provider package
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'firebase_options.dart'; // Firebase options
 import 'initialbinding/initialbinding.dart';
 import 'routes/router.dart'; // Your router file
-import 'firebase_options.dart'; // Firebase options
 import 'utils/themes.dart'; // Custom theme
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensures Flutter is initialized before running the app
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); // Firebase initialization
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensures Flutter is initialized before running the app
+  await Firebase.initializeApp(
+      options:
+          DefaultFirebaseOptions.currentPlatform); // Firebase initialization
 
   // Initialize Shared Preferences
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   AppRouter.initRoutes(prefs); // Initialize GetX with SharedPreferences
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        // Add the RTCService provider here
+        Provider<RTCService>(
+            create: (_) => RTCService()), // Replace with your RTCService
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
