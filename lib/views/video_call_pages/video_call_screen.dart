@@ -1,11 +1,12 @@
 import 'package:calmspace/views/video_call_pages/screens/create_room/create_room.dart';
 import 'package:calmspace/views/video_call_pages/screens/join_room/join_room.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'constants/styles.dart';
 
 class VideoCallPage extends StatelessWidget {
-  const VideoCallPage({super.key});
+  const VideoCallPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -21,30 +22,25 @@ class VideoCallPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                height: size.height * 0.06,
-                width: size.width * 0.7,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const CreateRoom())),
-                  child: const Text('Create Room'),
-                  style: RoundedButtonStyle,
-                ),
-              ),
+              _buildButton(
+                  size, 'Create Room', () => Get.to(() => CreateRoom())),
               const SizedBox(height: 20),
-              SizedBox(
-                height: size.height * 0.06,
-                width: size.width * 0.7,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const JoinRoom())),
-                  child: const Text('Join Room'),
-                  style: RoundedButtonStyle,
-                ),
-              ),
+              _buildButton(size, 'Join Room', () => Get.to(() => JoinRoom())),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildButton(Size size, String text, VoidCallback onPressed) {
+    return SizedBox(
+      height: size.height * 0.06,
+      width: size.width * 0.7,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        child: Text(text),
+        style: RoundedButtonStyle,
       ),
     );
   }

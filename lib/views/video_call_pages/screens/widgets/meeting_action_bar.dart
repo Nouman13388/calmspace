@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../constants/styles.dart';
 import 'meeting_action_button.dart';
 
-// Meeting ActionBar
 class MeetingActionBar extends StatelessWidget {
-  // control states
-  final bool isMicEnabled,
-      isWebcamEnabled;
-
-  // callback functions
+  final bool isMicEnabled, isWebcamEnabled;
   final void Function() onCallEndButtonPressed,
       onMicButtonPressed,
       onWebcamButtonPressed;
-
   final double iconSize;
 
   const MeetingActionBar({
@@ -28,65 +23,45 @@ class MeetingActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      // color: Theme.of(context).backgroundColor,
       child: SizedBox(
-        width : size.width * 0.85,
+        width: size.width * 0.85,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Call End Control
-            GestureDetector(
-              onTap: onCallEndButtonPressed,
-              child: SizedBox(
-                width: size.width * 0.2,
-                child: MeetingActionButton(
-                  backgroundColor: Colors.red,
-                  onPressed: onCallEndButtonPressed,
-                  icon: Icons.call_end,
-                  iconSize: iconSize,
-                ),
-              ),
+            _buildActionButton(
+                size, Colors.red, Icons.call_end, onCallEndButtonPressed),
+            _buildActionButton(
+              size,
+              isMicEnabled ? hoverColor : secondaryColor.withOpacity(0.8),
+              isMicEnabled ? Icons.mic : Icons.mic_off,
+              onMicButtonPressed,
             ),
-
-            // Mic Control
-            GestureDetector(
-              onTap: onMicButtonPressed,
-              child: SizedBox(
-                                width: size.width * 0.2,
-
-                child: MeetingActionButton(
-                  onPressed: onMicButtonPressed,
-                  backgroundColor:
-                      isMicEnabled ? hoverColor : secondaryColor.withOpacity(0.8),
-                  icon: isMicEnabled ? Icons.mic : Icons.mic_off,
-                  iconSize: iconSize,
-                ),
-              ),
+            _buildActionButton(
+              size,
+              isWebcamEnabled ? hoverColor : secondaryColor.withOpacity(0.8),
+              isWebcamEnabled ? Icons.videocam : Icons.videocam_off,
+              onWebcamButtonPressed,
             ),
-
-            // Webcam Control
-            GestureDetector(
-              onTap: onWebcamButtonPressed,
-              child: SizedBox(
-                                width: size.width * 0.2,
-
-                child: MeetingActionButton(
-                  onPressed: onWebcamButtonPressed,
-                  backgroundColor: isWebcamEnabled
-                      ? hoverColor
-                      : secondaryColor.withOpacity(0.8),
-                  icon: isWebcamEnabled ? Icons.videocam : Icons.videocam_off,
-                  iconSize: iconSize,
-                ),
-              ),
-            ),
-
-            // Webcam Switch Control
-            // if(Platform.isAndroid)
-
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+      Size size, Color backgroundColor, IconData icon, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: SizedBox(
+        width: size.width * 0.2,
+        child: MeetingActionButton(
+          backgroundColor: backgroundColor,
+          onPressed: onPressed,
+          icon: icon,
+          iconSize: iconSize,
         ),
       ),
     );
