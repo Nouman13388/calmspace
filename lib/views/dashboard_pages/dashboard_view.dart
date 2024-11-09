@@ -34,7 +34,7 @@ class DashboardView extends StatelessWidget {
               }
             }),
             const SizedBox(height: 20),
-            _buildScoreAndBadgeInfo(), // Updated section
+            _buildScoreAndBadgeInfo(),
             const SizedBox(height: 20),
             _buildHealthDataSection(),
             const SizedBox(height: 20),
@@ -180,7 +180,7 @@ class DashboardView extends StatelessWidget {
             Text("Symptoms: ${healthData.symptoms}",
                 style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 8),
-            Text("Recorded At: ${healthData.createdAt.toLocal().toString()}",
+            Text("Recorded At: ${formatDate(healthData.createdAt)}",
                 style: const TextStyle(fontSize: 14)),
           ],
         ),
@@ -189,11 +189,6 @@ class DashboardView extends StatelessWidget {
   }
 
   Widget _buildUpcomingAppointment(Appointment appointment) {
-    String formatDate(String dateTime) {
-      DateTime parsedDate = DateTime.parse(dateTime);
-      return DateFormat.yMMMMd().add_jm().format(parsedDate);
-    }
-
     return Card(
       margin: const EdgeInsets.all(8.0),
       elevation: 4,
@@ -225,5 +220,10 @@ class DashboardView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Helper function to format DateTime
+  String formatDate(DateTime dateTime) {
+    return DateFormat.yMMMMd().add_jm().format(dateTime);
   }
 }

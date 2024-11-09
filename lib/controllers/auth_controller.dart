@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/user_model.dart';
 import '../services/auth_services.dart';
 
@@ -28,6 +29,7 @@ class AuthController extends GetxController {
     onControllerDeleted();
   }
 
+  // Fetch user data by email
   Future<void> fetchUserByEmail(String email) async {
     try {
       isLoading.value = true;
@@ -38,7 +40,8 @@ class AuthController extends GetxController {
 
       if (fetchedData != null) {
         userData.value = EndUser.fromJson(fetchedData);
-        print('User data value ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
+        print(
+            'User data value ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', userData.value!.email!);
@@ -62,6 +65,7 @@ class AuthController extends GetxController {
     }
   }
 
+  // Load user data from SharedPreferences
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('user_email');
@@ -74,9 +78,12 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<UserCredential?> signUpWithEmail(String fullName, String email, String password, String confirmPassword, bool isTherapist) async {
+  // Sign up with email and password
+  Future<UserCredential?> signUpWithEmail(String fullName, String email,
+      String password, String confirmPassword, bool isTherapist) async {
     if (password != confirmPassword) {
-      throw FirebaseAuthException(code: 'passwords-not-match', message: 'The passwords do not match.');
+      throw FirebaseAuthException(
+          code: 'passwords-not-match', message: 'The passwords do not match.');
     }
 
     try {
@@ -87,12 +94,14 @@ class AuthController extends GetxController {
         throw Exception('A user or therapist with this email already exists.');
       }
 
-      UserCredential userCredential = await _authServices.signUpWithEmail(fullName, email, password);
+      UserCredential userCredential =
+          await _authServices.signUpWithEmail(fullName, email, password);
 
       if (isTherapist) {
         String specialization = "Default Specialization";
         String bio = "Default Bio";
-        await _authServices.storeTherapistData(email, fullName, specialization, bio);
+        await _authServices.storeTherapistData(
+            email, fullName, specialization, bio);
       } else {
         await _authServices.storeUserData(fullName, email, password);
       }
@@ -123,6 +132,7 @@ class AuthController extends GetxController {
     }
   }
 
+  // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
       isLoading.value = true;
@@ -146,7 +156,8 @@ class AuthController extends GetxController {
 
       bool userExists = await _authServices.checkUserExists(userEmail);
       if (!userExists) {
-        await _authServices.storeUserData(userName!, userEmail, 'defaultPassword123');
+        await _authServices.storeUserData(
+            userName!, userEmail, 'defaultPassword123');
       }
 
       await fetchUserByEmail(userEmail);
@@ -162,13 +173,15 @@ class AuthController extends GetxController {
     } on FirebaseAuthException {
       rethrow;
     } catch (e) {
-      print('An error occurred while signing in: ${mapFirebaseAuthExceptionMessage(e.toString())}');
+      print(
+          'An error occurred while signing in: ${mapFirebaseAuthExceptionMessage(e.toString())}');
       return null;
     } finally {
       isLoading.value = false;
     }
   }
 
+  // Log out the user
   Future<void> logout(SharedPreferences prefs) async {
     try {
       isLoading.value = true;
@@ -201,11 +214,14 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<UserCredential?> authenticateTherapist(String email, String password, SharedPreferences prefs, bool rememberMe) async {
+  // Authenticate therapist
+  Future<UserCredential?> authenticateTherapist(String email, String password,
+      SharedPreferences prefs, bool rememberMe) async {
     try {
       isLoading.value = true;
 
-      UserCredential userCredential = await _authServices.signInWithEmail(email, password);
+      UserCredential userCredential =
+          await _authServices.signInWithEmail(email, password);
 
       bool therapistExists = await _authServices.checkUserExists(email);
       if (!therapistExists) {
@@ -236,13 +252,15 @@ class AuthController extends GetxController {
     } on FirebaseAuthException {
       rethrow;
     } catch (e) {
-      print('An error occurred during authentication: ${mapFirebaseAuthExceptionMessage(e.toString())}');
+      print(
+          'An error occurred during authentication: ${mapFirebaseAuthExceptionMessage(e.toString())}');
       return null;
     } finally {
       isLoading.value = false;
     }
   }
 
+  // Send password reset email
   Future<void> forgotPassword(String email) async {
     try {
       isLoading.value = true;
@@ -267,6 +285,7 @@ class AuthController extends GetxController {
     }
   }
 
+  // Map FirebaseAuthException to user-friendly messages
   String mapFirebaseAuthExceptionMessage(String errorMessage) {
     if (errorMessage.contains('wrong-password')) {
       return 'The password is incorrect. Please try again.';
@@ -280,7 +299,9 @@ class AuthController extends GetxController {
     return 'An unknown error occurred. Please try again later.';
   }
 
-  Future<void> authenticateUser(String email, String password, SharedPreferences prefs, bool rememberMe) async {
+  // Authenticate user
+  Future<void> authenticateUser(String email, String password,
+      SharedPreferences prefs, bool rememberMe) async {
     try {
       await fetchUserByEmail(email);
       if (rememberMe) {
@@ -292,6 +313,7 @@ class AuthController extends GetxController {
     }
   }
 
+  // Print user data for debugging
   void printUserData() {
     if (userData.value != null) {
       print('User Data:');

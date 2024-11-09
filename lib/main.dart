@@ -1,3 +1,4 @@
+import 'package:calmspace/controllers/user_controller.dart';
 import 'package:calmspace/views/video_call_pages/services/rtc_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,9 @@ void main() async {
 
   // Initialize Shared Preferences
   SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  // Initialize GetX and dependencies here
+  Get.put(UserController()); // Ensure UserController is initialized here
 
   AppRouter.initRoutes(prefs); // Initialize GetX with SharedPreferences
 

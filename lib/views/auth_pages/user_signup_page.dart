@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../controllers/user_controller.dart'; // Import the UserController
 
 class UserSignUpPage extends StatelessWidget {
   UserSignUpPage({super.key});
@@ -15,6 +16,8 @@ class UserSignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
+    final userController =
+        Get.find<UserController>(); // Initialize the UserController
 
     return Scaffold(
       appBar: AppBar(
@@ -62,7 +65,7 @@ class UserSignUpPage extends StatelessWidget {
             Obx(() => ElevatedButton(
                   onPressed: authController.isLoading.value
                       ? null
-                      : () => _registerUser(authController),
+                      : () => _registerUser(authController, userController),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 40, vertical: 14),
@@ -80,19 +83,32 @@ class UserSignUpPage extends StatelessWidget {
     );
   }
 
-  Future<void> _registerUser(AuthController authController) async {
+  Future<void> _registerUser(
+      AuthController authController, UserController userController) async {
     authController.isLoading.value = true;
+
     try {
+      // Check if the email already exists in Firebase and the backend
+      bool emailExists =
+          await userController.isEmailExists(_emailController.text);
+
+      if (emailExists) {
+        _showSnackbar('Error', 'Email is already registered!', Colors.red);
+        return;
+      }
+
+      // Proceed with Firebase sign-up if the email does not exist
       await authController.signUpWithEmail(
         _fullNameController.text,
         _emailController.text,
         _passwordController.text,
         _confirmPasswordController.text,
-        false, // isTherapist
+        false, // isTherapist (assuming the user is not a therapist here)
       );
 
       _showSnackbar(
           'Success', 'User account created successfully!', Colors.orangeAccent);
+
       // Navigate to login page after successful sign-up
       Get.offNamed('/user-login'); // Navigate to UserLoginPage
     } catch (e) {

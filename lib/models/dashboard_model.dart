@@ -35,16 +35,16 @@ class HealthData {
 class Appointment {
   final int id;
   final String status;
-  final String startTime;
-  final String endTime;
+  final DateTime startTime;
+  final DateTime endTime;
   final int therapist; // Changed to int
   final int user; // Changed to int
 
   Appointment({
     required this.id,
     required this.status,
-    required this.startTime,
-    required this.endTime,
+    required this.startTime, // DateTime
+    required this.endTime, // DateTime
     required this.therapist, // Include as int
     required this.user, // Include as int
   });
@@ -54,11 +54,14 @@ class Appointment {
     return Appointment(
       id: json['id'],
       status: json['status'] ?? 'unknown', // Default value if null
-      startTime: json['start_time'] ?? '', // Default value if null
-      endTime: json['end_time'] ?? '', // Default value if null
-      therapist: json['professional'] ??
-          0, // Changed to get the correct field and handle null
-      user: json['user'] ?? 0, // Changed to handle null
+      startTime: json['start_time'] != null
+          ? DateTime.parse(json['start_time'])
+          : DateTime.now(), // Parse DateTime
+      endTime: json['end_time'] != null
+          ? DateTime.parse(json['end_time'])
+          : DateTime.now(), // Parse DateTime
+      therapist: json['therapist'] ?? 0, // Corrected field name
+      user: json['user'] ?? 0, // Default value if null
     );
   }
 
@@ -67,9 +70,9 @@ class Appointment {
     return {
       'id': id,
       'status': status,
-      'start_time': startTime,
-      'end_time': endTime,
-      'professional': therapist,
+      'start_time': startTime.toIso8601String(), // Convert DateTime to string
+      'end_time': endTime.toIso8601String(), // Convert DateTime to string
+      'therapist': therapist,
       'user': user,
     };
   }

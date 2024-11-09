@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:get/get_connect/connect.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
+import '../controllers/user_controller.dart';
 import '../models/assessment_question.dart';
 import '../models/content.dart';
 import '../models/dashboard_model.dart';
@@ -12,42 +13,51 @@ import '../models/feedback_model.dart';
 import '../models/user_model.dart';
 
 class ApiService {
-  // Fetch health data
-  Future<List<HealthData>> fetchHealthData() async {
+  final UserController _userController = Get.find<UserController>();
+
+  // Generic method to fetch data from any endpoint
+  Future<List<T>> _fetchData<T>(
+      String url, T Function(Map<String, dynamic>) fromJson) async {
     try {
-      final response = await http.get(Uri.parse(AppConstants.healthDataUrl));
+      final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         List<dynamic> jsonData = json.decode(response.body);
-        return jsonData.map((data) => HealthData.fromMap(data)).toList();
+        debugPrint("Fetched data: $jsonData");
+        return jsonData.map((data) => fromJson(data)).toList();
       } else {
         debugPrint(
-            "Failed to load health data: ${response.statusCode} - ${response.body}");
-        throw Exception('Failed to load health data');
+            "Failed to fetch data: ${response.statusCode} - ${response.body}");
+        throw Exception('Failed to load data');
       }
     } catch (e) {
-      debugPrint("Error fetching health data: $e");
-      throw Exception('Error fetching health data: $e');
+      debugPrint("Error fetching data: $e");
+      throw Exception('Error fetching data: $e');
     }
   }
 
-  // Fetch appointments
-  Future<List<Appointment>> fetchAppointments(String role, String name) async {
-    try {
-      final response = await http.get(Uri.parse(AppConstants.appointmentsUrl));
-
-      if (response.statusCode == 200) {
-        List<dynamic> jsonData = json.decode(response.body);
-        return jsonData.map((data) => Appointment.fromJson(data)).toList();
-      } else {
-        debugPrint(
-            "Failed to load appointments: ${response.statusCode} - ${response.body}");
-        throw Exception('Failed to load appointments');
-      }
-    } catch (e) {
-      debugPrint("Error fetching appointments: $e");
-      throw Exception('Error fetching appointments: $e');
+  // Check if the user is logged in, throw an error if not
+  Future<int> _checkUserLoggedIn() async {
+    final userId = await _userController.getLoggedInUserId();
+    if (userId == null) {
+      throw Exception('User is not logged in. Please log in to continue.');
     }
+    return userId;
+  }
+
+  // Fetch health data for the logged-in user
+  Future<List<HealthData>> fetchHealthData() async {
+    final userId = await _checkUserLoggedIn();
+    final url = '${AppConstants.healthDataUrl}?user_id=$userId';
+    return _fetchData(url, (data) => HealthData.fromMap(data));
+  }
+
+  // Fetch appointments for the logged-in user and therapist
+  Future<List<Appointment>> fetchAppointments(String role, String name) async {
+    final userId = await _checkUserLoggedIn();
+    final url =
+        '${AppConstants.appointmentsUrl}?user_id=$userId&role=$role&name=$name';
+    return _fetchData(url, (data) => Appointment.fromJson(data));
   }
 
   // Get user by email
@@ -57,8 +67,10 @@ class ApiService {
           await http.get(Uri.parse('${AppConstants.userUrl}?email=$email'));
 
       if (response.statusCode == 200) {
-        return EndUser.fromJson(json.decode(response.body)); // Use EndUser here
+        debugPrint("Fetched user data: ${response.body}");
+        return EndUser.fromJson(json.decode(response.body));
       } else {
+        debugPrint("Failed to fetch user data: ${response.body}");
         throw Exception('Failed to fetch user data: ${response.body}');
       }
     } catch (e) {
@@ -73,7 +85,7 @@ class ApiService {
       final response = await http.get(Uri.parse(AppConstants.feedbackUrl));
       if (response.statusCode == 200) {
         List<dynamic> jsonData = json.decode(response.body);
-        // Map JSON data to a list of Feedback objects
+        debugPrint("Fetched feedback data: $jsonData");
         return jsonData.map((data) => Feedback.fromJson(data)).toList();
       } else {
         debugPrint('Failed to load feedback: ${response.statusCode}');
@@ -95,25 +107,29 @@ class ApiService {
       );
 
       if (response.statusCode == 201) {
+        debugPrint("Feedback submitted successfully.");
         return true;
       } else {
         debugPrint(
             'Error submitting feedback: ${response.statusCode} - ${response.body}');
+        throw Exception('Error submitting feedback');
       }
     } catch (e) {
       debugPrint('Something went wrong while submitting feedback: $e');
+      throw Exception('Feedback submission failed');
     }
-    return false;
   }
 
+  // Fetch assessment questions
   Future<List<AssessmentQuestion>> fetchAssessmentQuestions() async {
     final response = await http.get(Uri.parse(AppConstants.assessmentsUrl));
 
     if (response.statusCode == 200) {
-      // Assuming your backend returns a list of assessment questions in JSON format
       List<dynamic> jsonData = json.decode(response.body);
+      debugPrint("Fetched assessment questions: $jsonData");
       return jsonData.map((item) => AssessmentQuestion.fromJson(item)).toList();
     } else {
+      debugPrint('Failed to load assessment questions');
       throw Exception('Failed to load assessment questions');
     }
   }
@@ -122,21 +138,28 @@ class ApiService {
 class ContentService extends GetConnect {
   // Fetch content from ArticleUrl
   Future<List<MentalHealthContent>> fetchContentFromArticle() async {
-    final response = await get(AppConstants.articlesUrl);
+    try {
+      final response = await get(AppConstants.articlesUrl);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> contentList = response.body[0]
-          ['content']; // Ensure this structure matches your API response
-      return contentList
-          .map((data) => MentalHealthContent.fromMap(data))
-          .toList();
-    } else {
-      debugPrint(
-          "Failed to load articles: ${response.statusCode} - ${response.body}");
-      throw Exception('Failed to load articles');
+      if (response.statusCode == 200) {
+        final contentList = response.body[0]['content'] ??
+            []; // Ensure this structure matches your API response
+        debugPrint("Fetched article content: $contentList");
+        return contentList
+            .map((data) => MentalHealthContent.fromMap(data))
+            .toList();
+      } else {
+        debugPrint(
+            "Failed to load articles: ${response.statusCode} - ${response.body}");
+        throw Exception('Failed to load articles');
+      }
+    } catch (e) {
+      debugPrint("Error fetching article content: $e");
+      throw Exception('Error fetching article content');
     }
   }
 
+  // Get user by email (for ContentService)
   Future<EndUser?> getUserByEmail(String email) async {
     try {
       final response =
@@ -144,15 +167,16 @@ class ContentService extends GetConnect {
       if (response.statusCode == 200) {
         List<dynamic> users = jsonDecode(response.body);
         if (users.isNotEmpty) {
+          debugPrint("Fetched user by email: ${users[0]}");
           return EndUser.fromJson(
               users[0]); // Assuming the first match is the user
         }
       } else {
-        print(
+        debugPrint(
             'Error fetching user by email: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Exception fetching user by email: $e');
+      debugPrint('Exception fetching user by email: $e');
     }
     return null;
   }
@@ -163,15 +187,15 @@ class ContentService extends GetConnect {
       final response = await http.get(Uri.parse(AppConstants.feedbackUrl));
       if (response.statusCode == 200) {
         List<dynamic> jsonData = json.decode(response.body);
+        debugPrint("Fetched feedback data: $jsonData");
 
-        // Map JSON data to a list of Feedback objects
         return jsonData.map((data) => Feedback.fromJson(data)).toList();
       } else {
-        print('Failed to load feedback: ${response.statusCode}');
+        debugPrint('Failed to load feedback: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('Error fetching feedback: $e');
+      debugPrint('Error fetching feedback: $e');
       return null;
     }
   }
@@ -186,14 +210,16 @@ class ContentService extends GetConnect {
       );
 
       if (response.statusCode == 201) {
+        debugPrint("Feedback submitted successfully.");
         return true;
       } else {
-        print(
+        debugPrint(
             'Error submitting feedback: ${response.statusCode} - ${response.body}');
+        throw Exception('Error submitting feedback');
       }
     } catch (e) {
-      print('Something went wrong while submitting feedback: $e');
+      debugPrint('Something went wrong while submitting feedback: $e');
+      throw Exception('Feedback submission failed');
     }
-    return false;
   }
 }

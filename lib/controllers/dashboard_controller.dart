@@ -32,10 +32,10 @@ class DashboardController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       points.value = prefs.getInt('assessment_points') ?? 0;
       badge.value = prefs.getString('assessment_badge') ?? '';
-      print(
+      debugPrint(
           "Stored data loaded: points = ${points.value}, badge = '${badge.value}'"); // Debugging
     } catch (e) {
-      print("Error loading stored data: $e"); // Debugging
+      debugPrint("Error loading stored data: $e"); // Debugging
     }
   }
 
@@ -43,16 +43,11 @@ class DashboardController extends GetxController {
   Future<void> fetchHealthData() async {
     try {
       healthDataList.value = await apiService.fetchHealthData();
-      print(
+      debugPrint(
           "Health data fetched: ${healthDataList.length} entries"); // Debugging
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load health data: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
-      );
+      debugPrint(
+          "Error fetching health data: $e"); // Error handling, no Snackbar
     }
   }
 
@@ -60,16 +55,11 @@ class DashboardController extends GetxController {
   Future<void> fetchAppointments(String role, String name) async {
     try {
       appointmentList.value = await apiService.fetchAppointments(role, name);
-      print(
+      debugPrint(
           "Appointments fetched: ${appointmentList.length} entries"); // Debugging
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load appointments: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
-      );
+      debugPrint(
+          "Error fetching appointments: $e"); // Error handling, no Snackbar
     }
   }
 
@@ -82,7 +72,7 @@ class DashboardController extends GetxController {
       createdAt: DateTime.now(),
     );
     healthDataList.add(newHealthData);
-    print(
+    debugPrint(
         "Health data updated: Mood = $mood, Symptoms = $symptoms"); // Debugging
   }
 
