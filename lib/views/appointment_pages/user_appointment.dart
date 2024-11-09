@@ -96,16 +96,6 @@ class UserAppointmentPage extends StatelessWidget {
                                 therapist.email, // Pass therapist email
                           ),
                         );
-
-                        // Show success Snackbar with orange accent color at the bottom
-                        Get.snackbar(
-                          'Success',
-                          'Appointment booked successfully with ${therapist.name}!',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.orangeAccent,
-                          colorText: Colors.white,
-                          duration: Duration(seconds: 3),
-                        );
                       } else {
                         // Handle case where no matching user is found
                         print('No matching user found for the logged-in email');

@@ -9,9 +9,29 @@ class BookingController extends GetxController {
   var selectedEndDateTime = Rx<DateTime?>(null);
   var isLoading = RxBool(false);
   var isAppointmentBooked = RxBool(false);
+  var errorMessage = RxString('');
+  var successMessage = RxString('');
 
   // Assume API service is initialized here
   final ApiService _apiService = Get.find<ApiService>();
+
+  // Clear previous messages
+  void clearMessages() {
+    errorMessage.value = '';
+    successMessage.value = '';
+  }
+
+  // Set error message
+  void setErrorMessage(String message) {
+    errorMessage.value = message;
+    print('Debug: Error message set - $message');
+  }
+
+  // Set success message
+  void setSuccessMessage(String message) {
+    successMessage.value = message;
+    print('Debug: Success message set - $message');
+  }
 
   // Check if the appointment overlaps with any existing appointment
   Future<bool> checkForOverlappingAppointments(
@@ -46,10 +66,7 @@ class BookingController extends GetxController {
   Future<void> bookAppointment(int userId, int therapistId, String userEmail,
       String therapistEmail) async {
     isLoading.value = true;
-
     try {
-      // Proceed with booking logic here
-
       // Simulate a delay (e.g., API call)
       await Future.delayed(Duration(seconds: 2));
 
@@ -57,13 +74,12 @@ class BookingController extends GetxController {
       isAppointmentBooked.value = true;
       isLoading.value = false;
 
-      // Optionally: Show success notification
-      Get.snackbar('Booking Successful', 'Your appointment has been booked.');
+      setSuccessMessage('Appointment booked successfully.');
     } catch (error) {
       print("Error occurred while booking: $error");
       isLoading.value = false;
-      Get.snackbar('Booking Failed',
-          'Failed to book your appointment. Please try again.');
+      setErrorMessage(
+          'An error occurred while booking your appointment. Please try again.');
     }
   }
 

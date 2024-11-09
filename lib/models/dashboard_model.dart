@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class HealthData {
   final int id;
   final String mood;
@@ -37,30 +39,33 @@ class Appointment {
   final String status;
   final DateTime startTime;
   final DateTime endTime;
-  final int therapist; // Changed to int
-  final int user; // Changed to int
+  final int therapist;
+  final int user;
 
   Appointment({
     required this.id,
     required this.status,
-    required this.startTime, // DateTime
-    required this.endTime, // DateTime
-    required this.therapist, // Include as int
-    required this.user, // Include as int
+    required this.startTime,
+    required this.endTime,
+    required this.therapist,
+    required this.user,
   });
 
-  // Modify to handle null values gracefully and match your requirements
+  // Modify to handle null values gracefully and parse custom date format
   factory Appointment.fromJson(Map<String, dynamic> json) {
+    // Define the date format you're receiving in the API response
+    final dateFormat = DateFormat("dd/MM/yyyy HH:mm");
+
     return Appointment(
       id: json['id'],
       status: json['status'] ?? 'unknown', // Default value if null
       startTime: json['start_time'] != null
-          ? DateTime.parse(json['start_time'])
-          : DateTime.now(), // Parse DateTime
+          ? dateFormat.parse(json['start_time'])
+          : DateTime.now(), // Parse DateTime using custom format
       endTime: json['end_time'] != null
-          ? DateTime.parse(json['end_time'])
-          : DateTime.now(), // Parse DateTime
-      therapist: json['therapist'] ?? 0, // Corrected field name
+          ? dateFormat.parse(json['end_time'])
+          : DateTime.now(), // Parse DateTime using custom format
+      therapist: json['therapist'] ?? 0, // Default value if null
       user: json['user'] ?? 0, // Default value if null
     );
   }
