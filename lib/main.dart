@@ -1,4 +1,6 @@
+import 'package:calmspace/controllers/booking_controller.dart';
 import 'package:calmspace/controllers/user_controller.dart';
+import 'package:calmspace/services/api_service.dart';
 import 'package:calmspace/views/video_call_pages/services/rtc_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -14,15 +16,18 @@ import 'utils/themes.dart'; // Custom theme
 void main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); // Ensures Flutter is initialized before running the app
+
   await Firebase.initializeApp(
       options:
           DefaultFirebaseOptions.currentPlatform); // Firebase initialization
 
-  // Initialize Shared Preferences
+  // Initialize SharedPreferences
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  // Initialize GetX and dependencies here
-  Get.put(UserController()); // Ensure UserController is initialized here
+  // Initialize UserController before ApiService
+  Get.put(UserController()); // Ensure UserController is initialized first
+  Get.put(ApiService()); // Then initialize ApiService
+  Get.put(BookingController());
 
   AppRouter.initRoutes(prefs); // Initialize GetX with SharedPreferences
 

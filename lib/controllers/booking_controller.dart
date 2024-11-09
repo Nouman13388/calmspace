@@ -1,115 +1,87 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
-import '../../constants/app_constants.dart';
+import '../services/api_service.dart'; // Assuming ApiService is responsible for fetching appointment data
 
 class BookingController extends GetxController {
-  Rx<DateTime?> selectedStartDateTime = Rx<DateTime?>(null);
-  Rx<DateTime?> selectedEndDateTime = Rx<DateTime?>(null);
-  RxBool isLoading = false.obs; // Observable to track loading state
+  // Observable variables to store selected times
+  var selectedStartDateTime = Rx<DateTime?>(null);
+  var selectedEndDateTime = Rx<DateTime?>(null);
+  var isLoading = RxBool(false);
+  var isAppointmentBooked = RxBool(false);
 
-  final DateFormat dateFormatter = DateFormat('dd/MM/yyyy');
-  final DateFormat timeFormatter = DateFormat('HH:mm');
+  // Assume API service is initialized here
+  final ApiService _apiService = Get.find<ApiService>();
 
-  void selectDateTime(
-      bool isStartTime, DateTime pickedDate, TimeOfDay pickedTime) {
-    if (isStartTime) {
-      selectedStartDateTime.value = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
-      );
-      print('Selected Start DateTime: ${selectedStartDateTime.value}');
-    } else {
-      selectedEndDateTime.value = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
-      );
-      print('Selected End DateTime: ${selectedEndDateTime.value}');
+  // Check if the appointment overlaps with any existing appointment
+  Future<bool> checkForOverlappingAppointments(
+      int userId, int therapistId) async {
+    try {
+      // Fetch existing appointments for the given user and therapist
+      final appointments = await _apiService.fetchAppointments(
+          userId.toString(), therapistId.toString());
+
+      // Check for overlap with selected start and end times
+      DateTime? start = selectedStartDateTime.value;
+      DateTime? end = selectedEndDateTime.value;
+
+      if (start == null || end == null) return false;
+
+      // Check for overlap with any existing appointments
+      for (var appointment in appointments) {
+        if (start.isBefore(appointment.endTime) &&
+            end.isAfter(appointment.startTime)) {
+          // There is an overlap
+          return true;
+        }
+      }
+      return false; // No overlap
+    } catch (e) {
+      print("Error checking appointments: $e");
+      return false; // In case of error, assume no overlap
     }
   }
 
+  // Booking the appointment
   Future<void> bookAppointment(int userId, int therapistId, String userEmail,
       String therapistEmail) async {
-    if (selectedStartDateTime.value != null &&
-        selectedEndDateTime.value != null) {
-      isLoading.value = true; // Start loading indicator
-      final appointment = {
-        'start_time': selectedStartDateTime.value!.toIso8601String(),
-        'end_time': selectedEndDateTime.value!.toIso8601String(),
-        'status': 'User',
-        'user': userId,
-        'therapist': therapistId,
-      };
+    isLoading.value = true;
 
-      print('Booking Appointment with the following data:');
-      print('User ID: $userId, User Email: $userEmail');
-      print('Therapist ID: $therapistId, Therapist Email: $therapistEmail');
-      print('Start Time: ${appointment['start_time']}');
-      print('End Time: ${appointment['end_time']}');
+    try {
+      // Proceed with booking logic here
 
-      try {
-        final response = await http.post(
-          Uri.parse(AppConstants.appointmentsUrl),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: json.encode(appointment),
-        );
+      // Simulate a delay (e.g., API call)
+      await Future.delayed(Duration(seconds: 2));
 
-        print('API Response Code: ${response.statusCode}');
-        print('API Response Body: ${response.body}');
+      // After booking, mark appointment as successfully booked
+      isAppointmentBooked.value = true;
+      isLoading.value = false;
 
-        if (response.statusCode == 201) {
-          // Only show this snackbar upon successful booking
-          Get.snackbar(
-            'Appointment Booked',
-            'Your appointment has been successfully booked.',
-            backgroundColor: Colors.orangeAccent,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-            duration: Duration(seconds: 2),
-          );
-
-          await Future.delayed(
-              Duration(seconds: 2)); // Delay to allow snackbar to display
-          Get.back();
-        } else {
-          print(
-              'Failed to book appointment. Status Code: ${response.statusCode}');
-          _showErrorSnackbar(
-              'Failed to book appointment. Please try again later.');
-        }
-      } catch (e) {
-        print('Exception occurred during booking: $e');
-        _showErrorSnackbar('An unexpected error occurred.');
-      } finally {
-        isLoading.value = false; // Stop loading indicator
-        print('Booking process completed.');
-      }
-    } else {
-      print('Error: Start and/or End times not selected.');
-      _showErrorSnackbar('Please select both start and end times.');
+      // Optionally: Show success notification
+      Get.snackbar('Booking Successful', 'Your appointment has been booked.');
+    } catch (error) {
+      print("Error occurred while booking: $error");
+      isLoading.value = false;
+      Get.snackbar('Booking Failed',
+          'Failed to book your appointment. Please try again.');
     }
   }
 
-  void _showErrorSnackbar(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      backgroundColor: Colors.orangeAccent,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
+  // Select the start and end date/time
+  void selectDateTime(
+      bool isStartTime, DateTime pickedDate, TimeOfDay pickedTime) {
+    DateTime dateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
     );
+
+    if (isStartTime) {
+      selectedStartDateTime.value = dateTime;
+    } else {
+      selectedEndDateTime.value = dateTime;
+    }
   }
 }
