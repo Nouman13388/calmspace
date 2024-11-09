@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import '../services/api_service.dart'; // Assuming ApiService is responsible for fetching appointment data
 
@@ -67,14 +69,52 @@ class BookingController extends GetxController {
       String therapistEmail) async {
     isLoading.value = true;
     try {
-      // Simulate a delay (e.g., API call)
-      await Future.delayed(Duration(seconds: 2));
+      // Get the selected start and end time
+      DateTime? start = selectedStartDateTime.value;
+      DateTime? end = selectedEndDateTime.value;
 
-      // After booking, mark appointment as successfully booked
-      isAppointmentBooked.value = true;
+      if (start == null || end == null) {
+        setErrorMessage("Please select valid start and end times.");
+        isLoading.value = false;
+        return;
+      }
+
+      // Check if the appointment overlaps
+      bool isOverlapping = await checkForOverlappingAppointments(userId, therapistId);
+
+      if (isOverlapping) {
+        setErrorMessage("The selected time overlaps with an existing appointment.");
+        isLoading.value = false;
+        return;
+      }
+
+      // Proceed with booking the appointment on the backend
+      final appointmentData = {
+        'user': userId,
+        'therapist': therapistId,
+        'start_time': start.toIso8601String(),
+        'end_time': end.toIso8601String(),
+        'status': 'User',  // Adjust the status as needed
+      };
+
+      final url = 'http://50.19.24.133:8000/api/appointments/';  // Use AppConstants.appointmentsUrl if you have this constant
+
+      // Make POST request to backend to book the appointment
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(appointmentData),
+      );
+
+      // Handle the response
+      if (response.statusCode == 201) {
+        setSuccessMessage("Appointment booked successfully.");
+        isAppointmentBooked.value = true;
+      } else {
+        setErrorMessage("Failed to book appointment: ${response.body}");
+      }
+
       isLoading.value = false;
-
-      setSuccessMessage('Appointment booked successfully.');
     } catch (error) {
       print("Error occurred while booking: $error");
       isLoading.value = false;
