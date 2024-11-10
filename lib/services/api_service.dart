@@ -139,21 +139,31 @@ class ContentService extends GetConnect {
   // Fetch content from ArticleUrl
   Future<List<MentalHealthContent>> fetchContentFromArticle() async {
     try {
-      final response = await get(AppConstants.articlesUrl);
+      // Send a GET request to the articles URL
+      final response = await http.get(Uri.parse(AppConstants.articlesUrl));
 
       if (response.statusCode == 200) {
-        final contentList = response.body[0]['content'] ??
-            []; // Ensure this structure matches your API response
-        debugPrint("Fetched article content: $contentList");
-        return contentList
+        // Parse the response body, which is a list of articles
+        final List<dynamic> responseData = json.decode(response.body);
+
+        // Extract the 'content' field from the response (it contains the list of articles)
+        final List<dynamic> articlesData = responseData[0]['content'];
+
+        // Log the fetched articles for debugging
+        debugPrint("Fetched articles: $articlesData");
+
+        // Map the list of articles data to MentalHealthContent objects
+        return articlesData
             .map((data) => MentalHealthContent.fromMap(data))
             .toList();
       } else {
+        // Handle non-200 status codes
         debugPrint(
             "Failed to load articles: ${response.statusCode} - ${response.body}");
         throw Exception('Failed to load articles');
       }
     } catch (e) {
+      // Catch any exceptions and print the error
       debugPrint("Error fetching article content: $e");
       throw Exception('Error fetching article content');
     }

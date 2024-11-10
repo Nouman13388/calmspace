@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../constants/app_constants.dart';
 import '../services/api_service.dart'; // Assuming ApiService is responsible for fetching appointment data
 
 class BookingController extends GetxController {
@@ -80,10 +82,12 @@ class BookingController extends GetxController {
       }
 
       // Check if the appointment overlaps
-      bool isOverlapping = await checkForOverlappingAppointments(userId, therapistId);
+      bool isOverlapping =
+          await checkForOverlappingAppointments(userId, therapistId);
 
       if (isOverlapping) {
-        setErrorMessage("The selected time overlaps with an existing appointment.");
+        setErrorMessage(
+            "The selected time overlaps with an existing appointment.");
         isLoading.value = false;
         return;
       }
@@ -94,10 +98,11 @@ class BookingController extends GetxController {
         'therapist': therapistId,
         'start_time': start.toIso8601String(),
         'end_time': end.toIso8601String(),
-        'status': 'User',  // Adjust the status as needed
+        'status': 'User', // Adjust the status as needed
       };
 
-      final url = 'http://50.19.24.133:8000/api/appointments/';  // Use AppConstants.appointmentsUrl if you have this constant
+      // Use the constant from AppConstants for appointments URL
+      final url = AppConstants.appointmentsUrl; // Using the constant here
 
       // Make POST request to backend to book the appointment
       final response = await http.post(

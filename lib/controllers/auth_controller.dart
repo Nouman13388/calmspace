@@ -33,22 +33,22 @@ class AuthController extends GetxController {
   Future<void> fetchUserByEmail(String email) async {
     try {
       isLoading.value = true;
-      print('---------------------------------------------');
+      print('Fetching user data for email: $email');
 
       final fetchedData = await _authServices.getUserByEmail(email);
-      print('fetchedData $fetchedData');
+      print('Fetched data: $fetchedData');
 
       if (fetchedData != null) {
         userData.value = EndUser.fromJson(fetchedData);
         print(
-            'User data value ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
+            'User data loaded: ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', userData.value!.email!);
         await prefs.setString('user_name', userData.value!.name!);
         await prefs.setInt('user_id', userData.value!.id!);
 
-        print('User data fetched successfully!');
+        print('User data fetched and saved successfully!');
       } else {
         print('No user found with this email.'); // Changed snackbar to print
       }
@@ -109,7 +109,7 @@ class AuthController extends GetxController {
 
       Get.snackbar(
         'Welcome!',
-        'You have successfully signed up, ${fullName}!',
+        'You have successfully signed up, $fullName!',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
@@ -303,12 +303,20 @@ class AuthController extends GetxController {
   Future<void> authenticateUser(String email, String password,
       SharedPreferences prefs, bool rememberMe) async {
     try {
+      // Sign in with email and password
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      // After successful login, fetch the user data
       await fetchUserByEmail(email);
+
+      // Optionally, store credentials in SharedPreferences if 'rememberMe' is true
       if (rememberMe) {
         await prefs.setString('email', email);
         await prefs.setString('password', password);
       }
     } catch (e) {
+      // Handle any exceptions or failed sign-in attempts
       throw Exception('Authentication failed: ${e.toString()}');
     }
   }

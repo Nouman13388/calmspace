@@ -1,27 +1,26 @@
 import 'dart:convert';
-import 'package:calmspace/services/api_service.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:get/get.dart'; // For reactive state management
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+
 import '../constants/app_constants.dart';
 
 class AuthServices {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Loading state management
-  bool isLoading = false;
-  final String baseUrl = 'http://127.0.0.1:8000/api/users';
+  // Reactive state for loading
+  RxBool isLoading = false.obs;
 
-  // Fetch user by email
+  // Fetch user by email from the backend
   Future<Map<String, dynamic>?> getUserByEmail(String email) async {
-    final url = Uri.parse('${AppConstants.usersUrl}get_by_email?email=$email');
-    // final url = Uri.parse('https://192.168.1.100:8000/api/users/get_by_email?email=$email');
+    final url = Uri.parse('${AppConstants.userUrl}?email=$email');
     try {
       final response = await http.get(url);
-      print('---------------------------------------------');
-      print('response ${response.body}');
+      print('Response: ${response.body}');
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 404) {
@@ -34,8 +33,11 @@ class AuthServices {
       rethrow;
     }
   }
-  Future<UserCredential> signUpWithEmail(String fullName, String email, String password) async {
-    isLoading = true;
+
+  // Sign up a user with email and password
+  Future<UserCredential> signUpWithEmail(
+      String fullName, String email, String password) async {
+    isLoading.value = true; // Start loading
     try {
       // Check if the user already exists in the backend
       if (await checkUserExists(email)) {
@@ -43,7 +45,11 @@ class AuthServices {
       }
 
       // Create a new user in Firebase
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
       // Store user data in the backend
       await storeUserData(fullName, email, password);
@@ -55,15 +61,18 @@ class AuthServices {
       print('Error during sign-up: $e');
       throw Exception('Error during sign-up: $e');
     } finally {
-      isLoading = false;
+      isLoading.value = false; // End loading
     }
   }
 
-  Future<void> storeUserData(String fullName, String email, String password) async {
+  // Store user data in the backend
+  Future<void> storeUserData(
+      String fullName, String email, String password) async {
     final response = await http.post(
       Uri.parse(AppConstants.usersUrl),
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      body: jsonEncode({'name': fullName, 'email': email, 'password': password}),
+      body:
+          jsonEncode({'name': fullName, 'email': email, 'password': password}),
     );
 
     if (response.statusCode != 201) {
@@ -71,7 +80,9 @@ class AuthServices {
     }
   }
 
-  Future<void> storeTherapistData(String email, String fullName, String specialization, String bio) async {
+  // Store therapist data in the backend
+  Future<void> storeTherapistData(
+      String email, String fullName, String specialization, String bio) async {
     final response = await http.post(
       Uri.parse(AppConstants.professionalsUrl),
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
@@ -88,8 +99,10 @@ class AuthServices {
     }
   }
 
+  // Check if the user exists in the backend
   Future<bool> checkUserExists(String email) async {
-    final response = await http.get(Uri.parse('${AppConstants.usersUrl}?email=$email'));
+    final response =
+        await http.get(Uri.parse('${AppConstants.usersUrl}?email=$email'));
 
     if (response.statusCode == 200) {
       List<dynamic> users = jsonDecode(response.body);
@@ -101,8 +114,10 @@ class AuthServices {
     }
   }
 
+  // Check if the therapist exists in the backend
   Future<bool> checkTherapistExists(String email) async {
-    final response = await http.get(Uri.parse('${AppConstants.professionalsUrl}?email=$email'));
+    final response = await http
+        .get(Uri.parse('${AppConstants.professionalsUrl}?email=$email'));
 
     if (response.statusCode == 200) {
       List<dynamic> therapist = jsonDecode(response.body);
@@ -114,33 +129,45 @@ class AuthServices {
     }
   }
 
+  // Sign in with email and password
   Future<UserCredential> signInWithEmail(String email, String password) async {
-    UserCredential credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    isLoading.value = true; // Start loading
+    try {
+      UserCredential credential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
 
-    // Fetch user data from backend
-    final userData = await ApiService().getUserByEmail(email);
-    if (userData != null) {
-      if (kDebugMode) {
-        print("Fetched user data from backend: ${userData.toJson()}");
+      // Fetch user data from backend after successful login
+      final userData = await getUserByEmail(email);
+      if (userData != null) {
+        if (kDebugMode) {
+          print("Fetched user data from backend: ${userData.toString()}");
+        }
+      } else {
+        if (kDebugMode) {
+          print("Failed to fetch user data for $email");
+        }
       }
-    } else {
-      if (kDebugMode) {
-        print("Failed to fetch user data for $email");
-      }
+
+      return credential;
+    } catch (e) {
+      print('Error during sign-in: $e');
+      rethrow;
+    } finally {
+      isLoading.value = false; // End loading
     }
-
-    return credential;
   }
 
+  // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
-    isLoading = true;
+    isLoading.value = true; // Start loading
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google sign-in aborted');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       UserCredential userCredential = await _auth.signInWithCredential(
         GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
@@ -153,7 +180,8 @@ class AuthServices {
 
       // Check if user exists in backend
       if (!await checkUserExists(userEmail)) {
-        await storeUserData(userName!, userEmail, 'defaultPassword123'); // Placeholder password
+        await storeUserData(
+            userName!, userEmail, 'defaultPassword123'); // Placeholder password
       }
 
       return userCredential;
@@ -164,15 +192,17 @@ class AuthServices {
       print('Error during Google sign-in: $e');
       return null;
     } finally {
-      isLoading = false;
+      isLoading.value = false; // End loading
     }
   }
 
+  // Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
     print('Password reset email sent to: $email');
   }
 
+  // Log out user
   Future<void> logout() async {
     await _auth.signOut();
     await _googleSignIn.signOut(); // Sign out from Google as well
