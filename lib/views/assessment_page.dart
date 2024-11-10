@@ -170,8 +170,7 @@ class AssessmentPage extends StatelessWidget {
       String mood, int points, String badge) async {
     final prefs = await SharedPreferences.getInstance();
     final user = FirebaseAuth.instance.currentUser; // Get logged-in user
-    final email = user?.email ??
-        'guest@example.com'; // Default to guest if no user is logged in
+    final uid = user?.uid ?? 'guest'; // Use 'guest' if no user is logged in
 
     final data = {
       'mood': mood,
@@ -179,7 +178,24 @@ class AssessmentPage extends StatelessWidget {
       'badge': badge,
     };
 
-    await prefs.setString(email, json.encode(data));
-    print("Assessment result saved for $email: $data");
+    await prefs.setString(uid, json.encode(data));
+    print("Assessment result saved for UID $uid: $data");
+  }
+
+  // Function to load the assessment result from shared preferences
+  Future<void> _loadAssessmentResult() async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid ?? 'guest';
+
+    final result = prefs.getString(uid);
+    if (result != null) {
+      final data = json.decode(result);
+      print("Loaded assessment result for UID $uid: $data");
+      // Use the loaded data as needed, for example:
+      // controller.mood.value = data['mood'];
+      // controller.points.value = data['points'];
+      // controller.badge.value = data['badge'];
+    }
   }
 }

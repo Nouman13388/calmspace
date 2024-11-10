@@ -36,16 +36,15 @@ class DashboardController extends GetxController {
   Future<void> loadStoredData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      String userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-      if (userEmail.isEmpty) {
+      final userUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (userUid.isEmpty) {
         debugPrint("No logged-in user, cannot load stored data.");
         return;
       }
 
-      // Use email to create unique keys for the logged-in user
-      final sanitizedEmail = _sanitizeEmail(userEmail);
-      points.value = prefs.getInt('${sanitizedEmail}_assessment_points') ?? 0;
-      badge.value = prefs.getString('${sanitizedEmail}_assessment_badge') ?? '';
+      // Use uid to create unique keys for the logged-in user
+      points.value = prefs.getInt('${userUid}_assessment_points') ?? 0;
+      badge.value = prefs.getString('${userUid}_assessment_badge') ?? '';
 
       debugPrint(
           "Stored data loaded: points = ${points.value}, badge = '${badge.value}'");
@@ -58,26 +57,20 @@ class DashboardController extends GetxController {
   Future<void> saveDashboardData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      String userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-      if (userEmail.isEmpty) {
+      final userUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (userUid.isEmpty) {
         debugPrint("No logged-in user, cannot save data.");
         return;
       }
 
-      // Use email to create unique keys for the logged-in user
-      final sanitizedEmail = _sanitizeEmail(userEmail);
-      await prefs.setInt('${sanitizedEmail}_assessment_points', points.value);
-      await prefs.setString('${sanitizedEmail}_assessment_badge', badge.value);
+      // Use uid to create unique keys for the logged-in user
+      await prefs.setInt('${userUid}_assessment_points', points.value);
+      await prefs.setString('${userUid}_assessment_badge', badge.value);
       debugPrint(
           "Dashboard data saved: points = ${points.value}, badge = '${badge.value}'");
     } catch (e) {
       debugPrint("Error saving dashboard data: $e");
     }
-  }
-
-  // Helper function to sanitize email
-  String _sanitizeEmail(String email) {
-    return email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
   }
 
   // Fetch health data from API

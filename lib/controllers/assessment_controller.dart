@@ -47,65 +47,97 @@ class AssessmentController extends GetxController {
       "question": "Do you have trouble sleeping?",
       "options": ["Yes, frequently", "Sometimes", "Rarely", "No"]
     },
+    {
+      "question": "How do you feel about your work or studies?",
+      "options": ["Motivated", "Okay", "Overwhelmed", "Disinterested"]
+    },
+    {
+      "question": "Do you feel you have enough time for yourself?",
+      "options": ["Always", "Sometimes", "Rarely", "Never"]
+    },
+    {
+      "question": "Do you feel like your social relationships are fulfilling?",
+      "options": [
+        "Yes, very fulfilling",
+        "Somewhat fulfilling",
+        "Not fulfilling",
+        "Not at all"
+      ]
+    },
   ];
 
   @override
   void onInit() {
     super.onInit();
     loadStoredData(); // Load stored score and badge on initialization
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        loadStoredData(); // Load stored data when user logs in
+      } else {
+        resetAssessment(); // Reset data when user logs out
+      }
+    });
   }
 
   // Save score and badge to shared preferences
   Future<void> saveScoreAndBadge() async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final prefs = await SharedPreferences.getInstance();
-      final userEmail = currentUser.email ?? '';
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final userUid =
+            currentUser.uid; // Use UID to avoid issues with email changes
 
-      if (userEmail.isEmpty) {
-        print("No email found for the user.");
-        return;
+        if (userUid.isEmpty) {
+          print("No UID found for the user.");
+          return;
+        }
+
+        // Save points and badge using UID as the key
+        bool pointsSaved =
+            await prefs.setInt('${userUid}_assessment_points', points.value);
+        bool badgeSaved =
+            await prefs.setString('${userUid}_assessment_badge', badge.value);
+
+        if (pointsSaved && badgeSaved) {
+          print(
+              "Score and badge saved: points = ${points.value}, badge = ${badge.value}");
+        } else {
+          print("Failed to save score and badge.");
+        }
+      } else {
+        print("No user is logged in. Can't save data.");
       }
-
-      final sanitizedEmail = _sanitizeEmail(userEmail);
-
-      // Save points and badge using sanitized email keys
-      await prefs.setInt('${sanitizedEmail}_assessment_points', points.value);
-      await prefs.setString('${sanitizedEmail}_assessment_badge', badge.value);
-
-      print(
-          "Score and badge saved: points = ${points.value}, badge = ${badge.value}");
-    } else {
-      print("No user is logged in. Can't save data.");
+    } catch (error) {
+      print("Error saving score and badge: $error");
     }
   }
 
-  // Load score and badge from shared preferences
+  // Load stored score and badge from shared preferences
   Future<void> loadStoredData() async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final prefs = await SharedPreferences.getInstance();
-      final userEmail = currentUser.email ?? '';
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final userUid = currentUser.uid; // Use UID to fetch saved data
 
-      if (userEmail.isEmpty) {
-        print("No email found for the user.");
-        return;
+        if (userUid.isEmpty) {
+          print("No UID found for the user.");
+          return;
+        }
+
+        // Load saved points and badge using UID as the key
+        points.value = prefs.getInt('${userUid}_assessment_points') ?? 0;
+        badge.value = prefs.getString('${userUid}_assessment_badge') ?? '';
+
+        print(
+            "Stored data loaded: points = ${points.value}, badge = ${badge.value}");
+      } else {
+        print("No user is logged in. Can't load data.");
       }
-
-      final sanitizedEmail = _sanitizeEmail(userEmail);
-
-      // Load saved points and badge from shared preferences
-      points.value = prefs.getInt('${sanitizedEmail}_assessment_points') ?? 0;
-      badge.value = prefs.getString('${sanitizedEmail}_assessment_badge') ?? '';
-      print("Loaded score: ${points.value}, badge: ${badge.value}");
-    } else {
-      print("No user is logged in. Can't load data.");
+    } catch (error) {
+      print("Error loading stored data: $error");
     }
-  }
-
-  // Helper function to sanitize email (remove any special characters)
-  String _sanitizeEmail(String email) {
-    return email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
   }
 
   // Evaluate the answer and update points
@@ -115,7 +147,6 @@ class AssessmentController extends GetxController {
       print("Question skipped. Total skipped: ${skippedQuestions.value}");
     } else {
       selectedAnswers[currentQuestionIndex.value] = answer;
-      points.value += 10; // Award points per answered question
     }
 
     updateProgress(); // Update progress
@@ -140,7 +171,7 @@ class AssessmentController extends GetxController {
   // Mark the assessment as complete
   void completeAssessment() {
     isAssessmentComplete(true);
-    calculateResult();
+    calculateResult(); // Calculate mood and update points based on mood
     awardBadge();
     sendHealthData();
     saveScoreAndBadge(); // Store score and badge to SharedPreferences
@@ -168,36 +199,40 @@ class AssessmentController extends GetxController {
   void calculateResult() {
     int score = 0;
     selectedAnswers.values.forEach((answer) {
+      // Calculate the mood based on answers, for example:
       switch (answer) {
         case "Good":
         case "Always":
-          score += 10;
+        case "Motivated":
+        case "Yes, very fulfilling":
+          score += 10; // Positive answers contribute higher points
           break;
         case "Okay":
         case "Often":
-          score += 5;
+        case "Somewhat fulfilling":
+        case "Sometimes":
+          score += 5; // Neutral answers contribute moderate points
           break;
         case "Stressed":
         case "Anxious":
-        case "Sometimes":
-          score += 3;
-          break;
+        case "Overwhelmed":
+        case "Not fulfilling":
         case "Rarely":
-        case "Yes":
-        case "Yes, frequently":
-          score += 1;
-          break;
-        case "No":
-          score += 7;
+        case "Never":
+          score += 2; // Negative answers contribute fewer points
           break;
       }
     });
 
-    mood.value = score >= 30
+    // Determine mood based on score range
+    mood.value = score >= 50
         ? "Happy"
-        : score >= 15
+        : score >= 30
             ? "Anxious"
             : "Sad";
+
+    // Adjust points based on the final mood
+    points.value = (mood.value == "Happy") ? score + 20 : score;
   }
 
   // Award a badge based on points

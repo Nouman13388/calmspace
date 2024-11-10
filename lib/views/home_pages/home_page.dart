@@ -15,11 +15,8 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Initialize the AuthController using GetX dependency injection
     final authController = Get.find<AuthController>();
-    print('AuthController initialized: ${authController.userData}'); // Print statement for AuthController
-    authController.printUserData();
-    print('-----------------------------------');
-    authController.loadUserData();
-    print('-----------------------------------');
+    authController.loadUserData(); // Ensure user data is loaded
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -27,9 +24,9 @@ class HomePage extends StatelessWidget {
         children: [
           Obx(() {
             // Use the greeting based on the user's name from AuthController
-            final userName = authController.userData.value?.name ?? 'Guest';
-            print('User data: ${authController.userData.value}'); // Print statement for user data
-            final greeting = 'Hello, $userName';
+            final userName = authController.userData.value?.name ??
+                'Guest'; // Fallback to 'Guest'
+            final greeting = 'Hello,';
             return Text(
               greeting,
               style: const TextStyle(
