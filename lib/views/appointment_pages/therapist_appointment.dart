@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../../constants/app_constants.dart';
+import '../../controllers/therapist_controller.dart';
 
 class TherapistAppointmentPage extends StatefulWidget {
   const TherapistAppointmentPage({super.key});
@@ -19,77 +20,47 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
   var appointments = <Map<String, dynamic>>[].obs; // Appointments data
   var isLoading = true.obs; // Loading status
 
+  // Instance of TherapistController
+  final therapistController = Get.find<TherapistController>();
+
+  int? therapistId; // Will hold the therapist's ID
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Patients and Appointments'),
-      ),
-      body: Obx(() {
-        if (isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
 
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Patients', // Replaced "Users" with "Patients"
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-              // Displaying patients
-              for (var patient in patients)
-                ListTile(
-                  title: Text(patient['name']),
-                  subtitle: Text(patient['email']),
-                ),
+  // Initialize data
+  Future<void> _initializeData() async {
+    // First, fetch the therapist data
+    await therapistController.fetchTherapists();
 
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Appointments',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-              // Displaying appointments
-              for (var appointment in appointments)
-                Card(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                  child: ListTile(
-                    title: Text('Appointment ID: ${appointment['id']}'),
-                    subtitle: Text(
-                      'Start: ${appointment['start_time']} \nEnd: ${appointment['end_time']} \nStatus: ${appointment['status']}',
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Fetch data when button is pressed
-          fetchData();
-        },
-        child: const Icon(Icons.refresh),
-      ),
-    );
+    // After fetching therapists, get the logged-in therapist's ID
+    therapistId = await therapistController.getLoggedInTherapistId();
+
+    if (therapistId != null) {
+      // If therapist ID is found, fetch patients
+      fetchData();
+    } else {
+      // If no therapist ID found, show an error message
+      print('Therapist ID is missing. Redirecting to login...');
+      Get.snackbar(
+        'Error',
+        'Please log in as a therapist to view appointments.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
+    }
   }
 
   // Function to fetch all data (patients and appointments)
   Future<void> fetchData() async {
     isLoading(true); // Set loading to true before fetching
 
-    // Fetch Users and Appointments concurrently
-    await Future.wait([
-      fetchPatients(), // Fetch patients
-      fetchAppointments(
-          'victor@gmail.com'), // Fetch appointments for a specific patient
-    ]);
+    // Fetch Patients
+    await fetchPatients();
 
     isLoading(false); // Set loading to false after fetching
   }
@@ -115,11 +86,16 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
     }
   }
 
-  // Fetch appointments for a logged-in patient (using a static email for now)
-  Future<void> fetchAppointments(String patientEmail) async {
+  // Fetch appointments for a selected patient and the logged-in therapist
+  Future<void> fetchAppointmentsForPatient(int patientId) async {
+    if (therapistId == null) {
+      print('Therapist ID is missing.');
+      return;
+    }
+
     try {
       final response = await http.get(Uri.parse(
-          '${AppConstants.appointmentsUrl}?user_email=$patientEmail'));
+          '${AppConstants.appointmentsUrl}?user_id=$patientId&therapist_id=$therapistId'));
 
       if (response.statusCode == 200) {
         List<dynamic> fetchedAppointments = jsonDecode(response.body);
@@ -141,5 +117,114 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
     } catch (e) {
       print('Error fetching appointments: $e');
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Patients and Appointments'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: Obx(() {
+        // If loading, show the progress indicator
+        if (isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // Display Patients and their Appointments
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Patients',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
+                  ),
+                ),
+              ),
+              // Displaying patients
+              for (var patient in patients)
+                ListTile(
+                  leading: const Icon(Icons.person),
+                  title: Text(
+                    patient['name'],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(patient['email']),
+                  onTap: () {
+                    // When a patient is tapped, fetch the appointments for that patient and therapist
+                    setState(() {
+                      appointments.clear(); // Clear previous appointments
+                    });
+                    // Pass patient['id'] instead of patient['email']
+                    fetchAppointmentsForPatient(patient['id']);
+                  },
+                ),
+
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Appointments for the selected patient',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
+                  ),
+                ),
+              ),
+              // Displaying appointments for the selected patient
+              if (appointments.isEmpty)
+                const Center(child: Text('No appointments available.'))
+              else
+                // Displaying the appointments using Cards
+                for (var appointment in appointments)
+                  Card(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 15),
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: Icon(
+                        Icons.schedule,
+                        color: Colors.blueAccent,
+                        size: 30,
+                      ),
+                      title: Text(
+                        'Appointment ID: ${appointment['id']}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          Text('Start: ${appointment['start_time']}'),
+                          Text('End: ${appointment['end_time']}'),
+                          Text('Status: ${appointment['status']}'),
+                        ],
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 20,
+                        color: Colors.blueAccent,
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        );
+      }),
+    );
   }
 }

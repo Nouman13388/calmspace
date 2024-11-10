@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart'; // Add provider package
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'controllers/therapist_controller.dart';
 import 'firebase_options.dart'; // Firebase options
 import 'initialbinding/initialbinding.dart';
 import 'routes/router.dart'; // Your router file
@@ -26,6 +27,7 @@ void main() async {
 
   // Initialize UserController before ApiService
   Get.put(UserController()); // Ensure UserController is initialized first
+  Get.put(TherapistController());
   Get.put(ApiService()); // Then initialize ApiService
   Get.put(BookingController());
 

@@ -1,3 +1,4 @@
+import 'package:calmspace/controllers/therapist_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -214,49 +215,117 @@ class AuthController extends GetxController {
     }
   }
 
-  // Authenticate therapist
-  Future<UserCredential?> authenticateTherapist(String email, String password,
-      SharedPreferences prefs, bool rememberMe) async {
+  Future<UserCredential?> authenticateTherapist(
+    String email,
+    String password,
+    SharedPreferences prefs,
+    bool rememberMe,
+  ) async {
     try {
       isLoading.value = true;
 
-      UserCredential userCredential =
-          await _authServices.signInWithEmail(email, password);
+      // Ensure the TherapistController is initialized
+      Get.put(TherapistController());
 
-      bool therapistExists = await _authServices.checkUserExists(email);
+      // Initialize therapist controller and fetch therapists
+      final therapistController = Get.find<TherapistController>();
+      await therapistController.fetchTherapists();
+
+      // Check if therapist with the given email exists
+      final therapistExists = therapistController.therapists
+          .any((therapist) => therapist.email == email);
+
       if (!therapistExists) {
+        // Therapist not found, stop here
+        print('No therapist account found for this email: $email.');
         Get.snackbar(
-          'Not Found',
+          'Error',
           'No therapist account found for this email. Please check and try again.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.orangeAccent,
           colorText: Colors.white,
         );
-        return null;
+        return null; // Return null since therapist doesn't exist
       }
 
-      if (rememberMe) {
-        prefs.setString('email', email);
-        prefs.setString('password', password);
-        prefs.setBool('rememberMe', rememberMe);
+      // Proceed with Firebase Authentication
+      print('Therapist found. Proceeding with Firebase Authentication...');
+
+      // Attempt Firebase sign-in
+      UserCredential userCredential =
+          await _authServices.signInWithEmail(email, password);
+
+      if (userCredential.user != null) {
+        // If Firebase authentication is successful
+        print('Firebase authentication successful for email: $email.');
+
+        // Handle "Remember Me" logic if successful
+        if (rememberMe) {
+          prefs.setString('email', email);
+          prefs.setString('password', password);
+          prefs.setBool('rememberMe', rememberMe);
+          print('Credentials saved for "Remember Me".');
+        }
+        return userCredential; // Return the Firebase UserCredential
+      } else {
+        // Firebase authentication failed
+        print('Firebase authentication failed for email: $email');
+        Get.snackbar(
+          'Authentication Failed',
+          'Unable to sign in. Please check your credentials and try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orangeAccent,
+          colorText: Colors.white,
+        );
+        return null; // Authentication failed
       }
+    } on FirebaseAuthException catch (e) {
+      // Catch Firebase Authentication exceptions
+      String errorMessage = _getFirebaseAuthErrorMessage(e);
+      print('Firebase Authentication Error: $errorMessage');
 
       Get.snackbar(
-        'Welcome!',
-        'You have successfully signed in!',
+        'Authentication Error',
+        errorMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
       );
-      return userCredential;
-    } on FirebaseAuthException {
-      rethrow;
+      return null; // Return null for FirebaseAuthException
     } catch (e) {
-      print(
-          'An error occurred during authentication: ${mapFirebaseAuthExceptionMessage(e.toString())}');
-      return null;
+      // Catch any other errors
+      print('An error occurred during authentication: ${e.toString()}');
+
+      Get.snackbar(
+        'Error',
+        'An unexpected error occurred. Please try again later.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+      );
+      return null; // Return null for any other exception
     } finally {
+      // Reset loading state, regardless of success or failure
       isLoading.value = false;
+      print('Authentication process complete.');
+    }
+  }
+
+// Helper function to handle FirebaseAuthException errors
+  String _getFirebaseAuthErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No user found for this email.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'user-disabled':
+        return 'This user has been disabled.';
+      case 'too-many-requests':
+        return 'Too many login attempts. Please try again later.';
+      case 'invalid-credential':
+        return 'Invalid credentials. Please check your email and password.';
+      default:
+        return 'An unknown error occurred during authentication.';
     }
   }
 

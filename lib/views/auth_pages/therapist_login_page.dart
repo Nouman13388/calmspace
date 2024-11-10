@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TherapistLoginPage extends StatefulWidget {
-  TherapistLoginPage({super.key});
+  const TherapistLoginPage({super.key});
 
   @override
   _TherapistLoginPageState createState() => _TherapistLoginPageState();
@@ -34,19 +34,33 @@ class _TherapistLoginPageState extends State<TherapistLoginPage> {
   }
 
   void _loginTherapist() async {
-    _isLoading.value = true;
+    _isLoading.value = true; // Show loading indicator
+
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await _authController.authenticateTherapist(
+
+      // Call the authentication function
+      UserCredential? userCredential =
+          await _authController.authenticateTherapist(
         _emailController.text,
         _passwordController.text,
         prefs,
         _rememberMe.value,
       );
-      Get.offAllNamed('/therapist-homepage');
-    } catch (e) {
-      print('Caught error: $e');
 
+      // Check if authentication was successful
+      if (userCredential != null && userCredential.user != null) {
+        print('Authentication successful. Proceeding to homepage...');
+
+        // Successful login, navigate to homepage
+        Get.offAllNamed('/therapist-homepage');
+      } else {
+        print('Authentication failed. Please check your credentials.');
+        // Optional: Handle failed authentication logic here (e.g., showing an error message).
+      }
+    } catch (e) {
+      // Catch any errors during authentication
+      print('Caught error: $e');
       String errorMessage = _getErrorMessage(e);
       Get.snackbar(
         'Error',
@@ -56,7 +70,7 @@ class _TherapistLoginPageState extends State<TherapistLoginPage> {
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      _isLoading.value = false;
+      _isLoading.value = false; // Hide loading indicator
     }
   }
 
@@ -101,7 +115,10 @@ class _TherapistLoginPageState extends State<TherapistLoginPage> {
             SizedBox(height: MediaQuery.of(context).size.height * 0.1),
             Text(
               'Login to Your Therapist Account',
-              style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall!
+                  .copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
             TextField(
@@ -122,9 +139,9 @@ class _TherapistLoginPageState extends State<TherapistLoginPage> {
                   child: Row(
                     children: [
                       Obx(() => Checkbox(
-                        value: _rememberMe.value,
-                        onChanged: (value) => _rememberMe.value = value!,
-                      )),
+                            value: _rememberMe.value,
+                            onChanged: (value) => _rememberMe.value = value!,
+                          )),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -144,23 +161,27 @@ class _TherapistLoginPageState extends State<TherapistLoginPage> {
             ),
             const SizedBox(height: 20),
             Obx(() => ElevatedButton(
-              onPressed: _isLoading.value ? null : _loginTherapist,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: _isLoading.value
-                  ? const CircularProgressIndicator()
-                  : const Text('Sign in'),
-            )),
+                  onPressed: _isLoading.value ? null : _loginTherapist,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: _isLoading.value
+                      ? const CircularProgressIndicator()
+                      : const Text('Sign in'),
+                )),
             const SizedBox(height: 40),
             GestureDetector(
               onTap: () => Get.toNamed('/therapist-signup'),
               child: Text(
                 "Don't have an account? Sign up",
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.blue),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(color: Colors.blue),
               ),
             ),
             const SizedBox(height: 30),
