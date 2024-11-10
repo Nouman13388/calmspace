@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:calmspace/views/appointment_pages/patient_appointment_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -17,7 +18,6 @@ class TherapistAppointmentPage extends StatefulWidget {
 
 class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
   var patients = <Map<String, dynamic>>[].obs; // Patients data
-  var appointments = <Map<String, dynamic>>[].obs; // Appointments data
   var isLoading = true.obs; // Loading status
 
   // Instance of TherapistController
@@ -55,7 +55,7 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
     }
   }
 
-  // Function to fetch all data (patients and appointments)
+  // Function to fetch all data (patients)
   Future<void> fetchData() async {
     isLoading(true); // Set loading to true before fetching
 
@@ -76,46 +76,13 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
         patients.value = List<Map<String, dynamic>>.from(fetchedPatients);
         print('Patients fetched:');
         fetchedPatients.forEach((patient) {
-          print('Patient: ${patient['name']} (${patient['email']})');
+          print('Patient: ${patient['name']} (${patient['id']})');
         });
       } else {
         print('Failed to fetch patients. Status Code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching patients: $e');
-    }
-  }
-
-  // Fetch appointments for a selected patient and the logged-in therapist
-  Future<void> fetchAppointmentsForPatient(int patientId) async {
-    if (therapistId == null) {
-      print('Therapist ID is missing.');
-      return;
-    }
-
-    try {
-      final response = await http.get(Uri.parse(
-          '${AppConstants.appointmentsUrl}?user_id=$patientId&therapist_id=$therapistId'));
-
-      if (response.statusCode == 200) {
-        List<dynamic> fetchedAppointments = jsonDecode(response.body);
-        // Explicitly cast to List<Map<String, dynamic>>
-        appointments.value =
-            List<Map<String, dynamic>>.from(fetchedAppointments);
-        print('Appointments fetched:');
-        fetchedAppointments.forEach((appointment) {
-          print('Appointment ID: ${appointment['id']}');
-          print('Start: ${appointment['start_time']}');
-          print('End: ${appointment['end_time']}');
-          print('Therapist ID: ${appointment['therapist']}');
-          print('Status: ${appointment['status']}');
-        });
-      } else {
-        print(
-            'Failed to fetch appointments. Status Code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching appointments: $e');
     }
   }
 
@@ -132,7 +99,7 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Display Patients and their Appointments
+        // Display Patients
         return SingleChildScrollView(
           child: Column(
             children: [
@@ -155,72 +122,20 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
                     patient['name'],
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(patient['email']),
+                  subtitle: Text('ID: ${patient['id']}'),
                   onTap: () {
-                    // When a patient is tapped, fetch the appointments for that patient and therapist
-                    setState(() {
-                      appointments.clear(); // Clear previous appointments
-                    });
-                    // Pass patient['id'] instead of patient['email']
-                    fetchAppointmentsForPatient(patient['id']);
-                  },
-                ),
-
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Appointments for the selected patient',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
-                  ),
-                ),
-              ),
-              // Displaying appointments for the selected patient
-              if (appointments.isEmpty)
-                const Center(child: Text('No appointments available.'))
-              else
-                // Displaying the appointments using Cards
-                for (var appointment in appointments)
-                  Card(
-                    margin: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: Icon(
-                        Icons.schedule,
-                        color: Colors.blueAccent,
-                        size: 30,
-                      ),
-                      title: Text(
-                        'Appointment ID: ${appointment['id']}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.blueAccent,
+                    // When a patient is tapped, navigate to the PatientAppointmentsPage
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PatientAppointmentsPage(
+                          patientId: patient['id'], // Pass the patient ID
+                          therapistId: therapistId!, // Pass the therapist ID
                         ),
                       ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Text('Start: ${appointment['start_time']}'),
-                          Text('End: ${appointment['end_time']}'),
-                          Text('Status: ${appointment['status']}'),
-                        ],
-                      ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 20,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
-                  ),
+                    );
+                  },
+                ),
             ],
           ),
         );
