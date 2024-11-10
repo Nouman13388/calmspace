@@ -37,10 +37,16 @@ class TherapistProfileController extends GetxController {
       if (user != null) {
         userId = user.uid;
         email.value = user.email ?? 'No Email';
-        // Check if the user has a profile picture from Google Sign-In
+
+        // Fetch the display name from Firebase Auth (use as username)
+        username.value = user.displayName ??
+            'No Name'; // Default to 'No Name' if displayName is null
+
+        // Check if the user has a profile picture from Google Sign-In or Firebase
         if (user.photoURL != null && user.photoURL!.isNotEmpty) {
           photoUrl.value = user.photoURL!;
         }
+
         await fetchUserProfile(userId!);
       } else {
         _showError('No user is currently signed in.');
@@ -58,10 +64,16 @@ class TherapistProfileController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        username.value = data['user']?.toString() ?? 'No Name';
+
+        // If backend provides username (in case displayName is empty), update it
+        if (data['user'] != null && username.value == 'No Name') {
+          username.value = data['user']?.toString() ?? 'No Name';
+        }
+
         bio.value = data['bio'] ?? '';
         location.value = data['location'] ?? '';
         privacySettings.value = data['privacy_settings']?.toString() ?? '0';
+
         // Update photoUrl from backend if available
         if (data['profile_picture'] != null) {
           photoUrl.value = data['profile_picture'];
@@ -111,8 +123,9 @@ class TherapistProfileController extends GetxController {
           bio.value.isNotEmpty ? bio.value : 'No bio provided';
       request.fields['location'] =
           location.value.isNotEmpty ? location.value : 'No location provided';
-      request.fields['privacy_settings'] =
-          (int.tryParse(privacySettings.value) ?? 0).toString();
+
+      // Ensure privacySettings is a String before assigning
+      request.fields['privacy_settings'] = privacySettings.value.toString();
 
       if (selectedImage != null) {
         request.files.add(
@@ -124,7 +137,7 @@ class TherapistProfileController extends GetxController {
       var response = await request.send();
 
       if (response.statusCode == 200) {
-        fetchUserProfile(user.id as String);
+        fetchUserProfile(user.id! as String);
       } else {
         _showError('Failed to update profile: ${response.statusCode}');
       }
