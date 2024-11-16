@@ -72,6 +72,12 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
 
       if (response.statusCode == 200) {
         List<dynamic> fetchedPatients = jsonDecode(response.body);
+        // Filter out the currently logged-in therapist
+        fetchedPatients = fetchedPatients.where((patient) {
+          return patient['id'] !=
+              therapistId; // Exclude the logged-in therapist
+        }).toList();
+
         // Explicitly cast to List<Map<String, dynamic>>
         patients.value = List<Map<String, dynamic>>.from(fetchedPatients);
         print('Patients fetched:');
