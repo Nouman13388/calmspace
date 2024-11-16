@@ -2,6 +2,7 @@ import 'package:calmspace/views/content_page.dart';
 import 'package:calmspace/views/dashboard_pages/dashboard_view.dart';
 import 'package:calmspace/views/navbar.dart';
 import 'package:calmspace/views/profile_pages/user_profile_page.dart';
+import 'package:cuberto_bottom_bar/internal/tab_data.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -157,11 +158,15 @@ class _UserHomePageState extends State<UserHomePage> {
                     onTap: () => Get.toNamed('/assessment'),
                   ),
                   FeatureCardData(
+                    icon: Icons.tips_and_updates,
+                    title: 'Tips',
+                    onTap: () => Get.toNamed('/assessment'),
+                  ),
+                  FeatureCardData(
                     icon: Icons.feedback,
                     title: 'Feedback',
                     onTap: () => Get.toNamed('/feedback'),
                   ),
-                  // Add more feature cards as needed
                 ],
               ),
               DashboardView(),
@@ -173,6 +178,24 @@ class _UserHomePageState extends State<UserHomePage> {
         bottomNavigationBar: CustomNavBar(
           currentIndex: _currentIndex,
           onTap: _onNavItemTapped,
+          tabs: [
+            TabData(
+              iconData: Icons.home,
+              title: 'Home',
+            ),
+            TabData(
+              iconData: Icons.dashboard,
+              title: 'Dashboard',
+            ),
+            TabData(
+              iconData: Icons.article,
+              title: 'Content',
+            ),
+            TabData(
+              iconData: Icons.person,
+              title: 'Profile',
+            ),
+          ],
         ),
         drawer: Drawer(
           child: ListView(

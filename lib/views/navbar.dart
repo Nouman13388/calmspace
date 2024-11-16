@@ -4,49 +4,39 @@ import 'package:flutter/material.dart';
 class CustomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final List<TabData> tabs; // Accept tabs dynamically
+  final Color? backgroundColor;
+  final Color? inactiveColor;
+  final Color? activeColor;
+  final double height;
 
-  const CustomNavBar({super.key, required this.currentIndex, required this.onTap});
+  const CustomNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    required this.tabs, // Add tabs as a required parameter
+    this.backgroundColor = const Color(0xFFFFF3E0),
+    this.inactiveColor = const Color(0xFFC68181),
+    this.activeColor = Colors.white,
+    this.height = 70,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Define your tab data
-    final List<TabData> tabs = [
-      const TabData(
-        key: Key('Home'),
-        iconData: Icons.home,
-        title: 'Home',
-      ),
-      const TabData(
-        key: Key('Dashboard'),
-        iconData: Icons.dashboard,
-        title: 'Dashboard',
-      ),
-      const TabData(
-        key: Key('Browse'),
-        iconData: Icons.saved_search,
-        title: 'Browse',
-      ),
-      const TabData(
-        key: Key('Profile'),
-        iconData: Icons.person,
-        title: 'Profile',
-      ),
-    ];
-
     return Container(
-      height: 70, // Increased height for the navbar
-      color: const Color(0xFFFFF3E0), // Background color for the navbar
+      height: height,
+      color: backgroundColor,
       child: CubertoBottomBar(
         key: const Key("BottomBar"),
-        inactiveIconColor: const Color(0xFFC68181), // Darker inactive color
+        inactiveIconColor: inactiveColor,
         tabStyle: CubertoTabStyle.styleNormal,
-        selectedTab: currentIndex, // Current selected tab index
+        selectedTab: currentIndex,
         tabs: tabs,
         onTabChangedListener: (position, title, color) {
-          onTap(position); // Call the onTap function with the selected index
+          onTap(position);
         },
-        textColor: const Color(0xFFFFF3E0), // Darker text color for better contrast
-        barBackgroundColor: const Color(0xFFFFF3E0), // A slightly darker shade for the bar background
+        textColor: activeColor,
+        barBackgroundColor: backgroundColor,
       ),
     );
   }

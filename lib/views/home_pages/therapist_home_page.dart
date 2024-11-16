@@ -1,7 +1,8 @@
 import 'package:calmspace/views/content_page.dart';
-import 'package:calmspace/views/map_pages/google_map_screen.dart';
 import 'package:calmspace/views/navbar.dart';
 import 'package:calmspace/views/profile_pages/therapist_profile_page.dart';
+import 'package:calmspace/views/tips_pages/therapist_tips_page.dart';
+import 'package:cuberto_bottom_bar/internal/tab_data.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -137,35 +138,38 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: PageView(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            HomePage(
-              featureCards: [
-                FeatureCardData(
-                  icon: Icons.calendar_today,
-                  title: 'Appointments',
-                  onTap: () => Get.toNamed('/therapist-appointment'),
-                ),
-                FeatureCardData(
-                  icon: Icons.message,
-                  title: 'Chat',
-                  onTap: () => Get.toNamed('/therapist-thread'),
-                ),
-              ],
-            ),
-            GoogleMapScreen(),
-            const ContentPage(),
-            TherapistProfilePage(),
-          ],
-        ),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          HomePage(
+            featureCards: [
+              FeatureCardData(
+                icon: Icons.calendar_today,
+                title: 'Appointments',
+                onTap: () => Get.toNamed('/therapist-appointment'),
+              ),
+              FeatureCardData(
+                icon: Icons.message,
+                title: 'Chat',
+                onTap: () => Get.toNamed('/therapist-thread'),
+              ),
+            ],
+          ),
+          TherapistTipsPage(),
+          const ContentPage(),
+          TherapistProfilePage(),
+        ],
       ),
       bottomNavigationBar: CustomNavBar(
         currentIndex: _currentIndex,
         onTap: _onNavItemTapped,
+        tabs: [
+          TabData(iconData: Icons.home, title: 'Home'),
+          TabData(iconData: Icons.tips_and_updates, title: 'Tips'),
+          TabData(iconData: Icons.library_books, title: 'Content'),
+          TabData(iconData: Icons.person, title: 'Profile'),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -233,8 +237,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              user?.displayName ??
-                  'Therapist Name', // Default name if displayName is null
+              user?.displayName ?? 'Therapist Name', // Default name if null
               style: const TextStyle(color: Colors.white, fontSize: 20),
               overflow: TextOverflow.ellipsis,
             ),

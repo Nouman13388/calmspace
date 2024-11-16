@@ -22,6 +22,8 @@ import '../views/role_pages/therapist_list_view.dart';
 import '../views/role_pages/user_list_view.dart';
 import '../views/role_seletion_page.dart';
 import '../views/setiings_pages/user_settings_page.dart';
+import '../views/tips_pages/therapist_tips_page.dart';
+import '../views/tips_pages/user_tips_page.dart';
 
 class AppRouter {
   static List<GetPage> routes = [
@@ -68,6 +70,8 @@ class AppRouter {
         name: '/terms-of-service',
         page: () => TermsOfServicePage()), // New route
     GetPage(name: '/emergency', page: () => EmergencySupportPage()),
+    GetPage(name: '/therapist-tips', page: () => TherapistTipsPage()),
+    GetPage(name: '/user-tips', page: () => UserTipsPage()),
   ];
 
   static void initRoutes(SharedPreferences prefs) {
