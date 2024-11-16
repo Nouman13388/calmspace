@@ -160,7 +160,7 @@ class _UserHomePageState extends State<UserHomePage> {
                   FeatureCardData(
                     icon: Icons.tips_and_updates,
                     title: 'Tips',
-                    onTap: () => Get.toNamed('/assessment'),
+                    onTap: () => Get.toNamed('/user-tips'),
                   ),
                   FeatureCardData(
                     icon: Icons.feedback,

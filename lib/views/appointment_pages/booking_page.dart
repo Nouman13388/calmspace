@@ -41,8 +41,6 @@ class BookingPage extends StatelessWidget {
           children: [
             _buildDateTimePickerSection(context, 'Start Time', true),
             const SizedBox(height: 20),
-            _buildDateTimePickerSection(context, 'End Time', false),
-            const SizedBox(height: 20),
 
             // Preview Selected Date and Time
             Obx(() {
@@ -109,21 +107,37 @@ class BookingPage extends StatelessWidget {
                                 snackPosition: SnackPosition.BOTTOM,
                               );
                             } else {
-                              // If no overlap, proceed with booking
-                              await bookingController.bookAppointment(
-                                userId,
-                                therapistId,
-                                userEmail,
-                                therapistEmail,
-                              );
-                              // Provide success feedback
-                              Get.snackbar(
-                                'Appointment Booked',
-                                'Your appointment has been successfully booked!',
-                                backgroundColor: Colors.green,
-                                colorText: Colors.white,
-                                snackPosition: SnackPosition.BOTTOM,
-                              );
+                              // Check if the selected time is in the past
+                              final selectedStartTime =
+                                  bookingController.selectedStartDateTime.value;
+                              if (selectedStartTime != null &&
+                                  selectedStartTime.isBefore(DateTime.now())) {
+                                // Show an error if the appointment is in the past
+                                Get.snackbar(
+                                  'Invalid Appointment Time',
+                                  'You cannot book an appointment in the past.',
+                                  backgroundColor: Colors.redAccent,
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                              } else {
+                                // If no overlap and the time is valid, proceed with booking
+                                await bookingController.bookAppointment(
+                                  userId,
+                                  therapistId,
+                                  userEmail,
+                                  therapistEmail,
+                                );
+
+                                // Provide success feedback
+                                Get.snackbar(
+                                  'Appointment Booked',
+                                  'Your appointment has been successfully booked!',
+                                  backgroundColor: Colors.green,
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                              }
                             }
                           } catch (error) {
                             // Handle errors (e.g., network issues, null data, etc.)
@@ -158,7 +172,7 @@ class BookingPage extends StatelessWidget {
             const SizedBox(height: 40),
 
             // Optionally, display upcoming or past appointments
-            FutureBuilder(
+            FutureBuilder<List<Appointment>>(
               future: _apiService.fetchAppointments(
                   'User', 'Name'), // Adjust the parameters for your fetch logic
               builder: (context, snapshot) {
@@ -170,7 +184,8 @@ class BookingPage extends StatelessWidget {
                       child: Text('Error fetching appointments'));
                 }
                 if (snapshot.hasData) {
-                  var appointments = snapshot.data as List<Appointment>;
+                  List<Appointment> appointments =
+                      snapshot.data!; // Safely cast to List<Appointment>
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -198,7 +213,7 @@ class BookingPage extends StatelessWidget {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   );
                 }
@@ -245,8 +260,12 @@ class BookingPage extends StatelessWidget {
                 );
 
                 if (pickedTime != null) {
+                  // Set the start time
                   bookingController.selectDateTime(
                       isStartTime, pickedDate, pickedTime);
+
+                  // Automatically set the end time to 1.5 hours after the start time
+                  bookingController.setEndTimeForStartTime();
                 }
               }
             },
