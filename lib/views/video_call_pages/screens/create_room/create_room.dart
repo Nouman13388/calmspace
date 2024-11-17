@@ -123,7 +123,7 @@ class _CreateRoomState extends State<CreateRoom> {
                   });
                 },
                 style: RoundedButtonStyle,
-                child: const Text('Call'),
+                child: const Text('Generate Link'),
               ),
             ),
             const SizedBox(

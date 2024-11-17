@@ -40,7 +40,8 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
     therapistId = await therapistController.getLoggedInTherapistId();
 
     if (therapistId != null) {
-      // If therapist ID is found, fetch patients
+      // If therapist ID is found, fetch the therapist details and patients
+      fetchTherapistDetails();
       fetchData();
     } else {
       // If no therapist ID found, show an error message
@@ -52,6 +53,29 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
       );
+    }
+  }
+
+  // Fetch the logged-in therapist's details (for debugging purposes)
+  Future<void> fetchTherapistDetails() async {
+    try {
+      // Fetch the therapist by their ID
+      final therapist = therapistController.therapists.firstWhere(
+        (t) => t.id == therapistId,
+        orElse: () =>
+            Therapist(id: -1, email: '', name: '', specialization: '', bio: ''),
+      );
+
+      // Log therapist data to console (for debugging purposes)
+      if (therapist.id != -1) {
+        print('Logged-in Therapist Data:');
+        print('Name: ${therapist.name}');
+        print('Email: ${therapist.email}');
+        print('Specialization: ${therapist.specialization}');
+        print('Bio: ${therapist.bio}');
+      }
+    } catch (e) {
+      print('Error fetching therapist details: $e');
     }
   }
 
@@ -68,22 +92,41 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
   // Fetch patients from the API
   Future<void> fetchPatients() async {
     try {
+      // Get the logged-in therapist's email from the therapistController
+      String therapistEmail = therapistController.therapists
+          .firstWhere((t) => t.id == therapistId)
+          .email;
+
       final response = await http.get(Uri.parse(AppConstants.usersUrl));
 
       if (response.statusCode == 200) {
         List<dynamic> fetchedPatients = jsonDecode(response.body);
-        // Filter out the currently logged-in therapist
+
+        // Debugging: Log therapist email and patients before filtering
+        print('Therapist Email: $therapistEmail');
+        print('Patients before filtering:');
+        fetchedPatients.forEach((patient) {
+          print('Patient: ${patient['name']} (${patient['email']})');
+        });
+
+        // Filter out the currently logged-in therapist using email
         fetchedPatients = fetchedPatients.where((patient) {
-          return patient['id'] !=
-              therapistId; // Exclude the logged-in therapist
+          bool exclude =
+              patient['email'] != therapistEmail; // Use email for filtering
+          // Debugging: Print the exclusion check based on email
+          print(
+              'Checking patient email: ${patient['email']} against therapist email: $therapistEmail. Exclude: $exclude');
+          return exclude;
         }).toList();
 
-        // Explicitly cast to List<Map<String, dynamic>>
-        patients.value = List<Map<String, dynamic>>.from(fetchedPatients);
-        print('Patients fetched:');
+        // Debugging: Log the patients after filtering
+        print('Patients after filtering:');
         fetchedPatients.forEach((patient) {
-          print('Patient: ${patient['name']} (${patient['id']})');
+          print('Patient: ${patient['name']} (${patient['email']})');
         });
+
+        // Explicitly cast to List<Map<String, dynamic>> and update the patients list
+        patients.value = List<Map<String, dynamic>>.from(fetchedPatients);
       } else {
         print('Failed to fetch patients. Status Code: ${response.statusCode}');
       }
