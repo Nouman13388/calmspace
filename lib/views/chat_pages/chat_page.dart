@@ -11,6 +11,8 @@ class ChatPage extends StatelessWidget {
       therapistId: Get.arguments['therapistId']));
   final ScrollController _scrollController = ScrollController();
 
+  ChatPage({super.key});
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -30,11 +32,9 @@ class ChatPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.video_call),
             onPressed: () {
-              // Ensure userId and therapistId are strings
-              final userIdStr = chatController.userId.toString();
-              final therapistIdStr = chatController.therapistId.toString();
+              chatController.userId.toString();
+              chatController.therapistId.toString();
 
-              // Navigate to VideoCallPage with senderId and receiverId
               Get.to(() => const VideoCallPage());
             },
           ),
@@ -44,14 +44,15 @@ class ChatPage extends StatelessWidget {
         children: [
           Expanded(
             child: Obx(() {
-              // Show loading indicator only for the first load
               if (chatController.isFirstLoad.value) {
                 return const Center(child: CircularProgressIndicator());
               }
 
+              // Sort messages by createdAt to show in chronological order
               chatController.messages
                   .sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
+              // Scroll to bottom after fetching messages
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _scrollToBottom();
               });
@@ -61,7 +62,8 @@ class ChatPage extends StatelessWidget {
                 itemCount: chatController.messages.length,
                 itemBuilder: (context, index) {
                   final message = chatController.messages[index];
-                  final isSentByUser = message.isSentByUser;
+                  final isSentByUser =
+                      message.senderId == chatController.userId;
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(
@@ -77,7 +79,7 @@ class ChatPage extends StatelessWidget {
                         constraints: const BoxConstraints(maxWidth: 250),
                         decoration: BoxDecoration(
                           color: isSentByUser
-                              ? Colors.blue[300]
+                              ? Colors.blueAccent
                               : Colors.grey[200],
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(12.0),
@@ -93,7 +95,18 @@ class ChatPage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Display sender and receiver names
                             Text(
+                              '${message.senderName} to ${message.receiverName}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 5.0),
+                            // Selectable text for messages
+                            SelectableText(
                               message.message,
                               style: TextStyle(
                                 fontSize: 16.0,
@@ -138,8 +151,10 @@ class ChatPage extends StatelessWidget {
           MessageInput(
             messageController: chatController.messageController,
             sendMessage: () {
-              chatController.sendMessage();
-              _scrollToBottom();
+              if (!chatController.isSendingMessage.value) {
+                chatController.sendMessage();
+                _scrollToBottom();
+              }
             },
           ),
         ],

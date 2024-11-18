@@ -1,7 +1,6 @@
 import 'package:calmspace/views/content_page.dart';
 import 'package:calmspace/views/dashboard_pages/dashboard_view.dart';
 import 'package:calmspace/views/navbar.dart';
-import 'package:calmspace/views/profile_pages/user_profile_page.dart';
 import 'package:cuberto_bottom_bar/internal/tab_data.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
@@ -11,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../profile_pages/user_profile_page.dart';
 import 'home_page.dart';
 
 class UserHomePage extends StatefulWidget {

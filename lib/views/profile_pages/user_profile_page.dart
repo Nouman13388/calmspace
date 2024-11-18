@@ -1,121 +1,170 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../controllers/profile_controller.dart';
+import '../../controllers/user_profile_controller.dart'; // Ensure correct import path
 
 class UserProfilePage extends StatelessWidget {
-  final TherapistProfileController controller =
-      Get.put(TherapistProfileController());
+  final UserProfileController controller = Get.put(UserProfileController());
 
   UserProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Fetch user profile when the page loads
+    controller.fetchUserProfile(19); // Replace with dynamic user ID
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Profile'),
-        leading: Obx(() => controller.isEditing.value
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  controller.toggleEditing();
-                  controller.fetchUserData();
-                },
-              )
-            : Container()),
+        title: Text("User Profile"),
         actions: [
-          Obx(() => !controller.isEditing.value
-              ? IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: controller.toggleEditing,
-                )
-              : Container()),
+          IconButton(
+            icon: Icon(controller.isLoading.value ? Icons.refresh : Icons.edit),
+            onPressed: () {
+              if (controller.isLoading.value) {
+                controller.fetchUserProfile(19); // Reload data
+              } else {
+                controller.toggleEditMode();
+              }
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: () {
+              if (controller.isEditMode.value) {
+                if (controller.formKey.currentState?.validate() ?? false) {
+                  controller.saveProfile();
+                  Get.snackbar("Success", "Profile updated successfully!",
+                      backgroundColor: Colors.green, colorText: Colors.white);
+                }
+              }
+            },
+          )
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Obx(() {
-          return Form(
-            key: controller.formKey,
-            child: ListView(
-              children: [
-                Center(
-                  child: GestureDetector(
-                    onTap: controller.isEditing.value
-                        ? controller.pickImage
-                        : null,
-                    child: CircleAvatar(
-                      radius: 100,
-                      backgroundImage: controller.photoUrl.value.isNotEmpty
-                          ? (controller.photoUrl.value.startsWith('http')
-                              ? NetworkImage(controller.photoUrl.value)
-                              : FileImage(File(controller.photoUrl.value)))
-                          : null,
-                      child: controller.photoUrl.value.isEmpty &&
-                              controller.isEditing.value
-                          ? const Icon(Icons.camera_alt, color: Colors.white)
-                          : null,
-                    ),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: ListView(
+            children: [
+              // Profile Image
+              Center(
+                child: GestureDetector(
+                  onTap: controller.pickImage, // Open image picker
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundImage: controller.pickedImage.value == null
+                        ? NetworkImage(
+                            controller.profile.value?.profilePicture ??
+                                'https://via.placeholder.com/150')
+                        : FileImage(controller.pickedImage.value!)
+                            as ImageProvider,
                   ),
                 ),
-                const SizedBox(height: 16.0),
-                _buildTextField('Name', controller.username, (value) {
-                  controller.username.value = value;
-                }, controller.isEditing.value),
-                const SizedBox(height: 16.0),
-                _buildTextField('Email', controller.email, (value) {
-                  controller.email.value = value;
-                }, controller.isEditing.value, isEmail: true),
-                const SizedBox(height: 16.0),
-                if (controller.isEditing.value)
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (controller.formKey.currentState?.validate() ??
-                          false) {
-                        await controller.saveProfile();
-                      }
-                    },
-                    child: const Text('Save Profile'),
-                  ),
-              ],
-            ),
-          );
-        }),
-      ),
+              ),
+              SizedBox(height: 20),
+
+              // Display or edit the profile fields
+              controller.isEditMode.value
+                  ? _buildEditForm() // If in edit mode, show editable fields
+                  : _buildProfileDetails(), // Otherwise, show profile details
+
+              SizedBox(height: 30),
+            ],
+          ),
+        );
+      }),
     );
   }
 
-  Widget _buildTextField(String label, RxString observable,
-      Function(String) onChanged, bool isEditing,
-      {bool isEmail = false}) {
-    final TextEditingController controller =
-        TextEditingController(text: observable.value);
-    return isEditing
-        ? TextFormField(
-            controller: controller,
+  // Profile details view (non-editable)
+  Widget _buildProfileDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Username: ${controller.username.value}',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text('Location: ${controller.location.value}',
+            style: TextStyle(fontSize: 16)),
+        SizedBox(height: 10),
+        Text('Bio: ${controller.bio.value}', style: TextStyle(fontSize: 16)),
+      ],
+    );
+  }
+
+  // Edit form view (editable fields)
+  Widget _buildEditForm() {
+    return Form(
+      key: controller.formKey, // Form validation key
+      child: Column(
+        children: [
+          // Username Field
+          TextFormField(
+            initialValue: controller.username.value,
             decoration: InputDecoration(
-              labelText: label,
+              labelText: 'Username',
               border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.edit),
             ),
+            onChanged: (value) {
+              controller.username.value = value;
+            },
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter a $label';
+                return 'Username cannot be empty';
               }
-              if (isEmail && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                return 'Please enter a valid email address';
+              return null; // Validation passed
+            },
+          ),
+          SizedBox(height: 20),
+
+          // Location Field
+          TextFormField(
+            initialValue: controller.location.value,
+            decoration: InputDecoration(
+              labelText: 'Location',
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.edit),
+            ),
+            onChanged: (value) {
+              controller.location.value = value;
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Location cannot be empty';
               }
               return null;
             },
+          ),
+          SizedBox(height: 20),
+
+          // Bio Field
+          TextFormField(
+            initialValue: controller.bio.value,
+            decoration: InputDecoration(
+              labelText: 'Bio',
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.edit),
+            ),
+            maxLines: 4,
             onChanged: (value) {
-              onChanged(value);
-              observable.value = value; // Update observable directly
+              controller.bio.value = value;
             },
-          )
-        : ListTile(
-            title: Text(label),
-            subtitle: Text(observable.value),
-          );
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Bio cannot be empty';
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
