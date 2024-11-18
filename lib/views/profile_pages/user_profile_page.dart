@@ -10,69 +10,75 @@ class UserProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fetch user profile when the page loads
-    controller.fetchUserProfile(19); // Replace with dynamic user ID
+    controller.fetchUserProfile(); // Fetch profile data
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("User Profile"),
+        title: const Text("User Profile"),
         actions: [
           IconButton(
-            icon: Icon(controller.isLoading.value ? Icons.refresh : Icons.edit),
-            onPressed: () {
-              if (controller.isLoading.value) {
-                controller.fetchUserProfile(19); // Reload data
-              } else {
-                controller.toggleEditMode();
-              }
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.save),
+            icon: Icon(
+              controller.isEditMode.value ? Icons.check : Icons.edit,
+              color: Colors.white,
+            ),
             onPressed: () {
               if (controller.isEditMode.value) {
                 if (controller.formKey.currentState?.validate() ?? false) {
                   controller.saveProfile();
-                  Get.snackbar("Success", "Profile updated successfully!",
-                      backgroundColor: Colors.green, colorText: Colors.white);
+                  controller.toggleEditMode(); // Exit edit mode after saving
                 }
+              } else {
+                controller.toggleEditMode(); // Enter edit mode
               }
             },
-          )
+          ),
         ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         return Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15),
           child: ListView(
             children: [
-              // Profile Image
               Center(
                 child: GestureDetector(
                   onTap: controller.pickImage, // Open image picker
                   child: CircleAvatar(
-                    radius: 60,
+                    radius: 70,
                     backgroundImage: controller.pickedImage.value == null
                         ? NetworkImage(
                             controller.profile.value?.profilePicture ??
                                 'https://via.placeholder.com/150')
                         : FileImage(controller.pickedImage.value!)
                             as ImageProvider,
+                    child: controller.pickedImage.value == null
+                        ? const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 30)
+                        : null,
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-
-              // Display or edit the profile fields
-              controller.isEditMode.value
-                  ? _buildEditForm() // If in edit mode, show editable fields
-                  : _buildProfileDetails(), // Otherwise, show profile details
-
-              SizedBox(height: 30),
+              const SizedBox(height: 25),
+              controller.profile.value != null
+                  ? (controller.isEditMode.value
+                      ? _buildEditForm()
+                      : _buildProfileDetails())
+                  : _buildNoProfilePrompt(),
+              const SizedBox(height: 30),
+              if (controller.isEditMode.value)
+                ElevatedButton(
+                  onPressed: () {
+                    if (controller.formKey.currentState?.validate() ?? false) {
+                      controller.saveProfile();
+                      controller
+                          .toggleEditMode(); // Exit edit mode after saving
+                    }
+                  },
+                  child: const Text('Save Profile'),
+                ),
             ],
           ),
         );
@@ -80,88 +86,158 @@ class UserProfilePage extends StatelessWidget {
     );
   }
 
-  // Profile details view (non-editable)
   Widget _buildProfileDetails() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Username: ${controller.username.value}',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 10),
-        Text('Location: ${controller.location.value}',
-            style: TextStyle(fontSize: 16)),
-        SizedBox(height: 10),
-        Text('Bio: ${controller.bio.value}', style: TextStyle(fontSize: 16)),
+        _buildProfileDetailRow(
+            Icons.account_circle, 'Username', controller.username.value),
+        const SizedBox(height: 12),
+        _buildProfileDetailRow(
+            Icons.location_on, 'Location', controller.location.value),
+        const SizedBox(height: 12),
+        _buildProfileDetailRow(Icons.edit, 'Bio', controller.bio.value),
       ],
     );
   }
 
-  // Edit form view (editable fields)
+  Widget _buildProfileDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.grey[700], size: 20),
+        const SizedBox(width: 10),
+        Text(
+          '$label: ',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 16, color: Colors.black54),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildEditForm() {
     return Form(
-      key: controller.formKey, // Form validation key
+      key: controller.formKey,
       child: Column(
         children: [
-          // Username Field
-          TextFormField(
-            initialValue: controller.username.value,
-            decoration: InputDecoration(
-              labelText: 'Username',
-              border: OutlineInputBorder(),
-              suffixIcon: Icon(Icons.edit),
-            ),
-            onChanged: (value) {
+          _buildTextFormField(
+            'Username',
+            controller.username.value,
+            (value) {
               controller.username.value = value;
             },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Username cannot be empty';
-              }
-              return null; // Validation passed
-            },
+            icon: Icons.account_circle,
           ),
-          SizedBox(height: 20),
-
-          // Location Field
-          TextFormField(
-            initialValue: controller.location.value,
-            decoration: InputDecoration(
-              labelText: 'Location',
-              border: OutlineInputBorder(),
-              suffixIcon: Icon(Icons.edit),
-            ),
-            onChanged: (value) {
+          const SizedBox(height: 20),
+          _buildTextFormField(
+            'Location',
+            controller.location.value,
+            (value) {
               controller.location.value = value;
             },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Location cannot be empty';
-              }
-              return null;
-            },
+            icon: Icons.location_on,
           ),
-          SizedBox(height: 20),
-
-          // Bio Field
-          TextFormField(
-            initialValue: controller.bio.value,
-            decoration: InputDecoration(
-              labelText: 'Bio',
-              border: OutlineInputBorder(),
-              suffixIcon: Icon(Icons.edit),
-            ),
-            maxLines: 4,
-            onChanged: (value) {
+          const SizedBox(height: 20),
+          _buildTextFormField(
+            'Bio',
+            controller.bio.value,
+            (value) {
               controller.bio.value = value;
             },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Bio cannot be empty';
-              }
-              return null;
+            icon: Icons.edit,
+            maxLines: 4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextFormField(
+    String label,
+    String initialValue,
+    Function(String) onChanged, {
+    int maxLines = 1,
+    required IconData icon,
+  }) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontWeight: FontWeight.w500),
+        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon, color: Colors.grey),
+      ),
+      maxLines: maxLines,
+      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return '$label cannot be empty';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildNoProfilePrompt() {
+    return Column(
+      children: [
+        const Text(
+          'No profile found!',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'It looks like you haven\'t set up your profile yet. Please add your details below to get started!',
+          style: TextStyle(fontSize: 16, color: Colors.black54),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 30),
+        _buildProfileForm(),
+      ],
+    );
+  }
+
+  Widget _buildProfileForm() {
+    return Form(
+      key: controller.formKey,
+      child: Column(
+        children: [
+          _buildTextFormField(
+            'Username',
+            '',
+            (value) {
+              controller.username.value = value;
             },
+            icon: Icons.account_circle,
+          ),
+          const SizedBox(height: 20),
+          _buildTextFormField(
+            'Location',
+            '',
+            (value) {
+              controller.location.value = value;
+            },
+            icon: Icons.location_on,
+          ),
+          const SizedBox(height: 20),
+          _buildTextFormField(
+            'Bio',
+            '',
+            (value) {
+              controller.bio.value = value;
+            },
+            icon: Icons.edit,
+            maxLines: 4,
           ),
         ],
       ),
