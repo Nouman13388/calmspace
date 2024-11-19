@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../controllers/chat_controller.dart';
+import '../../models/message_model.dart';
 import '../video_call_pages/video_call_screen.dart';
 
 class ChatPage extends StatelessWidget {
@@ -106,13 +108,18 @@ class ChatPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 5.0),
                             // Selectable text for messages
-                            SelectableText(
-                              message.message,
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: isSentByUser
-                                    ? Colors.white
-                                    : Colors.black87,
+                            GestureDetector(
+                              onLongPress: () {
+                                _showMessageContextMenu(context, message);
+                              },
+                              child: SelectableText(
+                                message.message,
+                                style: TextStyle(
+                                  fontSize: 16.0,
+                                  color: isSentByUser
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 5.0),
@@ -159,6 +166,41 @@ class ChatPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // Show the context menu when a message is long-pressed
+  void _showMessageContextMenu(BuildContext context, Message message) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.copy),
+                title: const Text('Copy'),
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: message.message));
+                  Get.snackbar('Copied', 'Message copied to clipboard');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.reply),
+                title: const Text('Reply'),
+                onTap: () {
+                  // Reply logic can be added here
+                  Navigator.pop(context);
+                },
+              ),
+              // Add more actions if needed
+            ],
+          ),
+        );
+      },
     );
   }
 }
