@@ -35,6 +35,33 @@ class UserController extends GetxController {
     }
   }
 
+  // Fetch a specific user by their ID
+  Future<BackendUser?> fetchUser(int userId) async {
+    try {
+      // Check if users are already fetched, if not, fetch users first
+      if (users.isEmpty) {
+        print("Users list is empty. Fetching all users first...");
+        await fetchUsers(); // Fetch all users if not fetched yet
+      }
+
+      // Find the user from the list by their ID
+      final user = users.firstWhere(
+        (user) => user.id == userId,
+      );
+
+      if (user != null) {
+        print('User found with ID: $userId \n $user');
+        return user; // Return the found user
+      } else {
+        print('No user found with ID: $userId');
+        return null; // Return null if no user found
+      }
+    } catch (e) {
+      print('Error fetching user by ID: $e');
+      throw Exception('Error fetching user by ID: $e');
+    }
+  }
+
   // Check if the email already exists in Firebase and the backend before signing up
   Future<bool> isEmailExists(String email) async {
     try {

@@ -27,9 +27,9 @@ class UserProfileController extends GetxController {
   final UserController userController =
       Get.find<UserController>(); // Get UserController instance
 
-  // Fetch the user profile using the API
   Future<void> fetchUserProfile() async {
     final userId = await userController.getLoggedInUserId();
+
     if (userId == null) {
       print('No logged-in user found!');
       return;
@@ -42,26 +42,42 @@ class UserProfileController extends GetxController {
     try {
       final response =
           await http.get(Uri.parse('${AppConstants.profilesUrl}?user=$userId'));
-      print("API request made: ${AppConstants.profilesUrl}?user=$userId");
+      final userResponse =
+          await http.get(Uri.parse('${AppConstants.usersUrl}?id=$userId'));
 
-      if (response.statusCode == 200) {
+      print(
+          "API request made (Profile API): ${AppConstants.profilesUrl}?user=$userId");
+      print("API request made (User API): ${AppConstants.usersUrl}?id=$userId");
+
+      if (response.statusCode == 200 && userResponse.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        print("Profile data fetched: $data");
+        final List<dynamic> userData = json.decode(userResponse.body);
 
-        if (data.isNotEmpty) {
-          profile.value = BackendUser.fromJson(data[0]);
+        print("Profile data fetched: $data");
+        print("User data fetched: $userData");
+
+        if (data.isNotEmpty && userData.isNotEmpty) {
+          // Create BackendUser with the correct name from userData
+          final userName = userData[0]['name'] as String;
+
+          profile.value = BackendUser.fromJson(data[0], name: userName);
 
           // Set initial values for form fields
-          username.value = profile.value?.name ?? '';
+          username.value = profile.value?.name ?? ''; // Fetch the name here
           location.value = profile.value?.location ?? ''; // Initialize location
           bio.value = profile.value?.bio ?? '';
 
           // Ensure profilePicture is a valid String
           profilePicture.value = profile.value?.profilePicture ?? '';
 
+          // Print the individual details (Name, Location, Bio) to the console
+          print("User Name: ${username.value}");
+          print("User Location: ${location.value}");
+          print("User Bio: ${bio.value}");
+
           print("User profile loaded successfully: ${profile.value}");
         } else {
-          print("No profiles found for this user.");
+          print("No profiles or user data found for this user.");
           // No profile found, reset form values for new profile creation
           username.value = '';
           location.value = '';
@@ -69,7 +85,7 @@ class UserProfileController extends GetxController {
         }
       } else {
         print(
-            'Failed to load profile data. Status code: ${response.statusCode}');
+            'Failed to load profile or user data. Status code: ${response.statusCode}');
         throw Exception('Failed to load profile');
       }
     } catch (e) {
@@ -194,7 +210,6 @@ class UserProfileController extends GetxController {
   }
 }
 
-// BackendUser class represents the profile object
 class BackendUser {
   final int id;
   final String name;
@@ -213,10 +228,10 @@ class BackendUser {
   });
 
   // Factory constructor to parse JSON response from API
-  factory BackendUser.fromJson(Map<String, dynamic> json) {
+  factory BackendUser.fromJson(Map<String, dynamic> json, {String? name}) {
     return BackendUser(
       id: json['id'] as int, // Ensure this is an int
-      name: json['name'] as String? ?? 'No Name', // Cast to String safely
+      name: name ?? 'No Name', // Fallback to 'No Name' if name is null
       email: json['email'] as String? ?? 'No Email', // Cast to String safely
       bio: json['bio'] as String? ?? 'No Bio', // Cast to String safely
       location:

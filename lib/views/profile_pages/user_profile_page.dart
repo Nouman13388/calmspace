@@ -16,22 +16,35 @@ class UserProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("User Profile"),
         actions: [
-          IconButton(
-            icon: Icon(
-              controller.isEditMode.value ? Icons.check : Icons.edit,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              if (controller.isEditMode.value) {
-                if (controller.formKey.currentState?.validate() ?? false) {
-                  controller.saveProfile();
-                  controller.toggleEditMode(); // Exit edit mode after saving
-                }
-              } else {
-                controller.toggleEditMode(); // Enter edit mode
-              }
-            },
-          ),
+          // This will hide the icon when in edit mode (toggle edit/save)
+          Obx(() {
+            return Visibility(
+              visible: !controller
+                  .isEditMode.value, // Only show when not in edit mode
+              child: IconButton(
+                icon: const Icon(Icons.edit, color: Colors.white),
+                onPressed: () {
+                  controller.toggleEditMode(); // Enter edit mode
+                },
+              ),
+            );
+          }),
+          // This will show the save button when in edit mode
+          Obx(() {
+            return Visibility(
+              visible:
+                  controller.isEditMode.value, // Only show when in edit mode
+              child: IconButton(
+                icon: const Icon(Icons.check, color: Colors.white),
+                onPressed: () {
+                  if (controller.formKey.currentState?.validate() ?? false) {
+                    controller.saveProfile();
+                    controller.toggleEditMode(); // Exit edit mode after saving
+                  }
+                },
+              ),
+            );
+          }),
         ],
       ),
       body: Obx(() {
@@ -45,7 +58,10 @@ class UserProfilePage extends StatelessWidget {
             children: [
               Center(
                 child: GestureDetector(
-                  onTap: controller.pickImage, // Open image picker
+                  onTap: controller.isEditMode.value
+                      ? controller
+                          .pickImage // Open image picker only if in edit mode
+                      : null,
                   child: CircleAvatar(
                     radius: 70,
                     backgroundImage: controller.pickedImage.value == null
@@ -54,9 +70,11 @@ class UserProfilePage extends StatelessWidget {
                                 'https://via.placeholder.com/150')
                         : FileImage(controller.pickedImage.value!)
                             as ImageProvider,
-                    child: controller.pickedImage.value == null
+                    child: controller.isEditMode.value &&
+                            controller.pickedImage.value == null
                         ? const Icon(Icons.camera_alt,
-                            color: Colors.white, size: 30)
+                            color: Colors.white,
+                            size: 30) // Show camera icon only in edit mode
                         : null,
                   ),
                 ),
@@ -67,18 +85,6 @@ class UserProfilePage extends StatelessWidget {
                       ? _buildEditForm()
                       : _buildProfileDetails())
                   : _buildNoProfilePrompt(),
-              const SizedBox(height: 30),
-              if (controller.isEditMode.value)
-                ElevatedButton(
-                  onPressed: () {
-                    if (controller.formKey.currentState?.validate() ?? false) {
-                      controller.saveProfile();
-                      controller
-                          .toggleEditMode(); // Exit edit mode after saving
-                    }
-                  },
-                  child: const Text('Save Profile'),
-                ),
             ],
           ),
         );
