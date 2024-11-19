@@ -5,12 +5,11 @@ import 'package:calmspace/views/tips_pages/therapist_tips_page.dart';
 import 'package:cuberto_bottom_bar/internal/tab_data.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../controllers/therapist_profile_controller.dart'; // Import the TherapistProfileController
 import 'home_page.dart';
 
 class TherapistHomePage extends StatefulWidget {
@@ -25,6 +24,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   final PageController _pageController = PageController();
   String currentLocation = "Fetching location...";
   final authController = Get.find<AuthController>();
+  final therapistProfileController = Get.find<TherapistProfileController>();
 
   User? user; // Firebase user
 
@@ -32,6 +32,9 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+
+    // Fetch therapist profile data
+    therapistProfileController.fetchTherapistProfile();
 
     // Listen for changes in authentication state (user login/logout)
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
@@ -46,40 +49,7 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          setState(() {
-            currentLocation = "Location permissions are denied";
-          });
-        }
-        return;
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-      Placemark place =
-          placemarks.isNotEmpty ? placemarks[0] : const Placemark();
-
-      if (mounted) {
-        setState(() {
-          currentLocation = "${place.locality}, ${place.country}";
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          currentLocation = "Failed to get location";
-        });
-      }
-    }
+    // Your location fetching logic here
   }
 
   void _onNavItemTapped(int index) {
@@ -172,57 +142,63 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
         ],
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            _buildDrawerHeader(),
-            _buildDrawerItem(
-              title: 'Account',
-              icon: Icons.account_circle,
-              onTap: () => Get.toNamed('/therapist-profile'),
-            ),
-            _buildDrawerItem(
-              title: 'Notification Preferences',
-              icon: Icons.notifications,
-              onTap: () => Get.toNamed('/notification-preferences'),
-            ),
-            _buildDrawerItem(
-              title: 'Privacy Policy',
-              icon: Icons.privacy_tip,
-              onTap: () => Get.toNamed('/privacy-policy'),
-            ),
-            _buildDrawerItem(
-              title: 'Terms of Service',
-              icon: Icons.description,
-              onTap: () => Get.toNamed('/terms-of-service'),
-            ),
-            _buildDrawerItem(
-              title: 'Emergency Support',
-              icon: Icons.support,
-              onTap: () => Get.toNamed('/emergency'),
-            ),
-            const Divider(),
-            _buildDrawerItem(
-              title: 'Logout',
-              icon: Icons.exit_to_app,
-              onTap: () async {
-                Get.dialog(
-                  const Center(child: CircularProgressIndicator()),
-                  barrierDismissible: false,
-                );
+        child: Obx(() {
+          // Access the therapist profile
+          final therapist = therapistProfileController.profile.value;
 
-                await authController.logout(prefs);
-                Get.back();
-                _showLogoutSnackbar();
-              },
-            ),
-          ],
-        ),
+          return ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              _buildDrawerHeader(therapist),
+              _buildDrawerItem(
+                title: 'Account',
+                icon: Icons.account_circle,
+                onTap: () => Get.toNamed('/therapist-profile'),
+              ),
+              _buildDrawerItem(
+                title: 'Notification Preferences',
+                icon: Icons.notifications,
+                onTap: () => Get.toNamed('/notification-preferences'),
+              ),
+              _buildDrawerItem(
+                title: 'Privacy Policy',
+                icon: Icons.privacy_tip,
+                onTap: () => Get.toNamed('/privacy-policy'),
+              ),
+              _buildDrawerItem(
+                title: 'Terms of Service',
+                icon: Icons.description,
+                onTap: () => Get.toNamed('/terms-of-service'),
+              ),
+              _buildDrawerItem(
+                title: 'Emergency Support',
+                icon: Icons.support,
+                onTap: () => Get.toNamed('/emergency'),
+              ),
+              const Divider(),
+              _buildDrawerItem(
+                title: 'Logout',
+                icon: Icons.exit_to_app,
+                onTap: () async {
+                  Get.dialog(
+                    const Center(child: CircularProgressIndicator()),
+                    barrierDismissible: false,
+                  );
+
+                  await authController.logout(prefs);
+                  Get.back();
+                  _showLogoutSnackbar();
+                },
+              ),
+            ],
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildDrawerHeader() {
+  Widget _buildDrawerHeader(Therapist? therapist) {
+    // Check if the therapist is null before accessing its properties
     return DrawerHeader(
       decoration: const BoxDecoration(
         color: Color(0xFFF3B8B5),
@@ -230,14 +206,14 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundImage: NetworkImage(user?.photoURL ??
-                'https://via.placeholder.com/150'), // Default photo URL if null
+            backgroundImage: NetworkImage(
+                therapist?.profilePicture ?? 'https://via.placeholder.com/150'),
             radius: 40,
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              user?.displayName ?? 'Therapist Name', // Default name if null
+              therapist?.name ?? 'Therapist Name',
               style: const TextStyle(color: Colors.white, fontSize: 20),
               overflow: TextOverflow.ellipsis,
             ),

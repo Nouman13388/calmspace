@@ -9,6 +9,7 @@ import 'package:provider/provider.dart'; // Add provider package
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'controllers/therapist_controller.dart';
+import 'controllers/therapist_profile_controller.dart'; // Keep only the required import
 import 'firebase_options.dart'; // Firebase options
 import 'initialbinding/initialbinding.dart';
 import 'routes/router.dart'; // Your router file
@@ -19,17 +20,19 @@ void main() async {
       .ensureInitialized(); // Ensures Flutter is initialized before running the app
 
   await Firebase.initializeApp(
-      options:
-          DefaultFirebaseOptions.currentPlatform); // Firebase initialization
+    options: DefaultFirebaseOptions.currentPlatform,
+  ); // Firebase initialization
 
   // Initialize SharedPreferences
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  // Initialize UserController before ApiService
+  // Initialize controllers
   Get.put(UserController()); // Ensure UserController is initialized first
-  Get.put(TherapistController());
-  Get.put(ApiService()); // Then initialize ApiService
-  Get.put(BookingController());
+  Get.put(TherapistController()); // TherapistController
+  Get.put(ApiService()); // ApiService
+  Get.put(BookingController()); // BookingController
+  Get.put(
+      TherapistProfileController()); // Ensure this is the correct controller used in the app
 
   AppRouter.initRoutes(prefs); // Initialize GetX with SharedPreferences
 
@@ -38,7 +41,8 @@ void main() async {
       providers: [
         // Add the RTCService provider here
         Provider<RTCService>(
-            create: (_) => RTCService()), // Replace with your RTCService
+          create: (_) => RTCService(), // Replace with your RTCService
+        ),
       ],
       child: const MyApp(),
     ),

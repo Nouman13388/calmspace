@@ -24,7 +24,6 @@ class TherapistProfileController extends GetxController {
   var pickedImage = Rxn<File>(); // For storing the picked image
 
   final picker = ImagePicker(); // Image picker instance
-
   final UserController userController =
       Get.find<UserController>(); // Get UserController instance
   final TherapistController therapistController =
@@ -35,12 +34,10 @@ class TherapistProfileController extends GetxController {
     final userId = await userController.getLoggedInUserId();
     final therapistId = await therapistController.getLoggedInTherapistId();
 
-    if (userId == null) {
-      print('No logged-in user found!');
+    if (userId == null || therapistId == null) {
+      print('No logged-in user or therapist found!');
       return;
     }
-
-    print("Fetching therapist profile for userId: $userId");
 
     isLoading.value = true;
 
@@ -56,10 +53,6 @@ class TherapistProfileController extends GetxController {
         final userData = json.decode(response[1].body);
         final professionalData = json.decode(response[2].body);
 
-        print("Therapist profile data fetched: $profileData");
-        print("User data fetched: $userData");
-        print("Professional data fetched: $professionalData");
-
         if (profileData.isNotEmpty &&
             userData.isNotEmpty &&
             professionalData.isNotEmpty) {
@@ -69,30 +62,27 @@ class TherapistProfileController extends GetxController {
           // Set initial values for form fields
           username.value = profile.value?.name ?? '';
           location.value = profile.value?.location ?? '';
-          bio.value = professionalData[0]['bio'] ??
-              ''; // Using bio from professionalsUrl
-          specialization.value = professionalData[0]['specialization'] ??
-              ''; // New specialization field
+          bio.value = professionalData[0]['bio'] ?? '';
+          specialization.value = professionalData[0]['specialization'] ?? '';
           profilePicture.value = profile.value?.profilePicture ?? '';
 
           print("Therapist profile loaded successfully: ${profile.value}");
         } else {
-          print("No therapist profiles or user data found.");
+          print("No profile data found.");
           resetProfileFields();
         }
       } else {
         print(
             "Failed to load profile data. Status code: ${response[0].statusCode}");
-        throw Exception('Failed to load therapist profile');
       }
     } catch (e) {
       print("Error fetching therapist profile: $e");
     } finally {
       isLoading.value = false;
-      print("Finished loading therapist profile");
     }
   }
 
+  // Reset profile fields if no data is found
   void resetProfileFields() {
     username.value = '';
     location.value = '';
@@ -107,7 +97,6 @@ class TherapistProfileController extends GetxController {
 
     final loggedInEmail =
         (await userController.getLoggedInUserId()) ?? 'therapist@example.com';
-
     final updatedProfile = {
       'user': loggedInEmail,
       'bio': bio.value,
@@ -127,8 +116,6 @@ class TherapistProfileController extends GetxController {
       final requestMethod = isProfileNew ? 'POST' : 'PUT';
 
       var request = http.MultipartRequest(requestMethod, Uri.parse(url));
-
-      // Add fields to the request
       updatedProfile.forEach((key, value) {
         if (value != null) request.fields[key] = value.toString();
       });
@@ -139,7 +126,6 @@ class TherapistProfileController extends GetxController {
         request.files.add(pic);
       }
 
-      print("Sending request to: ${request.url}");
       var response = await request.send();
 
       if (response.statusCode == 200) {
@@ -147,9 +133,9 @@ class TherapistProfileController extends GetxController {
         Get.snackbar("Success", "Profile saved successfully!",
             backgroundColor: Colors.green, colorText: Colors.white);
       } else {
-        print("Failed to save profile. Status code: ${response.statusCode}");
         final responseBody = await response.stream.bytesToString();
-        print("Response body: $responseBody");
+        print(
+            "Failed to save profile. Status code: ${response.statusCode}. Response: $responseBody");
         throw Exception("Failed to save therapist profile");
       }
     } catch (e) {
@@ -165,12 +151,11 @@ class TherapistProfileController extends GetxController {
 
   // Pick an image (image picker logic)
   Future<void> pickImage() async {
-    print("Picking image...");
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       final file = File(pickedFile.path);
-      if (file.lengthSync() > 1024 * 1024 * 5) {
+      if (await _isImageTooLarge(file)) {
         print("Image file is too large!");
         return; // Reject if the image is too large (5MB here)
       }
@@ -181,8 +166,15 @@ class TherapistProfileController extends GetxController {
       print("No image selected.");
     }
   }
+
+  // Check if the selected image file is too large (e.g., 5MB limit)
+  Future<bool> _isImageTooLarge(File file) async {
+    final fileSize = await file.length();
+    return fileSize > 1024 * 1024 * 5; // 5MB limit
+  }
 }
 
+// Therapist model class
 class Therapist {
   final int id;
   final String name;
@@ -202,7 +194,6 @@ class Therapist {
     required this.specialization,
   });
 
-  // Factory constructor to parse JSON response from API
   factory Therapist.fromJson(Map<String, dynamic> json, {String? name}) {
     return Therapist(
       id: json['id'] as int,
