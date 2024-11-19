@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'controllers/therapist_controller.dart';
 import 'controllers/therapist_profile_controller.dart'; // Keep only the required import
+import 'controllers/user_profile_controller.dart';
 import 'firebase_options.dart'; // Firebase options
 import 'initialbinding/initialbinding.dart';
 import 'routes/router.dart'; // Your router file
@@ -33,6 +34,8 @@ void main() async {
   Get.put(BookingController()); // BookingController
   Get.put(
       TherapistProfileController()); // Ensure this is the correct controller used in the app
+  Get.put(
+      UserProfileController()); // Ensure this is the correct controller used in the app
 
   AppRouter.initRoutes(prefs); // Initialize GetX with SharedPreferences
 

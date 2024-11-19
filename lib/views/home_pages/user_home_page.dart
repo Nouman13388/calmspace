@@ -4,12 +4,11 @@ import 'package:calmspace/views/navbar.dart';
 import 'package:cuberto_bottom_bar/internal/tab_data.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../controllers/user_profile_controller.dart'; // Import UserProfileController
 import '../profile_pages/user_profile_page.dart';
 import 'home_page.dart';
 
@@ -23,44 +22,16 @@ class UserHomePage extends StatefulWidget {
 class _UserHomePageState extends State<UserHomePage> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
-  String currentLocation = "Fetching location...";
   final User? user = FirebaseAuth.instance.currentUser; // Get current user
   final authController = Get.find<AuthController>();
+  final userProfileController =
+      Get.find<UserProfileController>(); // Instance of UserProfileController
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
-  }
-
-  Future<void> _getCurrentLocation() async {
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        setState(() {
-          currentLocation = "Location permissions are denied";
-        });
-        return;
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-      Placemark place = placemarks[0];
-
-      setState(() {
-        currentLocation = "${place.locality}, ${place.country}";
-      });
-    } catch (e) {
-      setState(() {
-        currentLocation = "Failed to get location";
-      });
-    }
+    userProfileController
+        .fetchUserProfile(); // Fetch the user profile when the page loads
   }
 
   void _onNavItemTapped(int index) {
@@ -91,10 +62,13 @@ class _UserHomePageState extends State<UserHomePage> {
           title: Row(
             children: [
               Expanded(
-                child: Text(
-                  currentLocation,
-                  style: const TextStyle(fontSize: 11),
-                  overflow: TextOverflow.ellipsis,
+                child: Obx(
+                  () => Text(
+                    userProfileController.location.value ??
+                        "Fetching location...",
+                    style: const TextStyle(fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],
@@ -103,8 +77,11 @@ class _UserHomePageState extends State<UserHomePage> {
           leading: Builder(
             builder: (context) => IconButton(
               icon: CircleAvatar(
-                backgroundImage: NetworkImage(user?.photoURL ??
-                    'https://via.placeholder.com/150'), // User profile picture
+                backgroundImage: NetworkImage(
+                  userProfileController.profilePicture.value.isNotEmpty
+                      ? userProfileController.profilePicture.value
+                      : user?.photoURL ?? 'https://via.placeholder.com/150',
+                ), // User profile picture
               ),
               onPressed: () {
                 Scaffold.of(context).openDrawer(); // Open the drawer
@@ -250,30 +227,38 @@ class _UserHomePageState extends State<UserHomePage> {
   Widget _buildDrawerHeader() {
     return DrawerHeader(
       decoration: const BoxDecoration(color: Color(0xFFF3B8B5)),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(
-                user?.photoURL ?? 'https://via.placeholder.com/150'),
-            radius: 40,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              user?.displayName ?? 'User Name',
-              style: const TextStyle(color: Colors.white, fontSize: 20),
-              overflow: TextOverflow.ellipsis,
+      child: Obx(() {
+        return Row(
+          children: [
+            CircleAvatar(
+              backgroundImage: NetworkImage(
+                userProfileController.profilePicture.value.isNotEmpty
+                    ? userProfileController.profilePicture.value
+                    : user?.photoURL ?? 'https://via.placeholder.com/150',
+              ),
+              radius: 40,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                userProfileController.username.value.isNotEmpty
+                    ? userProfileController.username.value
+                    : 'User Name',
+                style: const TextStyle(color: Colors.white, fontSize: 20),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _buildDrawerItem(
-      {required String title,
-      required IconData icon,
-      required VoidCallback onTap}) {
+  Widget _buildDrawerItem({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
