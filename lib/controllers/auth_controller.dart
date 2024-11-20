@@ -51,15 +51,13 @@ class AuthController extends GetxController {
 
         print('User data fetched and saved successfully!');
       } else {
-        print('No user found with this email.'); // Changed snackbar to print
+        print('No user found with this email.');
       }
     } catch (e) {
-      Get.snackbar(
-        'Oops!',
-        'Something went wrong while fetching user data: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showErrorSnackbar(
+        title: 'Oops!',
+        message:
+            'Something went wrong while fetching user data: ${e.toString()}',
       );
     } finally {
       isLoading.value = false;
@@ -108,21 +106,16 @@ class AuthController extends GetxController {
       }
       userData.value = EndUser(email: email, name: fullName);
 
-      Get.snackbar(
-        'Welcome!',
-        'You have successfully signed up, $fullName!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showSuccessSnackbar(
+        title: 'Welcome!',
+        message: 'You have successfully signed up, $fullName!',
       );
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      Get.snackbar(
-        'Registration Failed',
-        e.message ?? 'An unexpected error occurred during registration.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showErrorSnackbar(
+        title: 'Registration Failed',
+        message:
+            e.message ?? 'An unexpected error occurred during registration.',
       );
       rethrow;
     } catch (e) {
@@ -140,12 +133,9 @@ class AuthController extends GetxController {
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        Get.snackbar(
-          'Sign-In Aborted',
-          'Please try signing in with Google again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orangeAccent,
-          colorText: Colors.white,
+        showErrorSnackbar(
+          title: 'Sign-In Aborted',
+          message: 'Please try signing in with Google again.',
         );
         throw Exception('Google sign-in aborted');
       }
@@ -163,12 +153,9 @@ class AuthController extends GetxController {
 
       await fetchUserByEmail(userEmail);
 
-      Get.snackbar(
-        'Welcome Back!',
-        'You are now signed in as $userName!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showSuccessSnackbar(
+        title: 'Welcome Back!',
+        message: 'You are now signed in as $userName!',
       );
       return userCredential;
     } on FirebaseAuthException {
@@ -194,21 +181,15 @@ class AuthController extends GetxController {
 
       await prefs.clear();
       userData.value = null;
-      Get.snackbar(
-        'Goodbye!',
-        'You have successfully logged out. Come back soon!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showSuccessSnackbar(
+        title: 'Goodbye!',
+        message: 'You have successfully logged out. Come back soon!',
       );
       Get.offAllNamed('/role-selection');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to log out. Please try again later.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showErrorSnackbar(
+        title: 'Error',
+        message: 'Failed to log out. Please try again later.',
       );
     } finally {
       isLoading.value = false;
@@ -238,14 +219,12 @@ class AuthController extends GetxController {
       if (!therapistExists) {
         // Therapist not found, stop here
         print('No therapist account found for this email: $email.');
-        Get.snackbar(
-          'Error',
-          'No therapist account found for this email. Please check and try again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orangeAccent,
-          colorText: Colors.white,
+        showErrorSnackbar(
+          title: 'Error',
+          message:
+              'No therapist account found for this email. Please check and try again.',
         );
-        return null; // Return null since therapist doesn't exist
+        return null;
       }
 
       // Proceed with Firebase Authentication
@@ -270,38 +249,30 @@ class AuthController extends GetxController {
       } else {
         // Firebase authentication failed
         print('Firebase authentication failed for email: $email');
-        Get.snackbar(
-          'Authentication Failed',
-          'Unable to sign in. Please check your credentials and try again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orangeAccent,
-          colorText: Colors.white,
+        showErrorSnackbar(
+          title: 'Authentication Failed',
+          message:
+              'Unable to sign in. Please check your credentials and try again.',
         );
-        return null; // Authentication failed
+        return null;
       }
     } on FirebaseAuthException catch (e) {
       // Catch Firebase Authentication exceptions
       String errorMessage = _getFirebaseAuthErrorMessage(e);
       print('Firebase Authentication Error: $errorMessage');
 
-      Get.snackbar(
-        'Authentication Error',
-        errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showErrorSnackbar(
+        title: 'Authentication Error',
+        message: errorMessage,
       );
       return null; // Return null for FirebaseAuthException
     } catch (e) {
       // Catch any other errors
       print('An error occurred during authentication: ${e.toString()}');
 
-      Get.snackbar(
-        'Error',
-        'An unexpected error occurred. Please try again later.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showErrorSnackbar(
+        title: 'Error',
+        message: 'An unexpected error occurred. Please try again later.',
       );
       return null; // Return null for any other exception
     } finally {
@@ -311,21 +282,60 @@ class AuthController extends GetxController {
     }
   }
 
-// Helper function to handle FirebaseAuthException errors
   String _getFirebaseAuthErrorMessage(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return 'No user found for this email.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'user-disabled':
-        return 'This user has been disabled.';
-      case 'too-many-requests':
-        return 'Too many login attempts. Please try again later.';
-      case 'invalid-credential':
-        return 'Invalid credentials. Please check your email and password.';
-      default:
-        return 'An unknown error occurred during authentication.';
+    // Debugging: Print the error code and message for debugging purposes
+    print('FirebaseAuthError: Code: ${e.code}, Message: ${e.message}');
+
+    // Check specific error codes
+    if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+      return 'The email or password you entered is incorrect. Please try again.';
+    } else if (e.code == 'user-disabled') {
+      return 'This user has been disabled.';
+    } else if (e.code == 'too-many-requests') {
+      return 'Too many login attempts. Please try again later.';
+    } else if (e.code == 'invalid-credential') {
+      return 'Invalid credentials. Please check your email and password.';
+    } else if (e.code == 'invalid-email') {
+      return 'The email address is not valid. Please enter a valid email.';
+    } else if (e.code == 'email-already-in-use') {
+      return 'The email address is already associated with another account.';
+    } else if (e.code == 'account-exists-with-different-credential') {
+      return 'An account already exists with the same email but different sign-in credentials.';
+    } else if (e.code == 'credential-already-in-use') {
+      return 'This credential is already associated with a different user account.';
+    } else if (e.code == 'requires-recent-login') {
+      return 'This operation requires recent login. Please log in again.';
+    } else if (e.code == 'provider-already-linked') {
+      return 'This account is already linked to the provider.';
+    } else if (e.code == 'invalid-verification-code') {
+      return 'The verification code is invalid. Please check and try again.';
+    } else if (e.code == 'invalid-verification-id') {
+      return 'The verification ID is invalid. Please restart the verification process.';
+    } else if (e.code == 'quota-exceeded') {
+      return 'The project has exceeded its SMS quota. Please try again later.';
+    } else if (e.code == 'unverified-email') {
+      return 'This operation requires a verified email address.';
+    } else if (e.code == 'user-token-expired') {
+      return 'Your session has expired. Please log in again.';
+    } else if (e.code == 'user-mismatch') {
+      return 'The credentials do not match the currently signed-in user.';
+    } else if (e.code == 'app-not-authorized') {
+      return 'This app is not authorized to use Firebase Authentication.';
+    } else if (e.code == 'invalid-phone-number') {
+      return 'The phone number format is invalid. Please enter a valid phone number.';
+    } else if (e.code == 'missing-phone-number') {
+      return 'A phone number is required to complete the operation.';
+    } else if (e.code == 'internal-error') {
+      return 'An internal error occurred. Please try again later.';
+    } else if (e.code == 'network-request-failed') {
+      return 'Network error. Please check your internet connection and try again.';
+    } else if (e.code == 'expired-action-code') {
+      return 'The action code has expired. Please try again.';
+    } else if (e.code == 'invalid-action-code') {
+      return 'The action code is invalid. Please check the link and try again.';
+    } else {
+      print('Unhandled FirebaseAuthException code: ${e.code}');
+      return 'An unknown error occurred during authentication. Please try again later.';
     }
   }
 
@@ -334,20 +344,16 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await _authServices.sendPasswordResetEmail(email);
-      Get.snackbar(
-        'Success!',
-        'A password reset email has been sent to $email. Please check your inbox!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showSuccessSnackbar(
+        title: 'Success!',
+        message:
+            'A password reset email has been sent to $email. Please check your inbox!',
       );
     } on FirebaseAuthException catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to send password reset email: ${mapFirebaseAuthExceptionMessage(e.message ?? 'An error occurred.')}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orangeAccent,
-        colorText: Colors.white,
+      showErrorSnackbar(
+        title: 'Error',
+        message:
+            'Failed to send password reset email: ${mapFirebaseAuthExceptionMessage(e.message ?? 'An error occurred.')}',
       );
     } finally {
       isLoading.value = false;
@@ -356,6 +362,8 @@ class AuthController extends GetxController {
 
   // Map FirebaseAuthException to user-friendly messages
   String mapFirebaseAuthExceptionMessage(String errorMessage) {
+    print(errorMessage); // Log the error for debugging purposes
+
     if (errorMessage.contains('wrong-password')) {
       return 'The password is incorrect. Please try again.';
     } else if (errorMessage.contains('user-not-found')) {
@@ -364,8 +372,14 @@ class AuthController extends GetxController {
       return 'The email address is not valid. Please enter a valid email.';
     } else if (errorMessage.contains('user-disabled')) {
       return 'This account has been disabled. Please contact support.';
+    } else if (errorMessage.contains('invalid-credential') ||
+        errorMessage.contains('malformed-credential') ||
+        errorMessage.contains('expired-credential')) {
+      return 'The supplied authentication credential is invalid, malformed, or expired. Please sign in again.';
+    } else {
+      // If no specific condition matches, return a generic message
+      return 'An unknown error occurred. Please try again later.';
     }
-    return 'An unknown error occurred. Please try again later.';
   }
 
   // Authenticate user
@@ -400,5 +414,27 @@ class AuthController extends GetxController {
     } else {
       print('No user data available.');
     }
+  }
+
+  // Show error snackbar
+  void showErrorSnackbar({required String title, required String message}) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.orangeAccent,
+      colorText: Colors.white,
+    );
+  }
+
+  // Show success snackbar
+  void showSuccessSnackbar({required String title, required String message}) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
   }
 }
