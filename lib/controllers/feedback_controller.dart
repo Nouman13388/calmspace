@@ -1,7 +1,9 @@
 import 'package:calmspace/services/api_service.dart'; // Ensure this import is correct
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+
 import '../models/feedback_model.dart';
+import 'user_controller.dart'; // Import the UserController
 
 class FeedbackController extends GetxController {
   var feedbackMessage = ''.obs;
@@ -47,12 +49,22 @@ class FeedbackController extends GetxController {
       return;
     }
 
+    // Fetch the logged-in user's ID dynamically using UserController
+    final userId =
+        await Get.find<UserController>().getLoggedInUserId(); // Get the user ID
+
+    if (userId == null) {
+      print('No logged-in user found');
+      Get.snackbar('Error', 'No logged-in user found');
+      return;
+    }
+
     isLoading.value = true;
 
     Feedback feedback = Feedback(
       message: feedbackMessage.value,
       createdAt: DateTime.now(),
-      user: 1, // Use a dummy user ID or any valid ID in your system
+      user: userId, // Use the dynamically fetched user ID
     );
 
     try {
