@@ -51,7 +51,6 @@ class Appointment {
     required this.user,
   });
 
-  // Modify to handle null values gracefully and parse custom date format
   factory Appointment.fromJson(Map<String, dynamic> json) {
     // Define the date format you're receiving in the API response
     final dateFormat = DateFormat("dd/MM/yyyy HH:mm");
@@ -70,7 +69,6 @@ class Appointment {
     );
   }
 
-  // Optional toJson method if you need to send the appointment data back to an API
   Map<String, dynamic> toJson() {
     return {
       'id': id,

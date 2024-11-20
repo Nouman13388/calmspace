@@ -9,7 +9,6 @@ import '../models/dashboard_model.dart';
 import '../services/api_service.dart';
 
 class BookingController extends GetxController {
-  // Observable variables to store selected times
   var selectedStartDateTime = Rx<DateTime?>(null);
   var selectedEndDateTime = Rx<DateTime?>(null);
   var isLoading = RxBool(false);
@@ -19,100 +18,104 @@ class BookingController extends GetxController {
 
   final ApiService _apiService = Get.find<ApiService>();
 
-  // Clear previous messages
   void clearMessages() {
     errorMessage.value = '';
     successMessage.value = '';
   }
 
-  // Set error message
   void setErrorMessage(String message) {
     errorMessage.value = message;
-    print('Debug: Error message set - $message');
+    print('Error: $message');
   }
 
-  // Set success message
   void setSuccessMessage(String message) {
     successMessage.value = message;
-    print('Debug: Success message set - $message');
+    print('Success: $message');
   }
 
-  // Check if the appointment overlaps with any existing appointment
-  Future<bool> checkForOverlappingAppointments(
+  Future<List<Appointment>> fetchAppointmentsFromApi(
       int userId, int therapistId) async {
     try {
-      print('Debug: Checking for overlapping appointments...');
-      final appointmentsJson = await _apiService.fetchAppointments(
-          userId.toString(), therapistId.toString());
+      final url =
+          "${AppConstants.appointmentsUrl}?user_id=$userId&therapist_id=$therapistId";
+      print('Fetching appointments from: $url');
 
-      // Fix: Cast the data correctly to a List of Appointment objects
-      List<Appointment> appointments = (appointmentsJson as List)
-          .map((appointmentJson) =>
-              Appointment.fromJson(Map<String, dynamic>.from(appointmentJson)))
-          .toList();
-
-      DateTime? start = selectedStartDateTime.value;
-      DateTime? end = selectedEndDateTime.value;
-
-      if (start == null || end == null) {
-        print('Debug: Start or end time is null.');
-        return false;
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data
+            .map((json) => Appointment.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } else {
+        print('Failed to fetch appointments: ${response.body}');
+        return [];
       }
-
-      // Check for overlapping appointments
-      for (var appointment in appointments) {
-        print(
-            'Debug: Checking appointment: ${appointment.startTime} to ${appointment.endTime}');
-        if (start.isBefore(appointment.endTime) &&
-            end.isAfter(appointment.startTime)) {
-          print('Debug: Appointment overlaps with existing appointment.');
-          return true; // There is an overlap
-        }
-      }
-      print('Debug: No overlap found.');
-      return false; // No overlap
     } catch (e) {
-      print("Error checking appointments: $e");
-      return false; // In case of error, assume no overlap
+      print('Error fetching appointments: $e');
+      return [];
     }
   }
 
-  // Booking the appointment
+  bool hasTimeConflict(
+      DateTime start, DateTime end, List<Appointment> appointments) {
+    for (var appointment in appointments) {
+      if (start.isAtSameMomentAs(appointment.startTime) &&
+          end.isAtSameMomentAs(appointment.endTime)) {
+        return true;
+      }
+      if (start.isBefore(appointment.endTime) &&
+          end.isAfter(appointment.startTime)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> checkForOverlappingAppointments(
+      int userId, int therapistId) async {
+    try {
+      final appointments = await fetchAppointmentsFromApi(userId, therapistId);
+      final start = selectedStartDateTime.value;
+      final end = selectedEndDateTime.value;
+
+      if (start == null || end == null) {
+        return false;
+      }
+
+      return hasTimeConflict(start, end, appointments);
+    } catch (e) {
+      print("Error checking for overlapping appointments: $e");
+      return false;
+    }
+  }
+
   Future<void> bookAppointment(int userId, int therapistId, String userEmail,
       String therapistEmail) async {
     isLoading.value = true;
     try {
-      DateTime? start = selectedStartDateTime.value;
-      DateTime? end = selectedEndDateTime.value;
+      final start = selectedStartDateTime.value;
+      final end = selectedEndDateTime.value;
 
       if (start == null || end == null) {
         setErrorMessage("Please select valid start and end times.");
-        isLoading.value = false;
         return;
       }
 
       if (end.isBefore(start)) {
         setErrorMessage("End time cannot be earlier than start time.");
-        isLoading.value = false;
         return;
       }
 
       if (start.isBefore(DateTime.now())) {
         setErrorMessage("You cannot book an appointment in the past.");
-        isLoading.value = false;
         return;
       }
 
-      print('Debug: Selected start time - $start');
-      print('Debug: Selected end time - $end');
+      final appointments = await fetchAppointmentsFromApi(userId, therapistId);
 
-      bool isOverlapping =
-          await checkForOverlappingAppointments(userId, therapistId);
-
-      if (isOverlapping) {
+      if (hasTimeConflict(start, end, appointments)) {
         setErrorMessage(
-            "The selected time overlaps with an existing appointment.");
-        isLoading.value = false;
+            "The selected time conflicts with an existing appointment.");
         return;
       }
 
@@ -125,33 +128,25 @@ class BookingController extends GetxController {
       };
 
       final url = AppConstants.appointmentsUrl;
-
-      print('Debug: Sending POST request to $url with data: $appointmentData');
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(appointmentData),
       );
 
-      print('Debug: Response status code - ${response.statusCode}');
       if (response.statusCode == 201) {
         setSuccessMessage("Appointment booked successfully.");
         isAppointmentBooked.value = true;
       } else {
-        print('Debug: Response body - ${response.body}');
         setErrorMessage("Failed to book appointment: ${response.body}");
       }
-
+    } catch (e) {
+      setErrorMessage("Error occurred: $e");
+    } finally {
       isLoading.value = false;
-    } catch (error) {
-      print("Error occurred while booking: $error");
-      isLoading.value = false;
-      setErrorMessage(
-          'An error occurred while booking your appointment. Please try again.');
     }
   }
 
-  // Select the start date/time and automatically set end time to 1.5 hours later
   void selectDateTime(
       bool isStartTime, DateTime pickedDate, TimeOfDay pickedTime) {
     DateTime dateTime = DateTime(
@@ -164,23 +159,17 @@ class BookingController extends GetxController {
 
     if (isStartTime) {
       selectedStartDateTime.value = dateTime;
-      print('Debug: Start time selected - $dateTime');
-
-      // Automatically set the end time to 1.5 hours after the start time
       setEndTimeForStartTime();
     } else {
       selectedEndDateTime.value = dateTime;
-      print('Debug: End time selected - $dateTime');
     }
   }
 
-  // Set end time to 1.5 hours after the selected start time
   void setEndTimeForStartTime() {
     if (selectedStartDateTime.value != null) {
       final startTime = selectedStartDateTime.value!;
-      final endTime = startTime.add(Duration(hours: 1, minutes: 30));
+      final endTime = startTime.add(const Duration(hours: 1, minutes: 30));
       selectedEndDateTime.value = endTime;
-      print('Debug: Automatically setting end time to $endTime');
     }
   }
 }

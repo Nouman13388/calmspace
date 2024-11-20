@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 
 import '../../controllers/booking_controller.dart';
 import '../../models/dashboard_model.dart';
-import '../../services/api_service.dart'; // Assuming ApiService is responsible for fetching appointment data
 
 class BookingPage extends StatelessWidget {
   final int userId;
@@ -13,8 +12,6 @@ class BookingPage extends StatelessWidget {
   final String therapistEmail;
 
   final BookingController bookingController = Get.put(BookingController());
-  final ApiService _apiService =
-      Get.put(ApiService()); // API service to fetch data
 
   BookingPage({
     super.key,
@@ -39,6 +36,7 @@ class BookingPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Start Time Picker
             _buildDateTimePickerSection(context, 'Start Time', true),
             const SizedBox(height: 20),
 
@@ -58,7 +56,7 @@ class BookingPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Selected Appointment Time:',
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w600),
@@ -85,20 +83,21 @@ class BookingPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // Book Appointment Button with Loader
+            // Book Appointment Button
             Obx(() {
               return Center(
                 child: ElevatedButton(
                   onPressed: bookingController.isLoading.value
-                      ? null // Disable button while loading
+                      ? null // Disable while loading
                       : () async {
                           try {
-                            // Check if the selected appointment time is available
+                            // Validate and check for overlaps
                             bool isOverlapping = await bookingController
                                 .checkForOverlappingAppointments(
                                     userId, therapistId);
 
                             if (isOverlapping) {
+                              // Show overlap error
                               Get.snackbar(
                                 'Time Slot Unavailable',
                                 'This time slot is already booked. Please choose another.',
@@ -106,46 +105,42 @@ class BookingPage extends StatelessWidget {
                                 colorText: Colors.white,
                                 snackPosition: SnackPosition.BOTTOM,
                               );
-                            } else {
-                              // Check if the selected time is in the past
-                              final selectedStartTime =
-                                  bookingController.selectedStartDateTime.value;
-                              if (selectedStartTime != null &&
-                                  selectedStartTime.isBefore(DateTime.now())) {
-                                // Show an error if the appointment is in the past
-                                Get.snackbar(
-                                  'Invalid Appointment Time',
-                                  'You cannot book an appointment in the past.',
-                                  backgroundColor: Colors.redAccent,
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                              } else {
-                                // If no overlap and the time is valid, proceed with booking
-                                await bookingController.bookAppointment(
-                                  userId,
-                                  therapistId,
-                                  userEmail,
-                                  therapistEmail,
-                                );
+                              return;
+                            }
 
-                                // Provide success feedback
-                                Get.snackbar(
-                                  'Appointment Booked',
-                                  'Your appointment has been successfully booked!',
-                                  backgroundColor: Colors.green,
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                              }
+                            // Check if selected time is valid
+                            final selectedStartTime =
+                                bookingController.selectedStartDateTime.value;
+                            if (selectedStartTime != null &&
+                                selectedStartTime.isBefore(DateTime.now())) {
+                              Get.snackbar(
+                                'Invalid Appointment Time',
+                                'You cannot book an appointment in the past.',
+                                backgroundColor: Colors.redAccent,
+                                colorText: Colors.white,
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                              return;
+                            }
+
+                            // Proceed to book the appointment
+                            await bookingController.bookAppointment(
+                                userId, therapistId, userEmail, therapistEmail);
+
+                            if (bookingController.isAppointmentBooked.value) {
+                              // Show success message
+                              Get.snackbar(
+                                'Appointment Booked',
+                                'Your appointment has been successfully booked!',
+                                backgroundColor: Colors.green,
+                                colorText: Colors.white,
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
                             }
                           } catch (error) {
-                            // Handle errors (e.g., network issues, null data, etc.)
-                            print(
-                                'Error occurred while booking appointment: $error');
                             Get.snackbar(
                               'Booking Failed',
-                              'An error occurred while booking your appointment. Please try again.',
+                              'An error occurred: $error',
                               backgroundColor: Colors.redAccent,
                               colorText: Colors.white,
                               snackPosition: SnackPosition.BOTTOM,
@@ -153,7 +148,7 @@ class BookingPage extends StatelessWidget {
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50), // Full width button
+                    minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -171,10 +166,10 @@ class BookingPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // Optionally, display upcoming or past appointments
+            // Display upcoming appointments
             FutureBuilder<List<Appointment>>(
-              future: _apiService.fetchAppointments(
-                  'User', 'Name'), // Adjust the parameters for your fetch logic
+              future: bookingController.fetchAppointmentsFromApi(
+                  userId, therapistId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -184,40 +179,32 @@ class BookingPage extends StatelessWidget {
                       child: Text('Error fetching appointments'));
                 }
                 if (snapshot.hasData) {
-                  List<Appointment> appointments =
-                      snapshot.data!; // Safely cast to List<Appointment>
+                  List<Appointment> appointments = snapshot.data!;
+                  if (appointments.isEmpty) {
+                    return const Text('No upcoming appointments.');
+                  }
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Upcoming Appointments',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(color: Colors.deepPurpleAccent),
-                      ),
-                      const SizedBox(height: 10),
-                      ...appointments.map((appointment) {
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          elevation: 5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    children: appointments.map((appointment) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          title: const Text('Appointment with Therapist',
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(
+                            'Start: ${DateFormat('dd/MM/yyyy HH:mm').format(appointment.startTime)}\n'
+                            'End: ${DateFormat('dd/MM/yyyy HH:mm').format(appointment.endTime)}',
                           ),
-                          child: ListTile(
-                            title: Text('Appointment with Therapist',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
-                            subtitle: Text(
-                              'Start: ${DateFormat('dd/MM/yyyy').format(appointment.startTime)} - ${DateFormat('HH:mm').format(appointment.startTime)}\n'
-                              'End: ${DateFormat('dd/MM/yyyy').format(appointment.endTime)} - ${DateFormat('HH:mm').format(appointment.endTime)}',
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
+                        ),
+                      );
+                    }).toList(),
                   );
                 }
-                return const Text('No appointments available');
+                return const Text('No appointments available.');
               },
             ),
           ],
@@ -226,7 +213,6 @@ class BookingPage extends StatelessWidget {
     );
   }
 
-  // Reusable date/time picker section with calendar and clock picker
   Widget _buildDateTimePickerSection(
       BuildContext context, String title, bool isStartTime) {
     return Card(
@@ -237,15 +223,13 @@ class BookingPage extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           title: Text(title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           trailing: IconButton(
             icon: const Icon(Icons.calendar_today,
                 color: Colors.deepPurpleAccent),
             onPressed: () async {
-              // First pick the date
               DateTime? pickedDate = await showDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
@@ -253,19 +237,13 @@ class BookingPage extends StatelessWidget {
                 lastDate: DateTime(2025),
               );
               if (pickedDate != null) {
-                // After date is picked, pick the time
                 TimeOfDay? pickedTime = await showTimePicker(
                   context: context,
                   initialTime: TimeOfDay.now(),
                 );
-
                 if (pickedTime != null) {
-                  // Set the start time
                   bookingController.selectDateTime(
                       isStartTime, pickedDate, pickedTime);
-
-                  // Automatically set the end time to 1.5 hours after the start time
-                  bookingController.setEndTimeForStartTime();
                 }
               }
             },
