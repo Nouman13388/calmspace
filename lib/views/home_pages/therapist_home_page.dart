@@ -5,6 +5,8 @@ import 'package:calmspace/views/tips_pages/therapist_tips_page.dart';
 import 'package:cuberto_bottom_bar/internal/tab_data.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -49,7 +51,43 @@ class _TherapistHomePageState extends State<TherapistHomePage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    // Your location fetching logic here
+    try {
+      // Check if location permissions are granted
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator
+            .requestPermission(); // Request permission if denied
+      }
+
+      // If permission is denied forever, show an error message
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          currentLocation = "Location permissions are denied";
+        });
+        return;
+      }
+
+      // Fetch the current position of the user with high accuracy
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      // Get the placemarks (e.g., city, country) based on the position coordinates
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+
+      // Extract city and country information
+      Placemark place = placemarks[0];
+
+      // Update the location in the UI
+      setState(() {
+        currentLocation = "${place.locality}, ${place.country}";
+      });
+    } catch (e) {
+      // Handle errors (e.g., if location is not available)
+      setState(() {
+        currentLocation = "Failed to get location: $e";
+      });
+    }
   }
 
   void _onNavItemTapped(int index) {
