@@ -1,3 +1,4 @@
+import 'package:calmspace/controllers/user_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -83,12 +84,34 @@ class DashboardController extends GetxController {
     }
   }
 
-  // Fetch appointments from API
   Future<void> fetchAppointments(String role, String name) async {
     try {
-      var appointments = await apiService.fetchAppointments(role, name);
-      appointmentList.value = appointments;
-      debugPrint("Appointments fetched: ${appointmentList.length} entries");
+      // Fetch logged-in user ID from the UserController
+      final userId = await Get.find<UserController>().getLoggedInUserId();
+
+      if (userId == null) {
+        // If no user ID is found, handle the error
+        debugPrint("No logged-in user found. Cannot fetch appointments.");
+        return;
+      }
+
+      // Use the fetched user ID to request appointments
+      var appointments = await apiService.fetchAppointments(userId);
+
+      // Check if there are any appointments fetched
+      if (appointments.isNotEmpty) {
+        // Get the latest appointment (last item in the list)
+        var latestAppointment = appointments.last;
+
+        // Update the appointment list
+        appointmentList.value = appointments;
+
+        // Log the last appointment (latest one)
+        debugPrint(
+            "Latest Appointment: $latestAppointment"); // Will print a formatted string with all fields
+      } else {
+        debugPrint("No appointments found.");
+      }
     } catch (e) {
       debugPrint("Error fetching appointments: $e");
     }

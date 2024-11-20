@@ -51,32 +51,46 @@ class Appointment {
     required this.user,
   });
 
+  // Factory constructor to create an Appointment from JSON
   factory Appointment.fromJson(Map<String, dynamic> json) {
-    // Define the date format you're receiving in the API response
+    // Define the date format for 'start_time' and 'end_time' (dd/MM/yyyy HH:mm)
     final dateFormat = DateFormat("dd/MM/yyyy HH:mm");
 
     return Appointment(
       id: json['id'],
-      status: json['status'] ?? 'unknown', // Default value if null
+      status:
+          json['status'] ?? 'unknown', // Default to 'unknown' if status is null
       startTime: json['start_time'] != null
-          ? dateFormat.parse(json['start_time'])
-          : DateTime.now(), // Parse DateTime using custom format
+          ? dateFormat.parse(json[
+              'start_time']) // Parse the start time using the correct format
+          : DateTime.now(), // Default to current time if not available
       endTime: json['end_time'] != null
-          ? dateFormat.parse(json['end_time'])
-          : DateTime.now(), // Parse DateTime using custom format
-      therapist: json['therapist'] ?? 0, // Default value if null
-      user: json['user'] ?? 0, // Default value if null
+          ? dateFormat.parse(
+              json['end_time']) // Parse the end time using the correct format
+          : DateTime.now(), // Default to current time if not available
+      therapist:
+          json['therapist'] ?? 0, // Default therapist ID to 0 if not provided
+      user: json['user'] ?? 0, // Default user ID to 0 if not provided
     );
   }
 
+  // Convert Appointment to JSON format
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'status': status,
-      'start_time': startTime.toIso8601String(), // Convert DateTime to string
-      'end_time': endTime.toIso8601String(), // Convert DateTime to string
+      'start_time':
+          startTime.toIso8601String(), // Convert DateTime to ISO 8601 string
+      'end_time':
+          endTime.toIso8601String(), // Convert DateTime to ISO 8601 string
       'therapist': therapist,
       'user': user,
     };
+  }
+
+  // Overriding the toString method to log Appointment details in a readable format
+  @override
+  String toString() {
+    return 'Appointment(id: $id, status: $status, startTime: $startTime, endTime: $endTime, therapist: $therapist, user: $user)';
   }
 }

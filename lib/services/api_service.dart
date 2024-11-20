@@ -53,10 +53,9 @@ class ApiService {
   }
 
   // Fetch appointments for the logged-in user and therapist
-  Future<List<Appointment>> fetchAppointments(String role, String name) async {
+  Future<List<Appointment>> fetchAppointments(int userId) async {
     final userId = await _checkUserLoggedIn();
-    final url =
-        '${AppConstants.appointmentsUrl}?user_id=$userId&role=$role&name=$name';
+    final url = '${AppConstants.appointmentsUrl}?user_id=$userId';
     return _fetchData(url, (data) => Appointment.fromJson(data));
   }
 

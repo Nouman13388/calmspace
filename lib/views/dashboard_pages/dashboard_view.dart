@@ -45,8 +45,9 @@ class DashboardView extends StatelessWidget {
                   child: Text("No upcoming appointments."),
                 );
               } else {
-                return _buildUpcomingAppointment(
-                    controller.appointmentList.first);
+                // Get the latest appointment from the list
+                Appointment latestAppointment = controller.appointmentList.last;
+                return _buildUpcomingAppointment(latestAppointment);
               }
             }),
           ],
@@ -188,6 +189,7 @@ class DashboardView extends StatelessWidget {
     );
   }
 
+  // Display upcoming appointment details
   Widget _buildUpcomingAppointment(Appointment appointment) {
     return Card(
       margin: const EdgeInsets.all(8.0),
