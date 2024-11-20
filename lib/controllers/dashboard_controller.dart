@@ -78,7 +78,8 @@ class DashboardController extends GetxController {
   Future<void> fetchHealthData() async {
     try {
       healthDataList.value = await apiService.fetchHealthData();
-      debugPrint("Health data fetched: ${healthDataList.length} entries");
+      debugPrint(
+          "\n\n\nHealth data fetched: ${healthDataList.length} entries\n\n\n");
     } catch (e) {
       debugPrint("Error fetching health data: $e");
     }

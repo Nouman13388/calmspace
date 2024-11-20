@@ -173,7 +173,7 @@ class AssessmentController extends GetxController {
     isAssessmentComplete(true);
     calculateResult(); // Calculate mood and update points based on mood
     awardBadge();
-    sendHealthData();
+    sendHealthData(); // Send health data to the backend
     saveScoreAndBadge(); // Store score and badge to SharedPreferences
     updateDashboard(); // Synchronize with DashboardController
   }
@@ -259,7 +259,7 @@ class AssessmentController extends GetxController {
     skippedQuestions.value = 0;
   }
 
-  // Send health data to the backend
+  // Send health data to the backend (updated)
   Future<void> sendHealthData() async {
     final url = AppConstants.healthDataUrl;
     User? currentUser = FirebaseAuth.instance.currentUser;
@@ -268,27 +268,27 @@ class AssessmentController extends GetxController {
       return;
     }
 
-    int backendUserId = await getBackendUserId(currentUser.email);
-    if (backendUserId == 0) {
-      print("Invalid user ID. Cannot send data.");
+    // Use current user's email
+    String email = currentUser.email ?? '';
+
+    if (email.isEmpty) {
+      print("User's email is empty. Cannot send data.");
       return;
     }
 
     // Prepare data for sending to backend
     Map<String, dynamic> data = {
-      'mood': mood.value,
-      'symptoms': symptoms.value,
-      'user': backendUserId,
-      'created_at': DateTime.now().toIso8601String(),
-      'points': points.value,
-      'badge': badge.value,
+      'mood': mood.value, // Current mood after assessment
+      'symptoms': symptoms.value, // Symptoms description
+      'user': email, // User's backend ID
+      // Don't include 'created_at', it will be handled by Django automatically
     };
 
     try {
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode(data),
+        body: json.encode(data), // Encoding the data into JSON
       );
 
       if (response.statusCode == 201) {

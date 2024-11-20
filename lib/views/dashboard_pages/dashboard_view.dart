@@ -153,8 +153,7 @@ class DashboardView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ...controller.healthDataList
-                  .map((healthData) => _buildHealthDataCard(healthData))
-                  .toList(),
+                  .map((healthData) => _buildHealthDataCard(healthData)),
             ],
           ),
         );
@@ -163,6 +162,9 @@ class DashboardView extends StatelessWidget {
   }
 
   Widget _buildHealthDataCard(HealthData healthData) {
+    // Add 5 hours to the time for display purposes
+    DateTime adjustedTime = healthData.createdAt.add(Duration(hours: 5));
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       elevation: 4,
@@ -181,7 +183,8 @@ class DashboardView extends StatelessWidget {
             Text("Symptoms: ${healthData.symptoms}",
                 style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 8),
-            Text("Recorded At: ${formatDate(healthData.createdAt)}",
+            Text(
+                "Recorded At: ${formatDate(adjustedTime)}", // Use adjusted time here
                 style: const TextStyle(fontSize: 14)),
           ],
         ),
