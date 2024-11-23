@@ -270,6 +270,10 @@ class AssessmentController extends GetxController {
 
     // Use current user's email
     String email = currentUser.email ?? '';
+    int backendUserId = await getBackendUserId(currentUser.email);
+    if (backendUserId == 0) {
+      print("Invalid user ID. Cannot send data.");
+    }
 
     if (email.isEmpty) {
       print("User's email is empty. Cannot send data.");
@@ -280,7 +284,7 @@ class AssessmentController extends GetxController {
     Map<String, dynamic> data = {
       'mood': mood.value, // Current mood after assessment
       'symptoms': symptoms.value, // Symptoms description
-      'user': email, // User's backend ID
+      'user': backendUserId,
       // Don't include 'created_at', it will be handled by Django automatically
     };
 

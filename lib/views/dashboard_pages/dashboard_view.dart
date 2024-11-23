@@ -42,7 +42,7 @@ class DashboardView extends StatelessWidget {
               if (controller.appointmentList.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Text("No upcoming appointments."),
+                  child: Text("No latest appointments."),
                 );
               } else {
                 // Get the latest appointment from the list
@@ -163,7 +163,7 @@ class DashboardView extends StatelessWidget {
 
   Widget _buildHealthDataCard(HealthData healthData) {
     // Add 5 hours to the time for display purposes
-    DateTime adjustedTime = healthData.createdAt.add(Duration(hours: 5));
+    DateTime adjustedTime = healthData.createdAt.add(Duration(hours: 8));
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -206,7 +206,7 @@ class DashboardView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Upcoming Appointment:",
+              "Latest Booked Appointment:",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),

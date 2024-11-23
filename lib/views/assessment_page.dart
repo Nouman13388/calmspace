@@ -192,10 +192,6 @@ class AssessmentPage extends StatelessWidget {
     if (result != null) {
       final data = json.decode(result);
       print("Loaded assessment result for UID $uid: $data");
-      // Use the loaded data as needed, for example:
-      // controller.mood.value = data['mood'];
-      // controller.points.value = data['points'];
-      // controller.badge.value = data['badge'];
     }
   }
 }
