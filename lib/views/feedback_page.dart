@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/feedback_controller.dart';
 
 class FeedbackPage extends StatelessWidget {
   final FeedbackController feedbackController = Get.put(FeedbackController());
+
+  FeedbackPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +26,8 @@ class FeedbackPage extends StatelessWidget {
             SizedBox(height: 20),
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor, // Soft peach color for the text box
+                color: Theme.of(context)
+                    .cardColor, // Soft peach color for the text box
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
@@ -52,17 +56,17 @@ class FeedbackPage extends StatelessWidget {
               return feedbackController.isLoading.value
                   ? CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: feedbackController.submitFeedback,
-                child: Text('Submit Feedback'),
-              );
+                      onPressed: feedbackController.submitFeedback,
+                      child: Text('Submit Feedback'),
+                    );
             }),
             SizedBox(height: 20),
             // Proper heading for the feedback list
             Text(
               'Previous Feedback',
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             SizedBox(height: 10),
             Expanded(
@@ -96,7 +100,8 @@ class FeedbackPage extends StatelessWidget {
           // Refresh the feedback data
           feedbackController.refreshFeedbackList(); // Call refresh method
         },
-        backgroundColor: Theme.of(context).floatingActionButtonTheme.backgroundColor,
+        backgroundColor:
+            Theme.of(context).floatingActionButtonTheme.backgroundColor,
         child: Icon(Icons.refresh),
       ),
     );

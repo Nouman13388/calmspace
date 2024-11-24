@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:calmspace/views/appointment_pages/patient_appointment_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -45,7 +46,9 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
       fetchData();
     } else {
       // If no therapist ID found, show an error message
-      print('Therapist ID is missing. Redirecting to login...');
+      if (kDebugMode) {
+        print('Therapist ID is missing. Redirecting to login...');
+      }
       Get.snackbar(
         'Error',
         'Please log in as a therapist to view appointments.',
@@ -68,14 +71,26 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
 
       // Log therapist data to console (for debugging purposes)
       if (therapist.id != -1) {
-        print('Logged-in Therapist Data:');
-        print('Name: ${therapist.name}');
-        print('Email: ${therapist.email}');
-        print('Specialization: ${therapist.specialization}');
-        print('Bio: ${therapist.bio}');
+        if (kDebugMode) {
+          print('Logged-in Therapist Data:');
+        }
+        if (kDebugMode) {
+          print('Name: ${therapist.name}');
+        }
+        if (kDebugMode) {
+          print('Email: ${therapist.email}');
+        }
+        if (kDebugMode) {
+          print('Specialization: ${therapist.specialization}');
+        }
+        if (kDebugMode) {
+          print('Bio: ${therapist.bio}');
+        }
       }
     } catch (e) {
-      print('Error fetching therapist details: $e');
+      if (kDebugMode) {
+        print('Error fetching therapist details: $e');
+      }
     }
   }
 
@@ -103,35 +118,52 @@ class _TherapistAppointmentPageState extends State<TherapistAppointmentPage> {
         List<dynamic> fetchedPatients = jsonDecode(response.body);
 
         // Debugging: Log therapist email and patients before filtering
-        print('Therapist Email: $therapistEmail');
-        print('Patients before filtering:');
-        fetchedPatients.forEach((patient) {
-          print('Patient: ${patient['name']} (${patient['email']})');
-        });
+        if (kDebugMode) {
+          print('Therapist Email: $therapistEmail');
+        }
+        if (kDebugMode) {
+          print('Patients before filtering:');
+        }
+        for (var patient in fetchedPatients) {
+          if (kDebugMode) {
+            print('Patient: ${patient['name']} (${patient['email']})');
+          }
+        }
 
         // Filter out the currently logged-in therapist using email
         fetchedPatients = fetchedPatients.where((patient) {
           bool exclude =
               patient['email'] != therapistEmail; // Use email for filtering
           // Debugging: Print the exclusion check based on email
-          print(
-              'Checking patient email: ${patient['email']} against therapist email: $therapistEmail. Exclude: $exclude');
+          if (kDebugMode) {
+            print(
+                'Checking patient email: ${patient['email']} against therapist email: $therapistEmail. Exclude: $exclude');
+          }
           return exclude;
         }).toList();
 
         // Debugging: Log the patients after filtering
-        print('Patients after filtering:');
-        fetchedPatients.forEach((patient) {
-          print('Patient: ${patient['name']} (${patient['email']})');
-        });
+        if (kDebugMode) {
+          print('Patients after filtering:');
+        }
+        for (var patient in fetchedPatients) {
+          if (kDebugMode) {
+            print('Patient: ${patient['name']} (${patient['email']})');
+          }
+        }
 
         // Explicitly cast to List<Map<String, dynamic>> and update the patients list
         patients.value = List<Map<String, dynamic>>.from(fetchedPatients);
       } else {
-        print('Failed to fetch patients. Status Code: ${response.statusCode}');
+        if (kDebugMode) {
+          print(
+              'Failed to fetch patients. Status Code: ${response.statusCode}');
+        }
       }
     } catch (e) {
-      print('Error fetching patients: $e');
+      if (kDebugMode) {
+        print('Error fetching patients: $e');
+      }
     }
   }
 

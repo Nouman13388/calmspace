@@ -21,7 +21,6 @@ import '../views/profile_pages/user_profile_page.dart';
 import '../views/role_pages/therapist_list_view.dart';
 import '../views/role_pages/user_list_view.dart';
 import '../views/role_seletion_page.dart';
-import '../views/setiings_pages/user_settings_page.dart';
 import '../views/tips_pages/therapist_tips_page.dart';
 import '../views/tips_pages/user_tips_page.dart';
 
@@ -35,7 +34,6 @@ class AppRouter {
     GetPage(name: '/forgot-password', page: () => const ForgotPage()),
     GetPage(name: '/user-homepage', page: () => const UserHomePage()),
     GetPage(name: '/therapist-homepage', page: () => const TherapistHomePage()),
-    GetPage(name: '/user-settings', page: () => const UserSettingsPage()),
     GetPage(name: '/user-profile', page: () => UserProfilePage()),
     GetPage(name: '/therapist-profile', page: () => TherapistProfilePage()),
     GetPage(name: '/map', page: () => GoogleMapScreen()),

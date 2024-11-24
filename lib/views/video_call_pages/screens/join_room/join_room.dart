@@ -8,7 +8,7 @@ import '../room/room.dart';
 import '../widgets/video_view.dart';
 
 class JoinRoom extends StatefulWidget {
-  const JoinRoom({Key? key}) : super(key: key);
+  const JoinRoom({super.key});
 
   @override
   State<JoinRoom> createState() => _JoinRoomState();
@@ -28,11 +28,11 @@ class _JoinRoomState extends State<JoinRoom> {
     super.didChangeDependencies();
   }
 
-@override
-void deactivate() async {
-  await _disposeLocal();
-  super.deactivate();
-}
+  @override
+  void deactivate() async {
+    await _disposeLocal();
+    super.deactivate();
+  }
 
   @override
   void dispose() async {
@@ -42,17 +42,17 @@ void deactivate() async {
   }
 
   Future<void> _disposeLocal() async {
-    var _stream = localVideo.srcObject;
+    var stream = localVideo.srcObject;
 
-    if (_stream != null) {
-      _stream.getTracks().forEach(
+    if (stream != null) {
+      stream.getTracks().forEach(
         (element) async {
           await element.stop();
         },
       );
 
-      await _stream.dispose();
-      _stream = null;
+      await stream.dispose();
+      stream = null;
     }
 
     var senders = await peerService.peerConnection.getSenders();
@@ -63,7 +63,6 @@ void deactivate() async {
 
     await localVideo.dispose();
   }
-
 
   Future<void> openCamera() async {
     await localVideo.initialize();
@@ -93,7 +92,9 @@ void deactivate() async {
         child: Column(
           children: [
             Flexible(
-              child: Hero(tag : 'localVideo', child: VideoView(localVideo, isMirrored: true)),
+              child: Hero(
+                  tag: 'localVideo',
+                  child: VideoView(localVideo, isMirrored: true)),
             ),
             const SizedBox(
               height: 20,
@@ -120,8 +121,8 @@ void deactivate() async {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => Room(localVideo.srcObject)));
                 },
-                child: const Text('Join'),
                 style: RoundedButtonStyle,
+                child: const Text('Join'),
               ),
             ),
           ],

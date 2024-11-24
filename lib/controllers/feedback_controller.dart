@@ -44,7 +44,9 @@ class FeedbackController extends GetxController {
 
   Future<void> submitFeedback() async {
     if (feedbackMessage.value.isEmpty) {
-      print('Feedback message cannot be empty');
+      if (kDebugMode) {
+        print('Feedback message cannot be empty');
+      }
       Get.snackbar('Error', 'Feedback message cannot be empty');
       return;
     }
@@ -54,7 +56,9 @@ class FeedbackController extends GetxController {
         await Get.find<UserController>().getLoggedInUserId(); // Get the user ID
 
     if (userId == null) {
-      print('No logged-in user found');
+      if (kDebugMode) {
+        print('No logged-in user found');
+      }
       Get.snackbar('Error', 'No logged-in user found');
       return;
     }

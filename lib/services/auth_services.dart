@@ -20,7 +20,9 @@ class AuthServices {
     final url = Uri.parse('${AppConstants.userUrl}?email=$email');
     try {
       final response = await http.get(url);
-      print('Response: ${response.body}');
+      if (kDebugMode) {
+        print('Response: ${response.body}');
+      }
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 404) {
@@ -29,7 +31,9 @@ class AuthServices {
         throw Exception('Failed to fetch user data');
       }
     } catch (e) {
-      print('Error fetching user by email: $e');
+      if (kDebugMode) {
+        print('Error fetching user by email: $e');
+      }
       rethrow;
     }
   }
@@ -55,10 +59,14 @@ class AuthServices {
       await storeUserData(fullName, email, password);
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Error: ${e.message}');
+      if (kDebugMode) {
+        print('Firebase Auth Error: ${e.message}');
+      }
       rethrow;
     } catch (e) {
-      print('Error during sign-up: $e');
+      if (kDebugMode) {
+        print('Error during sign-up: $e');
+      }
       throw Exception('Error during sign-up: $e');
     } finally {
       isLoading.value = false; // End loading
@@ -150,7 +158,9 @@ class AuthServices {
 
       return credential;
     } catch (e) {
-      print('Error during sign-in: $e');
+      if (kDebugMode) {
+        print('Error during sign-in: $e');
+      }
       rethrow;
     } finally {
       isLoading.value = false; // End loading
@@ -186,10 +196,14 @@ class AuthServices {
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Error: ${e.message}');
+      if (kDebugMode) {
+        print('Firebase Auth Error: ${e.message}');
+      }
       rethrow;
     } catch (e) {
-      print('Error during Google sign-in: $e');
+      if (kDebugMode) {
+        print('Error during Google sign-in: $e');
+      }
       return null;
     } finally {
       isLoading.value = false; // End loading
@@ -199,13 +213,17 @@ class AuthServices {
   // Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
-    print('Password reset email sent to: $email');
+    if (kDebugMode) {
+      print('Password reset email sent to: $email');
+    }
   }
 
   // Log out user
   Future<void> logout() async {
     await _auth.signOut();
     await _googleSignIn.signOut(); // Sign out from Google as well
-    print('User logged out.');
+    if (kDebugMode) {
+      print('User logged out.');
+    }
   }
 }

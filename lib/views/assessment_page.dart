@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,8 @@ import '../controllers/assessment_controller.dart';
 
 class AssessmentPage extends StatelessWidget {
   final AssessmentController controller = Get.put(AssessmentController());
+
+  AssessmentPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +22,9 @@ class AssessmentPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            print("Navigating back from assessment page.");
+            if (kDebugMode) {
+              print("Navigating back from assessment page.");
+            }
             Get.back();
           },
         ),
@@ -27,7 +32,9 @@ class AssessmentPage extends StatelessWidget {
       backgroundColor: const Color(0xFFFFF8E1),
       body: Obx(() {
         if (controller.isAssessmentComplete.value) {
-          print("Displaying results to the user.");
+          if (kDebugMode) {
+            print("Displaying results to the user.");
+          }
           _saveAssessmentResult(controller.mood.value, controller.points.value,
               controller.badge.value);
           return Center(
@@ -59,13 +66,15 @@ class AssessmentPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    print("Retaking assessment...");
+                    if (kDebugMode) {
+                      print("Retaking assessment...");
+                    }
                     controller.resetAssessment();
                   },
-                  child: const Text("Retake Assessment"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFF3B8B5),
                   ),
+                  child: const Text("Retake Assessment"),
                 ),
               ],
             ),
@@ -73,8 +82,10 @@ class AssessmentPage extends StatelessWidget {
         } else {
           final question =
               controller.questions[controller.currentQuestionIndex.value];
-          print(
-              "Displaying question ${controller.currentQuestionIndex.value + 1}");
+          if (kDebugMode) {
+            print(
+                "Displaying question ${controller.currentQuestionIndex.value + 1}");
+          }
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -137,7 +148,9 @@ class AssessmentPage extends StatelessWidget {
                                   controller.currentQuestionIndex.value],
                               onChanged: (value) async {
                                 if (value != null) {
-                                  print("User selected answer: $value");
+                                  if (kDebugMode) {
+                                    print("User selected answer: $value");
+                                  }
                                   controller.evaluateAnswer(value);
 
                                   // Show loading and delay before moving to next question
@@ -179,19 +192,10 @@ class AssessmentPage extends StatelessWidget {
     };
 
     await prefs.setString(uid, json.encode(data));
-    print("Assessment result saved for UID $uid: $data");
+    if (kDebugMode) {
+      print("Assessment result saved for UID $uid: $data");
+    }
   }
 
   // Function to load the assessment result from shared preferences
-  Future<void> _loadAssessmentResult() async {
-    final prefs = await SharedPreferences.getInstance();
-    final user = FirebaseAuth.instance.currentUser;
-    final uid = user?.uid ?? 'guest';
-
-    final result = prefs.getString(uid);
-    if (result != null) {
-      final data = json.decode(result);
-      print("Loaded assessment result for UID $uid: $data");
-    }
-  }
 }

@@ -6,7 +6,8 @@ class VideoView extends StatefulWidget {
   final double height;
   final bool isMirrored;
 
-  const VideoView(this.video, {Key? key,this.height = 210,this.isMirrored = false} ) : super(key: key);
+  const VideoView(this.video,
+      {super.key, this.height = 210, this.isMirrored = false});
 
   @override
   State<VideoView> createState() => _VideoViewState();

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,7 +22,9 @@ class TherapistController extends GetxController {
         throw Exception('Failed to load therapists');
       }
     } catch (e) {
-      print("Error fetching therapists: $e");
+      if (kDebugMode) {
+        print("Error fetching therapists: $e");
+      }
     }
   }
 
@@ -50,7 +53,9 @@ class TherapistController extends GetxController {
         return null; // No logged-in user found
       }
     } catch (e) {
-      print("Error finding therapist by email: $e");
+      if (kDebugMode) {
+        print("Error finding therapist by email: $e");
+      }
       return null;
     }
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -20,10 +21,14 @@ class TipsController extends GetxController {
         List<dynamic> fetchedUsers = jsonDecode(response.body);
         users.value = List<Map<String, dynamic>>.from(fetchedUsers);
       } else {
-        print('Failed to fetch users. Status Code: ${response.statusCode}');
+        if (kDebugMode) {
+          print('Failed to fetch users. Status Code: ${response.statusCode}');
+        }
       }
     } catch (e) {
-      print('Error fetching users: $e');
+      if (kDebugMode) {
+        print('Error fetching users: $e');
+      }
     } finally {
       isLoading(false); // Stop loading
     }
@@ -39,7 +44,9 @@ class TipsController extends GetxController {
       );
 
       if (response.statusCode == 201) {
-        print('Tip successfully assigned.');
+        if (kDebugMode) {
+          print('Tip successfully assigned.');
+        }
         Get.snackbar(
           'Success',
           'Tip assigned to ${tip.userEmail}.',
@@ -48,7 +55,9 @@ class TipsController extends GetxController {
           colorText: Colors.white,
         );
       } else {
-        print('Failed to assign tip. Status Code: ${response.statusCode}');
+        if (kDebugMode) {
+          print('Failed to assign tip. Status Code: ${response.statusCode}');
+        }
         Get.snackbar(
           'Error',
           'Failed to assign tip. Try again.',
@@ -58,7 +67,9 @@ class TipsController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error assigning tip: $e');
+      if (kDebugMode) {
+        print('Error assigning tip: $e');
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:calmspace/controllers/therapist_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -17,11 +18,15 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print("AuthController initialized");
+    if (kDebugMode) {
+      print("AuthController initialized");
+    }
   }
 
   void onControllerDeleted() {
-    print("AuthController removed");
+    if (kDebugMode) {
+      print("AuthController removed");
+    }
     super.onDelete(); // This calls the parent class's onDelete method
   }
 
@@ -34,24 +39,34 @@ class AuthController extends GetxController {
   Future<void> fetchUserByEmail(String email) async {
     try {
       isLoading.value = true;
-      print('Fetching user data for email: $email');
+      if (kDebugMode) {
+        print('Fetching user data for email: $email');
+      }
 
       final fetchedData = await _authServices.getUserByEmail(email);
-      print('Fetched data: $fetchedData');
+      if (kDebugMode) {
+        print('Fetched data: $fetchedData');
+      }
 
       if (fetchedData != null) {
         userData.value = EndUser.fromJson(fetchedData);
-        print(
-            'User data loaded: ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
+        if (kDebugMode) {
+          print(
+              'User data loaded: ${userData.value?.email} ${userData.value?.name} ${userData.value?.id}');
+        }
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', userData.value!.email!);
         await prefs.setString('user_name', userData.value!.name!);
         await prefs.setInt('user_id', userData.value!.id!);
 
-        print('User data fetched and saved successfully!');
+        if (kDebugMode) {
+          print('User data fetched and saved successfully!');
+        }
       } else {
-        print('No user found with this email.');
+        if (kDebugMode) {
+          print('No user found with this email.');
+        }
       }
     } catch (e) {
       showErrorSnackbar(
@@ -73,7 +88,9 @@ class AuthController extends GetxController {
 
     if (email != null && name != null && id != null) {
       userData.value = EndUser(email: email, name: name, id: id);
-      print('User data loaded: ${userData.value}');
+      if (kDebugMode) {
+        print('User data loaded: ${userData.value}');
+      }
     }
   }
 
@@ -119,7 +136,9 @@ class AuthController extends GetxController {
       );
       rethrow;
     } catch (e) {
-      print('Something went wrong: ${e.toString()}');
+      if (kDebugMode) {
+        print('Something went wrong: ${e.toString()}');
+      }
       return null;
     } finally {
       isLoading.value = false;
@@ -161,8 +180,10 @@ class AuthController extends GetxController {
     } on FirebaseAuthException {
       rethrow;
     } catch (e) {
-      print(
-          'An error occurred while signing in: ${mapFirebaseAuthExceptionMessage(e.toString())}');
+      if (kDebugMode) {
+        print(
+            'An error occurred while signing in: ${mapFirebaseAuthExceptionMessage(e.toString())}');
+      }
       return null;
     } finally {
       isLoading.value = false;
@@ -218,7 +239,9 @@ class AuthController extends GetxController {
 
       if (!therapistExists) {
         // Therapist not found, stop here
-        print('No therapist account found for this email: $email.');
+        if (kDebugMode) {
+          print('No therapist account found for this email: $email.');
+        }
         showErrorSnackbar(
           title: 'Error',
           message:
@@ -228,7 +251,9 @@ class AuthController extends GetxController {
       }
 
       // Proceed with Firebase Authentication
-      print('Therapist found. Proceeding with Firebase Authentication...');
+      if (kDebugMode) {
+        print('Therapist found. Proceeding with Firebase Authentication...');
+      }
 
       // Attempt Firebase sign-in
       UserCredential userCredential =
@@ -236,19 +261,25 @@ class AuthController extends GetxController {
 
       if (userCredential.user != null) {
         // If Firebase authentication is successful
-        print('Firebase authentication successful for email: $email.');
+        if (kDebugMode) {
+          print('Firebase authentication successful for email: $email.');
+        }
 
         // Handle "Remember Me" logic if successful
         if (rememberMe) {
           prefs.setString('email', email);
           prefs.setString('password', password);
           prefs.setBool('rememberMe', rememberMe);
-          print('Credentials saved for "Remember Me".');
+          if (kDebugMode) {
+            print('Credentials saved for "Remember Me".');
+          }
         }
         return userCredential; // Return the Firebase UserCredential
       } else {
         // Firebase authentication failed
-        print('Firebase authentication failed for email: $email');
+        if (kDebugMode) {
+          print('Firebase authentication failed for email: $email');
+        }
         showErrorSnackbar(
           title: 'Authentication Failed',
           message:
@@ -259,7 +290,9 @@ class AuthController extends GetxController {
     } on FirebaseAuthException catch (e) {
       // Catch Firebase Authentication exceptions
       String errorMessage = _getFirebaseAuthErrorMessage(e);
-      print('Firebase Authentication Error: $errorMessage');
+      if (kDebugMode) {
+        print('Firebase Authentication Error: $errorMessage');
+      }
 
       showErrorSnackbar(
         title: 'Authentication Error',
@@ -268,7 +301,9 @@ class AuthController extends GetxController {
       return null; // Return null for FirebaseAuthException
     } catch (e) {
       // Catch any other errors
-      print('An error occurred during authentication: ${e.toString()}');
+      if (kDebugMode) {
+        print('An error occurred during authentication: ${e.toString()}');
+      }
 
       showErrorSnackbar(
         title: 'Error',
@@ -278,13 +313,17 @@ class AuthController extends GetxController {
     } finally {
       // Reset loading state, regardless of success or failure
       isLoading.value = false;
-      print('Authentication process complete.');
+      if (kDebugMode) {
+        print('Authentication process complete.');
+      }
     }
   }
 
   String _getFirebaseAuthErrorMessage(FirebaseAuthException e) {
     // Debugging: Print the error code and message for debugging purposes
-    print('FirebaseAuthError: Code: ${e.code}, Message: ${e.message}');
+    if (kDebugMode) {
+      print('FirebaseAuthError: Code: ${e.code}, Message: ${e.message}');
+    }
 
     // Check specific error codes
     if (e.code == 'user-not-found' || e.code == 'wrong-password') {
@@ -334,7 +373,9 @@ class AuthController extends GetxController {
     } else if (e.code == 'invalid-action-code') {
       return 'The action code is invalid. Please check the link and try again.';
     } else {
-      print('Unhandled FirebaseAuthException code: ${e.code}');
+      if (kDebugMode) {
+        print('Unhandled FirebaseAuthException code: ${e.code}');
+      }
       return 'An unknown error occurred during authentication. Please try again later.';
     }
   }
@@ -362,7 +403,9 @@ class AuthController extends GetxController {
 
   // Map FirebaseAuthException to user-friendly messages
   String mapFirebaseAuthExceptionMessage(String errorMessage) {
-    print(errorMessage); // Log the error for debugging purposes
+    if (kDebugMode) {
+      print(errorMessage);
+    } // Log the error for debugging purposes
 
     if (errorMessage.contains('wrong-password')) {
       return 'The password is incorrect. Please try again.';
@@ -386,10 +429,6 @@ class AuthController extends GetxController {
   Future<void> authenticateUser(String email, String password,
       SharedPreferences prefs, bool rememberMe) async {
     try {
-      // Sign in with email and password
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-
       // After successful login, fetch the user data
       await fetchUserByEmail(email);
 
@@ -407,12 +446,22 @@ class AuthController extends GetxController {
   // Print user data for debugging
   void printUserData() {
     if (userData.value != null) {
-      print('User Data:');
-      print('Email: ${userData.value?.email}');
-      print('Name: ${userData.value?.name}');
-      print('ID: ${userData.value?.id}');
+      if (kDebugMode) {
+        print('User Data:');
+      }
+      if (kDebugMode) {
+        print('Email: ${userData.value?.email}');
+      }
+      if (kDebugMode) {
+        print('Name: ${userData.value?.name}');
+      }
+      if (kDebugMode) {
+        print('ID: ${userData.value?.id}');
+      }
     } else {
-      print('No user data available.');
+      if (kDebugMode) {
+        print('No user data available.');
+      }
     }
   }
 

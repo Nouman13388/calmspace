@@ -11,14 +11,14 @@ class MeetingActionBar extends StatelessWidget {
   final double iconSize;
 
   const MeetingActionBar({
-    Key? key,
+    super.key,
     required this.isMicEnabled,
     required this.isWebcamEnabled,
     required this.onCallEndButtonPressed,
     required this.onMicButtonPressed,
     required this.onWebcamButtonPressed,
     this.iconSize = 30,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
