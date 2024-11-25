@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
 import '../models/dashboard_model.dart';
+import '../services/api_service.dart';
 
 class BookingController extends GetxController {
   var selectedStartDateTime = Rx<DateTime?>(null);
@@ -16,6 +16,8 @@ class BookingController extends GetxController {
   var errorMessage = RxString('');
   var successMessage = RxString('');
 
+  final ApiService _apiService = Get.find<ApiService>();
+
   void clearMessages() {
     errorMessage.value = '';
     successMessage.value = '';
@@ -23,16 +25,12 @@ class BookingController extends GetxController {
 
   void setErrorMessage(String message) {
     errorMessage.value = message;
-    if (kDebugMode) {
-      print('Error: $message');
-    }
+    print('Error: $message');
   }
 
   void setSuccessMessage(String message) {
     successMessage.value = message;
-    if (kDebugMode) {
-      print('Success: $message');
-    }
+    print('Success: $message');
   }
 
   Future<List<Appointment>> fetchAppointmentsFromApi(
@@ -40,9 +38,7 @@ class BookingController extends GetxController {
     try {
       final url =
           "${AppConstants.appointmentsUrl}?user_id=$userId&therapist_id=$therapistId";
-      if (kDebugMode) {
-        print('Fetching appointments from: $url');
-      }
+      print('Fetching appointments from: $url');
 
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -51,15 +47,11 @@ class BookingController extends GetxController {
             .map((json) => Appointment.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        if (kDebugMode) {
-          print('Failed to fetch appointments: ${response.body}');
-        }
+        print('Failed to fetch appointments: ${response.body}');
         return [];
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching appointments: $e');
-      }
+      print('Error fetching appointments: $e');
       return [];
     }
   }
@@ -92,9 +84,7 @@ class BookingController extends GetxController {
 
       return hasTimeConflict(start, end, appointments);
     } catch (e) {
-      if (kDebugMode) {
-        print("Error checking for overlapping appointments: $e");
-      }
+      print("Error checking for overlapping appointments: $e");
       return false;
     }
   }

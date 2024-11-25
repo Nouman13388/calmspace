@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:calmspace/controllers/auth_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,23 +50,17 @@ class _TherapistLoginPageState extends State<TherapistLoginPage> {
 
       // Check if authentication was successful
       if (userCredential != null && userCredential.user != null) {
-        if (kDebugMode) {
-          print('Authentication successful. Proceeding to homepage...');
-        }
+        print('Authentication successful. Proceeding to homepage...');
 
         // Successful login, navigate to homepage
         Get.offAllNamed('/therapist-homepage');
       } else {
-        if (kDebugMode) {
-          print('Authentication failed. Please check your credentials.');
-        }
+        print('Authentication failed. Please check your credentials.');
         // Optional: Handle failed authentication logic here (e.g., showing an error message).
       }
     } catch (e) {
       // Catch any errors during authentication
-      if (kDebugMode) {
-        print('Caught error: $e');
-      }
+      print('Caught error: $e');
       String errorMessage = _getErrorMessage(e);
       Get.snackbar(
         'Error',

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -232,19 +231,13 @@ class SignUpForm extends StatelessWidget {
       );
 
       if (response.statusCode == 201) {
-        if (kDebugMode) {
-          print('Therapist successfully stored in backend');
-        }
+        print('Therapist successfully stored in backend');
       } else {
-        if (kDebugMode) {
-          print('Error response: ${response.body}');
-        }
+        print('Error response: ${response.body}');
         throw Exception('Failed to store therapist in backend');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error storing therapist data: $e');
-      }
+      print('Error storing therapist data: $e');
     }
   }
 

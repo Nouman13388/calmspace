@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -50,14 +49,10 @@ class _PatientAppointmentsPageState extends State<PatientAppointmentsPage> {
               List<Map<String, dynamic>>.from(fetchedAppointments);
         });
       } else {
-        if (kDebugMode) {
-          print('Failed to fetch appointments.');
-        }
+        print('Failed to fetch appointments.');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching appointments: $e');
-      }
+      print('Error fetching appointments: $e');
     } finally {
       setState(() {
         isLoading(false);

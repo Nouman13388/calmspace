@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -152,9 +151,7 @@ class TherapistProfileController extends GetxController {
   }
 
   void _showError(String message) {
-    if (kDebugMode) {
-      print('Error: $message');
-    }
+    print('Error: $message');
   }
 
   Future<EndUser?> getUserByEmail(String email) async {
@@ -168,9 +165,7 @@ class TherapistProfileController extends GetxController {
         throw Exception('Failed to fetch user data: ${response.body}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error fetching user by email: $e");
-      }
+      print("Error fetching user by email: $e");
       return null;
     }
   }

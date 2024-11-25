@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -56,10 +55,8 @@ class UserAppointmentPage extends StatelessWidget {
                 return GestureDetector(
                   onTap: () async {
                     // Print therapist and current user details for debugging
-                    if (kDebugMode) {
-                      print(
-                          'Therapist selected: ${therapist.name} (${therapist.id})');
-                    }
+                    print(
+                        'Therapist selected: ${therapist.name} (${therapist.id})');
 
                     // Get the logged-in user's email using Firebase Auth
                     final firebase_auth.User? firebaseUser =
@@ -68,9 +65,7 @@ class UserAppointmentPage extends StatelessWidget {
                     if (firebaseUser != null) {
                       final loggedInEmail = firebaseUser.email;
 
-                      if (kDebugMode) {
-                        print('Logged-in user email: $loggedInEmail');
-                      }
+                      print('Logged-in user email: $loggedInEmail');
 
                       // Find the matched user by email
                       BackendUser? matchedUser =
@@ -80,20 +75,16 @@ class UserAppointmentPage extends StatelessWidget {
                       );
 
                       // Print the matched user details
-                      if (kDebugMode) {
-                        print(
-                            'Matched user: ${matchedUser.name} (${matchedUser.id})');
-                      }
+                      print(
+                          'Matched user: ${matchedUser.name} (${matchedUser.id})');
 
                       // If a matching user is found
                       if (matchedUser.id != -1) {
                         final userId = matchedUser.id;
                         final therapistId = therapist.id;
 
-                        if (kDebugMode) {
-                          print(
-                              'Matched IDs - User ID: $userId, Therapist ID: $therapistId');
-                        }
+                        print(
+                            'Matched IDs - User ID: $userId, Therapist ID: $therapistId');
 
                         // Navigate to the BookingPage and pass userId, therapistId, and emails
                         Get.to(
@@ -107,18 +98,13 @@ class UserAppointmentPage extends StatelessWidget {
                         );
                       } else {
                         // Handle case where no matching user is found
-                        if (kDebugMode) {
-                          print(
-                              'No matching user found for the logged-in email');
-                        }
+                        print('No matching user found for the logged-in email');
                         Get.snackbar(
                             'Error', 'No matching user found for this email');
                       }
                     } else {
                       // Handle case where no user is logged in
-                      if (kDebugMode) {
-                        print('No user is logged in.');
-                      }
+                      print('No user is logged in.');
                       Get.snackbar('Error', 'User not logged in');
                     }
                   },

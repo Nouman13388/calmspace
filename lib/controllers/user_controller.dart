@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,17 +24,13 @@ class UserController extends GetxController {
         users.value = fetchedUsers;
 
         // Log success message
-        if (kDebugMode) {
-          print(
-              'Successfully fetched ${fetchedUsers.length} users from backend.');
-        }
+        print(
+            'Successfully fetched ${fetchedUsers.length} users from backend.');
       } else {
         throw Exception('Failed to load users');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching users: $e');
-      }
+      print('Error fetching users: $e');
       throw Exception('Error fetching users: $e');
     }
   }
@@ -45,9 +40,7 @@ class UserController extends GetxController {
     try {
       // Check if users are already fetched, if not, fetch users first
       if (users.isEmpty) {
-        if (kDebugMode) {
-          print("Users list is empty. Fetching all users first...");
-        }
+        print("Users list is empty. Fetching all users first...");
         await fetchUsers(); // Fetch all users if not fetched yet
       }
 
@@ -56,14 +49,15 @@ class UserController extends GetxController {
         (user) => user.id == userId,
       );
 
-      if (kDebugMode) {
+      if (user != null) {
         print('User found with ID: $userId \n $user');
+        return user; // Return the found user
+      } else {
+        print('No user found with ID: $userId');
+        return null; // Return null if no user found
       }
-      return user; // Return the found user
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching user by ID: $e');
-      }
+      print('Error fetching user by ID: $e');
       throw Exception('Error fetching user by ID: $e');
     }
   }
@@ -72,13 +66,11 @@ class UserController extends GetxController {
   Future<bool> isEmailExists(String email) async {
     try {
       // First, check if the email exists in Firebase
-      final firebaseUser = await firebase_auth.FirebaseAuth.instance
+      final firebase_user = await firebase_auth.FirebaseAuth.instance
           .fetchSignInMethodsForEmail(email);
 
-      if (firebaseUser.isNotEmpty) {
-        if (kDebugMode) {
-          print('Email exists in Firebase: $email');
-        }
+      if (firebase_user.isNotEmpty) {
+        print('Email exists in Firebase: $email');
         return true;
       }
 
@@ -89,18 +81,14 @@ class UserController extends GetxController {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data.isNotEmpty) {
-          if (kDebugMode) {
-            print('Email exists in backend: $email');
-          }
+          print('Email exists in backend: $email');
           return true;
         }
       }
 
       return false;
     } catch (e) {
-      if (kDebugMode) {
-        print("Error checking if email exists: $e");
-      }
+      print("Error checking if email exists: $e");
       return false;
     }
   }
@@ -113,15 +101,11 @@ class UserController extends GetxController {
 
       if (firebaseUser != null) {
         final loggedInEmail = firebaseUser.email;
-        if (kDebugMode) {
-          print("Logged-in email: $loggedInEmail");
-        }
+        print("Logged-in email: $loggedInEmail");
 
         // Fetch users if not already fetched
         if (users.isEmpty) {
-          if (kDebugMode) {
-            print("Users list is empty, fetching from backend...");
-          }
+          print("Users list is empty, fetching from backend...");
           await fetchUsers(); // Fetch the users list if it's empty
         }
 
@@ -133,26 +117,18 @@ class UserController extends GetxController {
 
         if (matchedUser.id != -1) {
           // Log success message
-          if (kDebugMode) {
-            print('Successfully found user ID: ${matchedUser.id}');
-          }
+          print('Successfully found user ID: ${matchedUser.id}');
           return matchedUser.id; // Return the user ID if matched
         } else {
-          if (kDebugMode) {
-            print('No user found with email: $loggedInEmail');
-          }
+          print('No user found with email: $loggedInEmail');
           return null; // No user found with the logged-in email
         }
       } else {
-        if (kDebugMode) {
-          print('No logged-in user found.');
-        }
+        print('No logged-in user found.');
         return null; // No logged-in user found
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error finding user by email: $e");
-      }
+      print("Error finding user by email: $e");
       return null;
     }
   }
@@ -171,21 +147,15 @@ class UserController extends GetxController {
             users.where((user) => user.email != loggedInEmail).toList();
 
         // Log success message
-        if (kDebugMode) {
-          print('Filtered out logged-in user from the list.');
-        }
+        print('Filtered out logged-in user from the list.');
 
         return filteredUsers;
       } else {
-        if (kDebugMode) {
-          print('No user logged in');
-        }
+        print('No user logged in');
         throw Exception('No user logged in');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error filtering users: $e');
-      }
+      print('Error filtering users: $e');
       throw Exception('Error filtering users: $e');
     }
   }
@@ -194,9 +164,7 @@ class UserController extends GetxController {
   Future<void> signUpWithEmail(String fullName, String email, String password,
       String confirmPassword) async {
     if (password != confirmPassword) {
-      if (kDebugMode) {
-        print('Passwords do not match!');
-      }
+      print('Passwords do not match!');
       return;
     }
 
@@ -205,9 +173,7 @@ class UserController extends GetxController {
       bool emailExists = await isEmailExists(email);
 
       if (emailExists) {
-        if (kDebugMode) {
-          print('The email already exists in Firebase or backend.');
-        }
+        print('The email already exists in Firebase or backend.');
         return;
       }
 
@@ -231,13 +197,9 @@ class UserController extends GetxController {
       // Fetch the updated users list
       await fetchUsers();
 
-      if (kDebugMode) {
-        print('User signed up successfully!');
-      }
+      print('User signed up successfully!');
     } catch (e) {
-      if (kDebugMode) {
-        print('Error during sign-up: $e');
-      }
+      print('Error during sign-up: $e');
     }
   }
 
@@ -255,18 +217,12 @@ class UserController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        if (kDebugMode) {
-          print('User data stored in backend successfully');
-        }
+        print('User data stored in backend successfully');
       } else {
-        if (kDebugMode) {
-          print('Failed to store user in backend');
-        }
+        print('Failed to store user in backend');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error storing user in backend: $e');
-      }
+      print('Error storing user in backend: $e');
     }
   }
 }

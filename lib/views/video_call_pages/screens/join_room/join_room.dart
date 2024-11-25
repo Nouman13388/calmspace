@@ -8,7 +8,7 @@ import '../room/room.dart';
 import '../widgets/video_view.dart';
 
 class JoinRoom extends StatefulWidget {
-  const JoinRoom({super.key});
+  const JoinRoom({Key? key}) : super(key: key);
 
   @override
   State<JoinRoom> createState() => _JoinRoomState();
@@ -28,11 +28,11 @@ class _JoinRoomState extends State<JoinRoom> {
     super.didChangeDependencies();
   }
 
-  @override
-  void deactivate() async {
-    await _disposeLocal();
-    super.deactivate();
-  }
+@override
+void deactivate() async {
+  await _disposeLocal();
+  super.deactivate();
+}
 
   @override
   void dispose() async {
@@ -42,17 +42,17 @@ class _JoinRoomState extends State<JoinRoom> {
   }
 
   Future<void> _disposeLocal() async {
-    var stream = localVideo.srcObject;
+    var _stream = localVideo.srcObject;
 
-    if (stream != null) {
-      stream.getTracks().forEach(
+    if (_stream != null) {
+      _stream.getTracks().forEach(
         (element) async {
           await element.stop();
         },
       );
 
-      await stream.dispose();
-      stream = null;
+      await _stream.dispose();
+      _stream = null;
     }
 
     var senders = await peerService.peerConnection.getSenders();
@@ -63,6 +63,7 @@ class _JoinRoomState extends State<JoinRoom> {
 
     await localVideo.dispose();
   }
+
 
   Future<void> openCamera() async {
     await localVideo.initialize();
@@ -92,9 +93,7 @@ class _JoinRoomState extends State<JoinRoom> {
         child: Column(
           children: [
             Flexible(
-              child: Hero(
-                  tag: 'localVideo',
-                  child: VideoView(localVideo, isMirrored: true)),
+              child: Hero(tag : 'localVideo', child: VideoView(localVideo, isMirrored: true)),
             ),
             const SizedBox(
               height: 20,
@@ -121,8 +120,8 @@ class _JoinRoomState extends State<JoinRoom> {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => Room(localVideo.srcObject)));
                 },
-                style: RoundedButtonStyle,
                 child: const Text('Join'),
+                style: RoundedButtonStyle,
               ),
             ),
           ],

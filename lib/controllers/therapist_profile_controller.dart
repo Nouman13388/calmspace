@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io'; // For handling File
 
 import 'package:calmspace/controllers/therapist_controller.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -36,9 +35,7 @@ class TherapistProfileController extends GetxController {
     final therapistId = await therapistController.getLoggedInTherapistId();
 
     if (userId == null || therapistId == null) {
-      if (kDebugMode) {
-        print('No logged-in user or therapist found!');
-      }
+      print('No logged-in user or therapist found!');
       return;
     }
 
@@ -69,25 +66,17 @@ class TherapistProfileController extends GetxController {
           specialization.value = professionalData[0]['specialization'] ?? '';
           profilePicture.value = profile.value?.profilePicture ?? '';
 
-          if (kDebugMode) {
-            print("Therapist profile loaded successfully: ${profile.value}");
-          }
+          print("Therapist profile loaded successfully: ${profile.value}");
         } else {
-          if (kDebugMode) {
-            print("No profile data found.");
-          }
+          print("No profile data found.");
           resetProfileFields();
         }
       } else {
-        if (kDebugMode) {
-          print(
-              "Failed to load profile data. Status code: ${response[0].statusCode}");
-        }
+        print(
+            "Failed to load profile data. Status code: ${response[0].statusCode}");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error fetching therapist profile: $e");
-      }
+      print("Error fetching therapist profile: $e");
     } finally {
       isLoading.value = false;
     }
@@ -104,9 +93,7 @@ class TherapistProfileController extends GetxController {
 
   // Save the updated therapist profile
   Future<void> saveProfile() async {
-    if (kDebugMode) {
-      print("Saving therapist profile...");
-    }
+    print("Saving therapist profile...");
 
     final loggedInEmail =
         (await userController.getLoggedInUserId()) ?? 'therapist@example.com';
@@ -130,7 +117,7 @@ class TherapistProfileController extends GetxController {
 
       var request = http.MultipartRequest(requestMethod, Uri.parse(url));
       updatedProfile.forEach((key, value) {
-        request.fields[key] = value.toString();
+        if (value != null) request.fields[key] = value.toString();
       });
 
       if (pickedImage.value != null) {
@@ -142,32 +129,24 @@ class TherapistProfileController extends GetxController {
       var response = await request.send();
 
       if (response.statusCode == 200) {
-        if (kDebugMode) {
-          print("Therapist profile saved successfully!");
-        }
+        print("Therapist profile saved successfully!");
         Get.snackbar("Success", "Profile saved successfully!",
             backgroundColor: Colors.green, colorText: Colors.white);
       } else {
         final responseBody = await response.stream.bytesToString();
-        if (kDebugMode) {
-          print(
-              "Failed to save profile. Status code: ${response.statusCode}. Response: $responseBody");
-        }
+        print(
+            "Failed to save profile. Status code: ${response.statusCode}. Response: $responseBody");
         throw Exception("Failed to save therapist profile");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error saving profile: $e");
-      }
+      print("Error saving profile: $e");
     }
   }
 
   // Toggle between edit and view mode
   void toggleEditMode() {
     isEditMode.value = !isEditMode.value;
-    if (kDebugMode) {
-      print("Edit mode toggled: ${isEditMode.value}");
-    }
+    print("Edit mode toggled: ${isEditMode.value}");
   }
 
   // Pick an image (image picker logic)
@@ -177,20 +156,14 @@ class TherapistProfileController extends GetxController {
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       if (await _isImageTooLarge(file)) {
-        if (kDebugMode) {
-          print("Image file is too large!");
-        }
+        print("Image file is too large!");
         return; // Reject if the image is too large (5MB here)
       }
 
       pickedImage.value = file;
-      if (kDebugMode) {
-        print("Picked image: ${pickedImage.value?.path}");
-      }
+      print("Picked image: ${pickedImage.value?.path}");
     } else {
-      if (kDebugMode) {
-        print("No image selected.");
-      }
+      print("No image selected.");
     }
   }
 

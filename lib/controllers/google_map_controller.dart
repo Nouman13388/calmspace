@@ -1,12 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
-
-import '../constants/app_constants.dart'; // Import your AppConstants for URLs
 import 'location_controller.dart'; // Adjust the import path as necessary
+import '../constants/app_constants.dart'; // Import your AppConstants for URLs
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class MyGoogleMapController extends GetxController {
   var isLoading = true.obs;
@@ -18,6 +16,13 @@ class MyGoogleMapController extends GetxController {
     super.onInit();
     getCurrentLocation(); // Fetch current location when initialized
     fetchClinics(); // Fetch clinic locations
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+    // Optional: Clear markers here if needed when the controller is disposed
+    // markers.clear();
   }
 
   Future<void> getCurrentLocation() async {
@@ -46,8 +51,7 @@ class MyGoogleMapController extends GetxController {
       );
 
       if (kDebugMode) {
-        print(
-            'User Location: ${currentLocation['latitude']}, ${currentLocation['longitude']}');
+        print('User Location: ${currentLocation['latitude']}, ${currentLocation['longitude']}');
       }
     }
   }
@@ -80,13 +84,11 @@ class MyGoogleMapController extends GetxController {
     for (var clinic in clinics) {
       try {
         double latitude = double.tryParse(clinic['latitude'].toString()) ?? 0.0;
-        double longitude =
-            double.tryParse(clinic['longitude'].toString()) ?? 0.0;
+        double longitude = double.tryParse(clinic['longitude'].toString()) ?? 0.0;
 
         if (latitude != 0.0 && longitude != 0.0) {
           if (kDebugMode) {
-            print(
-                'Clinic: ${clinic['name']} | Latitude: $latitude, Longitude: $longitude');
+            print('Clinic: ${clinic['name']} | Latitude: $latitude, Longitude: $longitude');
           }
 
           markers.add(
@@ -97,8 +99,7 @@ class MyGoogleMapController extends GetxController {
                 title: clinic['name'],
                 snippet: clinic['address'],
               ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueRed),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             ),
           );
         } else {

@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -11,8 +10,6 @@ class TherapistListPage extends StatelessWidget {
   final TherapistController therapistController =
       Get.put(TherapistController());
   final UserController userController = Get.put(UserController());
-
-  TherapistListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +61,7 @@ class TherapistListPage extends StatelessWidget {
                       final loggedInEmail = firebaseUser.email;
 
                       // Print the logged-in user's email for debugging
-                      if (kDebugMode) {
-                        print('Logged-in User Email: $loggedInEmail');
-                      }
+                      print('Logged-in User Email: $loggedInEmail');
 
                       // Check if the therapist's email matches the logged-in user's email
                       BackendUser? matchedUser =
@@ -82,12 +77,8 @@ class TherapistListPage extends StatelessWidget {
                         final therapistId = therapist.id;
 
                         // Print the matched user and therapist IDs for debugging
-                        if (kDebugMode) {
-                          print('User ID: $userId');
-                        }
-                        if (kDebugMode) {
-                          print('Therapist ID: $therapistId');
-                        }
+                        print('User ID: $userId');
+                        print('Therapist ID: $therapistId');
 
                         // Navigate to the chat page and pass the userId and therapistId
                         Get.to(

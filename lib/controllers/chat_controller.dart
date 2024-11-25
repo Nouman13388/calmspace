@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -39,25 +38,20 @@ class ChatController extends GetxController {
 
   // Fetch messages from the API
   Future<void> fetchMessages() async {
-    if (isLoadingMessages.value) {
+    if (isLoadingMessages.value)
       return; // Prevent fetching if already in progress
-    }
     isLoadingMessages.value = true; // Set loading state
 
     try {
       final url = Uri.parse(
           '${AppConstants.chat}?user_id=${userId.toString()}&therapist_id=${therapistId.toString()}');
       // Print the URL and headers for debugging
-      if (kDebugMode) {
-        print("Fetching messages from: $url");
-      }
+      print("Fetching messages from: $url");
 
       final response = await http.get(url);
 
       // Print response headers for debugging
-      if (kDebugMode) {
-        print("Response headers: ${response.headers}");
-      }
+      print("Response headers: ${response.headers}");
 
       if (response.statusCode == 200) {
         List<dynamic> jsonData = json.decode(response.body);
@@ -69,22 +63,16 @@ class ChatController extends GetxController {
         isFirstLoad.value = false; // Set to false after first load
 
         // Optionally log fetched messages
-        if (kDebugMode) {
-          print("Fetched messages:");
-        }
+        print("Fetched messages:");
         for (var message in fetchedMessages) {
-          if (kDebugMode) {
-            print(
-                "${message.isSentByUser ? 'You' : 'Therapist'}: ${message.message}");
-          }
+          print(
+              "${message.isSentByUser ? 'You' : 'Therapist'}: ${message.message}");
         }
       } else {
         throw Exception('Failed to load messages');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching messages: $e');
-      }
+      print('Error fetching messages: $e');
     } finally {
       isLoadingMessages.value = false; // Reset loading state after completion
     }
@@ -132,9 +120,7 @@ class ChatController extends GetxController {
 
     try {
       // Log the message to check the structure
-      if (kDebugMode) {
-        print('Sending message: ${message.toJson()}');
-      }
+      print('Sending message: ${message.toJson()}');
 
       final response = await http.post(
         Uri.parse(AppConstants.chat),
@@ -143,25 +129,17 @@ class ChatController extends GetxController {
       );
 
       // Print response status and body for debugging
-      if (kDebugMode) {
-        print("Response status: ${response.statusCode}");
-      }
-      if (kDebugMode) {
-        print("Response body: ${response.body}");
-      }
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
 
       // Print response headers for debugging
-      if (kDebugMode) {
-        print("Response headers: ${response.headers}");
-      }
+      print("Response headers: ${response.headers}");
 
       if (response.statusCode != 201) {
         throw Exception('Failed to send message');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error sending message: $e');
-      }
+      print('Error sending message: $e');
     }
   }
 

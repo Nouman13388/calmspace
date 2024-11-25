@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
@@ -22,9 +21,7 @@ class TipService {
       return true;
     } else {
       // Handle error
-      if (kDebugMode) {
-        print('Failed to post tip: ${response.statusCode}');
-      }
+      print('Failed to post tip: ${response.statusCode}');
       return false;
     }
   }

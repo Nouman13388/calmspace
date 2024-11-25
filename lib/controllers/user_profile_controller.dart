@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io'; // For handling File
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -32,15 +31,11 @@ class UserProfileController extends GetxController {
     final userId = await userController.getLoggedInUserId();
 
     if (userId == null) {
-      if (kDebugMode) {
-        print('No logged-in user found!');
-      }
+      print('No logged-in user found!');
       return;
     }
 
-    if (kDebugMode) {
-      print("fetchUserProfile method called with userId: $userId");
-    }
+    print("fetchUserProfile method called with userId: $userId");
 
     isLoading.value = true; // Start loading indicator
 
@@ -50,25 +45,16 @@ class UserProfileController extends GetxController {
       final userResponse =
           await http.get(Uri.parse('${AppConstants.usersUrl}?id=$userId'));
 
-      if (kDebugMode) {
-        print(
-            "API request made (Profile API): ${AppConstants.profilesUrl}?user=$userId");
-      }
-      if (kDebugMode) {
-        print(
-            "API request made (User API): ${AppConstants.usersUrl}?id=$userId");
-      }
+      print(
+          "API request made (Profile API): ${AppConstants.profilesUrl}?user=$userId");
+      print("API request made (User API): ${AppConstants.usersUrl}?id=$userId");
 
       if (response.statusCode == 200 && userResponse.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         final List<dynamic> userData = json.decode(userResponse.body);
 
-        if (kDebugMode) {
-          print("Profile data fetched: $data");
-        }
-        if (kDebugMode) {
-          print("User data fetched: $userData");
-        }
+        print("Profile data fetched: $data");
+        print("User data fetched: $userData");
 
         if (data.isNotEmpty && userData.isNotEmpty) {
           // Create BackendUser with the correct name from userData
@@ -85,52 +71,34 @@ class UserProfileController extends GetxController {
           profilePicture.value = profile.value?.profilePicture ?? '';
 
           // Print the individual details (Name, Location, Bio) to the console
-          if (kDebugMode) {
-            print("User Name: ${username.value}");
-          }
-          if (kDebugMode) {
-            print("User Location: ${location.value}");
-          }
-          if (kDebugMode) {
-            print("User Bio: ${bio.value}");
-          }
+          print("User Name: ${username.value}");
+          print("User Location: ${location.value}");
+          print("User Bio: ${bio.value}");
 
-          if (kDebugMode) {
-            print("User profile loaded successfully: ${profile.value}");
-          }
+          print("User profile loaded successfully: ${profile.value}");
         } else {
-          if (kDebugMode) {
-            print("No profiles or user data found for this user.");
-          }
+          print("No profiles or user data found for this user.");
           // No profile found, reset form values for new profile creation
           username.value = '';
           location.value = '';
           bio.value = '';
         }
       } else {
-        if (kDebugMode) {
-          print(
-              'Failed to load profile or user data. Status code: ${response.statusCode}');
-        }
+        print(
+            'Failed to load profile or user data. Status code: ${response.statusCode}');
         throw Exception('Failed to load profile');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error fetching profile: $e");
-      }
+      print("Error fetching profile: $e");
     } finally {
       isLoading.value = false; // Stop loading indicator when done
-      if (kDebugMode) {
-        print("Finished loading user profile");
-      }
+      print("Finished loading user profile");
     }
   }
 
   // Fetch the current location of the user
   Future<void> fetchUserLocation() async {
-    if (kDebugMode) {
-      print("Fetching user location...");
-    }
+    print("Fetching user location...");
 
     try {
       final locationData = await LocationService.getLocation();
@@ -138,26 +106,18 @@ class UserProfileController extends GetxController {
       if (locationData != null) {
         location.value =
             '${locationData['latitude']}, ${locationData['longitude']}'; // Store as string
-        if (kDebugMode) {
-          print("Location fetched: ${location.value}");
-        }
+        print("Location fetched: ${location.value}");
       } else {
-        if (kDebugMode) {
-          print("Location not available.");
-        }
+        print("Location not available.");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error fetching location: $e");
-      }
+      print("Error fetching location: $e");
     }
   }
 
   // Save the updated profile with dynamic values
   Future<void> saveProfile() async {
-    if (kDebugMode) {
-      print("Saving profile...");
-    }
+    print("Saving profile...");
 
     // Get the logged-in user's email to assign it to the user field
     final loggedInEmail = (await userController.getLoggedInUserId()) ??
@@ -213,57 +173,39 @@ class UserProfileController extends GetxController {
       }
 
       // Print the request details
-      if (kDebugMode) {
-        print("Sending request to: ${request.url}");
-      }
+      print("Sending request to: ${request.url}");
       var response = await request.send();
       if (response.statusCode == 200) {
-        if (kDebugMode) {
-          print("Profile saved successfully!");
-        }
+        print("Profile saved successfully!");
         Get.snackbar("Success", "Profile saved successfully!",
             backgroundColor: Colors.green, colorText: Colors.white);
       } else {
-        if (kDebugMode) {
-          print("Failed to save profile. Status code: ${response.statusCode}");
-        }
+        print("Failed to save profile. Status code: ${response.statusCode}");
         final responseBody = await response.stream.bytesToString();
-        if (kDebugMode) {
-          print("Response body: $responseBody");
-        }
+        print("Response body: $responseBody");
         throw Exception("Failed to save profile");
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error saving profile: $e");
-      }
+      print("Error saving profile: $e");
     }
   }
 
   // Toggle between edit and view mode
   void toggleEditMode() {
     isEditMode.value = !isEditMode.value;
-    if (kDebugMode) {
-      print("Edit mode toggled: ${isEditMode.value}");
-    }
+    print("Edit mode toggled: ${isEditMode.value}");
   }
 
   // Pick an image (image picker logic)
   Future<void> pickImage() async {
-    if (kDebugMode) {
-      print("Picking image...");
-    }
+    print("Picking image...");
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       pickedImage.value = File(pickedFile.path);
-      if (kDebugMode) {
-        print("Picked image: ${pickedImage.value?.path}");
-      }
+      print("Picked image: ${pickedImage.value?.path}");
     } else {
-      if (kDebugMode) {
-        print("No image selected.");
-      }
+      print("No image selected.");
     }
   }
 }

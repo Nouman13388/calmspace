@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -116,9 +115,7 @@ class UserSignUpPage extends StatelessWidget {
       String errorMessage =
           authController.mapFirebaseAuthExceptionMessage(e.toString());
       _showSnackbar('Error', errorMessage, Colors.red);
-      if (kDebugMode) {
-        print(errorMessage);
-      } // Log the error for debugging
+      print(errorMessage); // Log the error for debugging
     } finally {
       authController.isLoading.value = false;
     }

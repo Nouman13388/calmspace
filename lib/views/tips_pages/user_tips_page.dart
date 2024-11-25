@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:calmspace/controllers/user_controller.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -47,9 +46,7 @@ class _UserTipsPageState extends State<UserTipsPage> {
         );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error initializing data: $e');
-      }
+      print('Error initializing data: $e');
     }
   }
 
@@ -58,25 +55,19 @@ class _UserTipsPageState extends State<UserTipsPage> {
     isLoading(true); // Set loading to true before fetching
     try {
       final response = await http.get(
-        Uri.parse('${AppConstants.assessmentsUrl}?user=$loggedInUserId'),
+        Uri.parse(AppConstants.assessmentsUrl + '?user=$loggedInUserId'),
       );
 
       if (response.statusCode == 200) {
         List<dynamic> fetchedData = jsonDecode(response.body);
         assessmentData.value = List<Map<String, dynamic>>.from(fetchedData);
-        if (kDebugMode) {
-          print('Assessment data fetched successfully.');
-        }
+        print('Assessment data fetched successfully.');
       } else {
-        if (kDebugMode) {
-          print(
-              'Failed to fetch assessments. Status Code: ${response.statusCode}');
-        }
+        print(
+            'Failed to fetch assessments. Status Code: ${response.statusCode}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching assessments: $e');
-      }
+      print('Error fetching assessments: $e');
     } finally {
       isLoading(false); // Set loading to false after fetching
     }

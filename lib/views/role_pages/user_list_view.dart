@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -57,18 +56,14 @@ class UserListPage extends StatelessWidget {
                     // Now directly use the selected user's ID (from the tapped card)
                     final userId = user.id;
 
-                    if (kDebugMode) {
-                      print('Selected User ID: $userId');
-                    }
+                    print('Selected User ID: $userId');
 
                     // Call the function to get the logged-in therapist's ID
                     final therapistId =
                         await therapistController.getLoggedInTherapistId();
 
                     if (therapistId != null) {
-                      if (kDebugMode) {
-                        print('Matched Therapist ID: $therapistId');
-                      }
+                      print('Matched Therapist ID: $therapistId');
 
                       // Navigate to the chat page and pass userId and therapistId
                       Get.to(
@@ -80,9 +75,7 @@ class UserListPage extends StatelessWidget {
                       );
                     } else {
                       // Handle case where no therapist was found
-                      if (kDebugMode) {
-                        print('No therapist found for the logged-in user.');
-                      }
+                      print('No therapist found for the logged-in user.');
                       Get.snackbar('Error', 'No therapist found.');
                     }
                   },
@@ -90,8 +83,9 @@ class UserListPage extends StatelessWidget {
                     margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                     child: ListTile(
                       leading: CircleAvatar(
+                        child: Text(user.name[
+                            0]), // Display the first letter of the user's name
                         backgroundColor: Colors.blueAccent,
-                        child: Text(user.name[0]),
                       ),
                       title: Text(user.name),
                       subtitle: Text(user.email),

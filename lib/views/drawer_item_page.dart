@@ -67,8 +67,6 @@ class _NotificationPreferencesPageState
 
 // News Preferences Page
 class NewsPreferencesPage extends StatelessWidget {
-  const NewsPreferencesPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,8 +80,6 @@ class NewsPreferencesPage extends StatelessWidget {
 
 // Privacy Policy Page
 class PrivacyPolicyPage extends StatelessWidget {
-  const PrivacyPolicyPage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,8 +143,6 @@ class PrivacyPolicyPage extends StatelessWidget {
 
 // Terms of Service Page
 class TermsOfServicePage extends StatelessWidget {
-  const TermsOfServicePage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

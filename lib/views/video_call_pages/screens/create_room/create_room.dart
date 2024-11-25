@@ -9,8 +9,8 @@ import '../widgets/video_view.dart';
 
 class CreateRoom extends StatefulWidget {
   const CreateRoom({
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<CreateRoom> createState() => _CreateRoomState();
@@ -43,17 +43,17 @@ class _CreateRoomState extends State<CreateRoom> {
   }
 
   Future<void> _disposeLocal() async {
-    var stream = localVideo.srcObject;
+    var _stream = localVideo.srcObject;
 
-    if (stream != null) {
-      stream.getTracks().forEach(
+    if (_stream != null) {
+      _stream.getTracks().forEach(
         (element) async {
           await element.stop();
         },
       );
 
-      await stream.dispose();
-      stream = null;
+      await _stream.dispose();
+      _stream = null;
     }
 
     var senders = await peerService.peerConnection.getSenders();
